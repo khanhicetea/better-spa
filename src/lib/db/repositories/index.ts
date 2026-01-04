@@ -1,7 +1,8 @@
 import type { DB } from "../init";
-import { UserRepository } from "./user.repo";
+import { JobRepository } from "./job.repo";
 import { TodoCategoryRepository } from "./todoCategory.repo";
 import { TodoItemRepository } from "./todoItem.repo";
+import { UserRepository } from "./user.repo";
 
 export type Repositories = ReturnType<typeof createRepos>;
 
@@ -10,6 +11,7 @@ export function createRepos(db: DB) {
     user: new UserRepository(db),
     todoCategory: new TodoCategoryRepository(db),
     todoItem: new TodoItemRepository(db),
+    job: new JobRepository(db),
   };
 
   // Inject repos reference into each repository for cross-repository access
@@ -20,9 +22,10 @@ export function createRepos(db: DB) {
   return repos;
 }
 
-export { UserRepository } from "./user.repo";
+export { JobRepository } from "./job.repo";
 export { TodoCategoryRepository } from "./todoCategory.repo";
 export { TodoItemRepository } from "./todoItem.repo";
+export { UserRepository } from "./user.repo";
 export {
   NotFoundError,
   type BaseRepository,

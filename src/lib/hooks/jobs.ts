@@ -1,0 +1,72 @@
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/lib/orpc";
+import type { JobStatus } from "@/lib/db/schema/job";
+
+export const JOB_QUERY_KEYS = {
+  userJobs: (filter?: { jobId?: string; status?: JobStatus }) =>
+    ["jobs", "user", filter] as const,
+  singleJob: (jobId: string) => ["jobs", "single", jobId] as const,
+} as const;
+
+interface UseUserJobsOptions {
+  jobId?: string;
+  status?: JobStatus;
+  limit?: number;
+  enabled?: boolean;
+}
+
+/**
+ * Hook to subscribe to user jobs with 1-second polling.
+ * Automatically stops polling when all jobs are in terminal states.
+ */
+export function useUserJobs(options: UseUserJobsOptions = {}) {
+  const { jobId, status, limit = 20, enabled = true } = options;
+
+  const query = useQuery({
+    ...orpc.job.listJobs.queryOptions({
+      input: {
+        jobId,
+        status,
+        limit,
+      },
+    }),
+    enabled,
+    refetchInterval: (query) => {
+      // Stop polling if all jobs are in terminal states
+      const jobs = query.state.data;
+      if (!jobs || jobs.length === 0) return 1000;
+
+      const hasActiveJobs = jobs.some(
+        (job) => job.status === "pending" || job.status === "processing",
+      );
+
+      return hasActiveJobs ? 1000 : false;
+    },
+    refetchIntervalInBackground: false,
+  });
+
+  return query;
+}
+
+/**
+ * Hook to subscribe to a single job with 1-second polling.
+ */
+export function useJob(jobId: string, enabled = true) {
+  return useQuery({
+    ...orpc.job.getJob.queryOptions({
+      input: { id: jobId },
+    }),
+    enabled: enabled && !!jobId,
+    refetchInterval: (query) => {
+      const job = query.state.data;
+      if (!job) return 1000;
+
+      // Stop polling when job is complete/failed/cancelled
+      const isTerminal = ["completed", "failed", "cancelled"].includes(
+        job.status,
+      );
+      return isTerminal ? false : 1000;
+    },
+    refetchIntervalInBackground: false,
+  });
+}

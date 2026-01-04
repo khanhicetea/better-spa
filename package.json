@@ -17,7 +17,8 @@
     "deps:major": "pnpx taze@latest major -Ilw",
     "ui": "pnpx shadcn@latest",
     "auth:secret": "pnpx @better-auth/cli@latest secret",
-    "auth:generate": "pnpx @better-auth/cli@latest generate --config ./src/lib/auth/auth.ts"
+    "auth:generate": "pnpx @better-auth/cli@latest generate --config ./src/lib/auth/auth.ts",
+    "worker": "tsx --env-file=.env scripts/worker.ts"
   },
   "dependencies": {
     "@better-upload/client": "^3.0.11",

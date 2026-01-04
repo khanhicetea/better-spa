@@ -11,17 +11,20 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   CheckCircle2,
+  Download,
   GripVertical,
   LayoutGrid,
   ListTodo,
+  Loader2,
   Plus,
   Sparkles,
   Trash2,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useState } from "react";
 import { PagePending } from "@/components/common/page-pending";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +32,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { orpc } from "@/lib/orpc";
 import type { Outputs } from "@/rpc/types";
 
@@ -79,6 +86,7 @@ function getCategoryColor(index: number) {
 }
 
 function TodoPage() {
+  const navigate = useNavigate();
   const [newCategoryName, setNewCategoryName] = useState("");
   const [activeTodo, setActiveTodo] = useState<TodoItem | null>(null);
 
@@ -95,6 +103,27 @@ function TodoPage() {
       onSuccess: () => {
         refetchCategories();
         setNewCategoryName("");
+      },
+    }),
+  );
+
+  const exportMutation = useMutation(
+    orpc.job.exportTodos.mutationOptions({
+      onSuccess: (job) => {
+        if (job) {
+          toast.success("Export job started", {
+            description: "You can view the progress in the Jobs page.",
+            action: {
+              label: "View Jobs",
+              onClick: () => navigate({ to: "/app/jobs" }),
+            },
+          });
+        }
+      },
+      onError: (error) => {
+        toast.error("Failed to start export", {
+          description: error.message,
+        });
       },
     }),
   );
@@ -182,32 +211,51 @@ function TodoPage() {
             </div>
           </div>
 
-          {/* Progress Stats */}
-          {totalTodos > 0 && (
-            <div className="flex items-center gap-4 p-3 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm">
-              <div className="flex items-center gap-2">
-                <ListTodo className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">{totalTodos} Tasks</span>
-              </div>
-              <div className="h-4 w-px bg-border" />
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <span className="text-sm font-medium">{completedTodos} Done</span>
-              </div>
-              <div className="h-4 w-px bg-border" />
-              <div className="flex items-center gap-2">
-                <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500 ease-out"
-                    style={{ width: `${progressPercentage}%` }}
-                  />
+          {/* Progress Stats and Export */}
+          <div className="flex items-center gap-3">
+            {totalTodos > 0 && (
+              <div className="flex items-center gap-4 p-3 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <ListTodo className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">
+                    {totalTodos} Tasks
+                  </span>
                 </div>
-                <span className="text-sm font-medium text-muted-foreground">
-                  {progressPercentage}%
-                </span>
+                <div className="h-4 w-px bg-border" />
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <span className="text-sm font-medium">
+                    {completedTodos} Done
+                  </span>
+                </div>
+                <div className="h-4 w-px bg-border" />
+                <div className="flex items-center gap-2">
+                  <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500 ease-out"
+                      style={{ width: `${progressPercentage}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {progressPercentage}%
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportMutation.mutate({})}
+              disabled={exportMutation.isPending}
+            >
+              {exportMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              Export
+            </Button>
+          </div>
         </div>
 
         {/* Kanban Board */}
@@ -252,10 +300,12 @@ function TodoPage() {
             <div className="p-4 rounded-full bg-muted/50 mb-4">
               <Sparkles className="h-10 w-10 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Get Started with Your Board</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              Get Started with Your Board
+            </h3>
             <p className="text-muted-foreground max-w-md mb-6">
-              Create your first category to start organizing your tasks. Categories help
-              you group related todos together.
+              Create your first category to start organizing your tasks.
+              Categories help you group related todos together.
             </p>
           </div>
         )}
@@ -281,10 +331,17 @@ function TodoCardPreview({ todo }: { todo: TodoItem }) {
   );
 }
 
-function TodoCard({ todo, onRefetch }: { todo: TodoItem; onRefetch: () => void }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: todo.id,
-  });
+function TodoCard({
+  todo,
+  onRefetch,
+}: {
+  todo: TodoItem;
+  onRefetch: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: todo.id,
+    });
 
   const [isEditingContent, setIsEditingContent] = useState(false);
   const [editingContent, setEditingContent] = useState(todo.content);
@@ -521,7 +578,9 @@ function CategoryColumn({
       <div
         ref={setNodeRef}
         className={`rounded-xl border backdrop-blur-sm transition-all duration-200 overflow-hidden ${colorScheme.border} ${
-          isOver ? "animate-bounce-subtle shadow-xl shadow-primary/20" : "hover:shadow-md"
+          isOver
+            ? "animate-bounce-subtle shadow-xl shadow-primary/20"
+            : "hover:shadow-md"
         }`}
       >
         {/* Category Header */}
@@ -558,7 +617,10 @@ function CategoryColumn({
             </div>
 
             <div className="flex items-center gap-1.5">
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 font-normal">
+              <Badge
+                variant="secondary"
+                className="text-xs px-2 py-0.5 font-normal"
+              >
                 {completedCount}/{todos.length}
               </Badge>
               {todos.length === 0 && (
@@ -591,7 +653,9 @@ function CategoryColumn({
 
           {isOver && (
             <div className="rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 h-14 flex items-center justify-center">
-              <span className="text-sm text-primary/70 font-medium">Drop here</span>
+              <span className="text-sm text-primary/70 font-medium">
+                Drop here
+              </span>
             </div>
           )}
 

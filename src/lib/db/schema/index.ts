@@ -4,6 +4,7 @@ import type {
   AccountTable,
   VerificationTable,
 } from "./auth";
+import type { JobTable } from "./job";
 import type { TodoCategoryTable, TodoItemTable } from "./todo";
 
 export interface Database {
@@ -13,4 +14,5 @@ export interface Database {
   verification: VerificationTable;
   todoCategory: TodoCategoryTable;
   todoItem: TodoItemTable;
+  job: JobTable;
 }

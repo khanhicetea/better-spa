@@ -61,7 +61,9 @@ export interface BaseRepository<TTable extends keyof Database> {
     where: SelectQueryCondition<TTable>;
     modify?: QueryModifier<TTable>;
   }): Promise<Selectable<Database[TTable]>>;
-  findAll(queryBuilder?: QueryModifier<TTable>): Promise<Selectable<Database[TTable]>[]>;
+  findAll(
+    queryBuilder?: QueryModifier<TTable>,
+  ): Promise<Selectable<Database[TTable]>[]>;
   findPaginated(options: {
     page: number;
     pageSize: number;
@@ -100,7 +102,9 @@ export interface BaseRepository<TTable extends keyof Database> {
   }): Promise<Selectable<Database[TTable]> | undefined>;
 }
 
-export class Repository<TTable extends keyof Database> implements BaseRepository<TTable> {
+export class Repository<TTable extends keyof Database>
+  implements BaseRepository<TTable>
+{
   protected _repos: Repositories | null = null;
 
   constructor(
@@ -121,7 +125,9 @@ export class Repository<TTable extends keyof Database> implements BaseRepository
    */
   protected get repos(): Repositories {
     if (!this._repos) {
-      throw new Error("Repos not initialized. Make sure createRepos() was called.");
+      throw new Error(
+        "Repos not initialized. Make sure createRepos() was called.",
+      );
     }
     return this._repos;
   }
@@ -180,7 +186,9 @@ export class Repository<TTable extends keyof Database> implements BaseRepository
     return rows as Pick<Selectable<Database[TTable]>, K>[];
   }
 
-  async findById(id: unknown): Promise<Selectable<Database[TTable]> | undefined> {
+  async findById(
+    id: unknown,
+  ): Promise<Selectable<Database[TTable]> | undefined> {
     const row = await (this.db.selectFrom(this.tableName) as any)
       .where("id", "=", id)
       .selectAll()
@@ -292,7 +300,9 @@ export class Repository<TTable extends keyof Database> implements BaseRepository
 
   async exists(id: unknown): Promise<boolean> {
     const row = await (this.db.selectFrom(this.tableName) as any)
-      .select((eb: ExpressionBuilder<Database, TTable>) => eb.lit(1).as("exists"))
+      .select((eb: ExpressionBuilder<Database, TTable>) =>
+        eb.lit(1).as("exists"),
+      )
       .where("id", "=", id)
       .limit(1)
       .executeTakeFirst();
@@ -305,7 +315,9 @@ export class Repository<TTable extends keyof Database> implements BaseRepository
     query = this.applyConditions(query, conditions);
 
     const row = await (query as any)
-      .select((eb: ExpressionBuilder<Database, TTable>) => eb.lit(1).as("exists"))
+      .select((eb: ExpressionBuilder<Database, TTable>) =>
+        eb.lit(1).as("exists"),
+      )
       .limit(1)
       .executeTakeFirst();
 
@@ -320,7 +332,9 @@ export class Repository<TTable extends keyof Database> implements BaseRepository
     return result;
   }
 
-  async deleteMany(conditions: DeleteQueryCondition<TTable>): Promise<DeleteResult[]> {
+  async deleteMany(
+    conditions: DeleteQueryCondition<TTable>,
+  ): Promise<DeleteResult[]> {
     let query = this.db.deleteFrom(this.tableName);
     query = this.applyConditions(query, conditions);
 
@@ -386,7 +400,9 @@ export class Repository<TTable extends keyof Database> implements BaseRepository
       .insertInto(this.tableName)
       .values(options.data as any)
       .onConflict((oc) =>
-        oc.columns(options.conflictColumns as any).doUpdateSet(dataToUpdate as any),
+        oc
+          .columns(options.conflictColumns as any)
+          .doUpdateSet(dataToUpdate as any),
       )
       .returningAll()
       .executeTakeFirst();
