@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/lib/orpc";
-import type { JobStatus } from "@/lib/db/schema/job";
+import type { JobStatus, Job } from "@/lib/db/schema/job";
+import { useEffect } from "react";
 
 export const JOB_QUERY_KEYS = {
   userJobs: (filter?: { jobId?: string; status?: JobStatus }) =>
@@ -62,11 +63,51 @@ export function useJob(jobId: string, enabled = true) {
       if (!job) return 1000;
 
       // Stop polling when job is complete/failed/cancelled
-      const isTerminal = ["completed", "failed", "cancelled"].includes(
-        job.status,
-      );
+      const isTerminal = ["completed", "failed", "cancelled"].includes(job.status);
       return isTerminal ? false : 1000;
     },
     refetchIntervalInBackground: false,
   });
+}
+
+export function useListenJob({
+  jobId,
+  enabled = true,
+  onChange,
+  onSuccess,
+  onFailed,
+  onCancel,
+  onSettled,
+}: {
+  jobId: string;
+  enabled?: boolean;
+  onChange?: (job: Job) => void;
+  onSuccess?: (job: Job) => void;
+  onFailed?: (job: Job) => void;
+  onCancel?: (job: Job) => void;
+  onSettled?: (job: Job) => void;
+}) {
+  const query = useJob(jobId, enabled);
+  const job = query.data;
+
+  useEffect(() => {
+    if (!job) return;
+
+    // Call onChange for any status change
+    onChange?.(job);
+
+    // Call specific callbacks based on terminal states
+    if (job.status === "completed") {
+      onSuccess?.(job);
+      onSettled?.(job);
+    } else if (job.status === "failed") {
+      onFailed?.(job);
+      onSettled?.(job);
+    } else if (job.status === "cancelled") {
+      onCancel?.(job);
+      onSettled?.(job);
+    }
+  }, [job?.status, job?.progress]);
+
+  return query;
 }
