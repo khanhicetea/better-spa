@@ -1,12 +1,12 @@
 import type { DB } from "../init";
 import type { JobStatus } from "../schema/job";
-import type { JobPayloads, JobType } from "@/lib/worker/types";
+import type { JobType, JobPayload } from "@/worker/types";
 import { Repository } from "./base";
 
 export interface CreateJobOptions<T extends JobType> {
   userId: string;
   type: T;
-  payload: JobPayloads[T];
+  payload: JobPayload<T>;
   label?: string;
   maxRetries?: number;
 }

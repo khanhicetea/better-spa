@@ -1,4 +1,4 @@
-import { Worker } from "../src/lib/worker";
+import { Worker } from "../src/worker";
 
 async function main() {
   const connectionString = process.env.DATABASE_URL;

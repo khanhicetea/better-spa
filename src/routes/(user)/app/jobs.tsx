@@ -6,14 +6,14 @@ import {
   Briefcase,
   CheckCircle2,
   Clock,
+  Eye,
   Loader2,
   RefreshCw,
   X,
 } from "lucide-react";
 import { PagePending } from "@/components/common/page-pending";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -21,11 +21,14 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Progress, ProgressValue } from "@/components/ui/progress";
 import {
-  Progress,
-  ProgressLabel,
-  ProgressValue,
-} from "@/components/ui/progress";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Tooltip,
   TooltipContent,
@@ -154,82 +157,69 @@ function JobCard({ job, onUpdated }: { job: Job; onUpdated: () => void }) {
 
   return (
     <Card className="transition-all hover:shadow-md">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${config.bgColor}`}>
-              <StatusIcon
-                className={`h-4 w-4 ${config.color} ${config.animate ? "animate-spin" : ""}`}
-              />
-            </div>
-            <div>
-              <CardTitle className="text-base">{job.label}</CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Created{" "}
-                {formatDistanceToNow(new Date(job.createdAt), {
-                  addSuffix: true,
-                })}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className={config.color}>
-              {config.label}
-            </Badge>
-            {job.status === "pending" && (
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => cancelMutation.mutate({ id: job.id })}
-                      disabled={cancelMutation.isPending}
-                      className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  }
-                />
-                <TooltipContent>Cancel job</TooltipContent>
-              </Tooltip>
-            )}
-          </div>
+      <div className="flex items-center gap-3 p-3">
+        <div className={`p-1.5 rounded-lg ${config.bgColor} shrink-0`}>
+          <StatusIcon
+            className={`h-4 w-4 ${config.color} ${config.animate ? "animate-spin" : ""}`}
+          />
         </div>
-      </CardHeader>
-      <CardContent>
-        {(job.status === "processing" || job.status === "completed") && (
-          <Progress value={job.progress} className="mt-2">
-            <ProgressLabel>Progress</ProgressLabel>
-            <ProgressValue />
-          </Progress>
-        )}
-        {job.error && (
-          <div className="mt-3 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-            {String(job.error)}
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-sm font-medium truncate">
+              {job.label}
+            </CardTitle>
+            <span className="text-xs text-muted-foreground shrink-0">
+              {formatDistanceToNow(new Date(job.createdAt), {
+                addSuffix: true,
+              })}
+            </span>
           </div>
-        )}
-        {job.status === "completed" && job.result != null && (
-          <div className="mt-3">
-            <details className="group">
-              <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
-                View result
-              </summary>
-              <pre className="mt-2 p-3 rounded-lg bg-muted text-xs overflow-auto max-h-48">
-                {JSON.stringify(job.result, null, 2)}
-              </pre>
-            </details>
-          </div>
-        )}
-        {job.completedAt && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            Completed{" "}
-            {formatDistanceToNow(new Date(job.completedAt), {
-              addSuffix: true,
-            })}
-          </p>
-        )}
-      </CardContent>
+          {(job.status === "processing" ||
+            (job.status === "completed" && job.progress < 100)) && (
+            <Progress value={job.progress} className="h-1" />
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {job.error && (
+            <Tooltip>
+              <TooltipTrigger
+                render={<AlertCircle className="h-4 w-4 text-destructive" />}
+              />
+              <TooltipContent>{String(job.error)}</TooltipContent>
+            </Tooltip>
+          )}
+          {job.status === "completed" && job.result != null && (
+            <Sheet>
+              <SheetTrigger
+                render={
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <Eye className="h-3.5 w-3.5" />
+                  </Button>
+                }
+              />
+              <SheetContent side="right" className="pl-4">
+                <SheetHeader>
+                  <SheetTitle>{job.label}</SheetTitle>
+                </SheetHeader>
+                <pre className="mt-4 p-4 rounded-lg bg-muted text-xs overflow-auto max-h-[calc(100vh-8rem)]">
+                  {JSON.stringify(job.result, null, 2)}
+                </pre>
+              </SheetContent>
+            </Sheet>
+          )}
+          {job.status === "pending" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => cancelMutation.mutate({ id: job.id })}
+              disabled={cancelMutation.isPending}
+              className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
+      </div>
     </Card>
   );
 }

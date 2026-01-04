@@ -5,7 +5,10 @@
       "Bash(pnpm check:*)",
       "Bash(pnpm check-types:*)",
       "WebFetch(domain:better-upload.com)",
-      "Bash(pnpm add:*)"
+      "Bash(pnpm add:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(pnpm lint:*)"
     ]
   }
 }

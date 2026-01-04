@@ -106,15 +106,3 @@ export const cancelJob = authedProcedure
 
     return updated ?? null;
   });
-
-export const exportTodos = authedProcedure.handler(async ({ context }) => {
-  const { repos } = context;
-
-  const job = await repos.job.createJob({
-    userId: context.user.id,
-    type: "export_todos",
-    payload: { userId: context.user.id },
-  });
-
-  return job ?? null;
-});

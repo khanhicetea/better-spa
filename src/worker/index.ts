@@ -2,12 +2,10 @@ import { CamelCasePlugin, Kysely, PostgresDialect } from "kysely";
 import pg from "pg";
 import type { Database } from "@/lib/db/schema";
 import type { Job, JobStatus } from "@/lib/db/schema/job";
-import { jobHandlers } from "./handlers";
-import {
-  DEFAULT_WORKER_CONFIG,
-  type JobType,
-  type WorkerConfig,
-} from "./types";
+import { createRepos } from "@/lib/db/repositories";
+import { workerRpc, type JobType } from "./rpc";
+import { DEFAULT_WORKER_CONFIG, type WorkerConfig } from "./types";
+import { createRouterClient } from "@orpc/server";
 
 const { Pool } = pg;
 
@@ -60,10 +58,7 @@ export class Worker {
   /**
    * Update job progress
    */
-  private async updateJobProgress(
-    jobId: string,
-    progress: number,
-  ): Promise<void> {
+  private async updateJobProgress(jobId: string, progress: number): Promise<void> {
     await this.db
       .updateTable("job")
       .set({
@@ -108,29 +103,48 @@ export class Worker {
   }
 
   /**
-   * Process a single job
+   * Process a single job using oRPC handler
    */
   private async processJob(job: Job): Promise<void> {
     console.log(`Processing job ${job.id} (${job.type}): ${job.label}`);
 
-    const handler = jobHandlers[job.type as JobType];
-    if (!handler) {
+    // Get handler module from worker RPC
+    const handlerModule = workerRpc[job.type as JobType];
+    if (!handlerModule) {
       await this.failJob(job.id, `Unknown job type: ${job.type}`);
       console.error(`Unknown job type: ${job.type}`);
       return;
     }
 
     try {
-      const result = await handler({
-        db: this.db,
-        job,
-        updateProgress: (progress) => this.updateJobProgress(job.id, progress),
+      // Create worker context
+      const repos = createRepos(this.db);
+      const rpcClient = createRouterClient(workerRpc, {
+        context: async () => {
+          return {
+            db: this.db,
+            repos,
+            job,
+            updateProgress: (progress: number) =>
+              this.updateJobProgress(job.id, progress),
+          };
+        },
       });
-      await this.completeJob(job.id, result);
-      console.log(`Job ${job.id} completed successfully`);
+
+      // Check if handler has a directly exported handler function
+      const handlerFn = rpcClient[job.type as JobType];
+
+      if (typeof handlerFn === "function") {
+        // Call the exported handler function directly
+        const result = await (handlerFn as any)(job.payload);
+        // const result = await rpcClient.export_todos(job.payload)
+        await this.completeJob(job.id, result);
+        console.log(`Job ${job.id} completed successfully`);
+      } else {
+        console.log(`Job type ${job.type} not found`);
+      }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
       await this.failJob(job.id, errorMessage);
       console.error(`Job ${job.id} failed:`, errorMessage);
     }
@@ -229,4 +243,5 @@ export class Worker {
 
 // Re-export types
 export * from "./types";
-export { jobHandlers } from "./handlers";
+export { workerProcedure } from "./base";
+export { workerRpc, type JobType } from "./rpc";

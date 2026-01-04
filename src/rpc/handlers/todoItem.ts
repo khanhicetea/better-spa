@@ -76,3 +76,15 @@ export const deleteTodo = authedProcedure
     await repos.todoItem.deleteById(input.id);
     return { success: true };
   });
+
+export const exportTodos = authedProcedure.handler(async ({ context }) => {
+  const { repos } = context;
+
+  const job = await repos.job.createJob<"export_todos">({
+    userId: context.user.id,
+    type: "export_todos",
+    payload: { userId: context.user.id },
+  });
+
+  return job ?? null;
+});

@@ -41,7 +41,7 @@ export function useUserJobs(options: UseUserJobsOptions = {}) {
         (job) => job.status === "pending" || job.status === "processing",
       );
 
-      return hasActiveJobs ? 1000 : false;
+      return hasActiveJobs ? 1000 : 5000;
     },
     refetchIntervalInBackground: false,
   });
@@ -63,7 +63,9 @@ export function useJob(jobId: string, enabled = true) {
       if (!job) return 1000;
 
       // Stop polling when job is complete/failed/cancelled
-      const isTerminal = ["completed", "failed", "cancelled"].includes(job.status);
+      const isTerminal = ["completed", "failed", "cancelled"].includes(
+        job.status,
+      );
       return isTerminal ? false : 1000;
     },
     refetchIntervalInBackground: false,
