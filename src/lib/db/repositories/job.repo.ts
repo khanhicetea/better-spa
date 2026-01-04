@@ -1,10 +1,50 @@
 import type { DB } from "../init";
 import type { JobStatus } from "../schema/job";
+import type { JobPayloads, JobType } from "@/lib/worker/types";
 import { Repository } from "./base";
+
+export interface CreateJobOptions<T extends JobType> {
+  userId: string;
+  type: T;
+  payload: JobPayloads[T];
+  label?: string;
+  maxRetries?: number;
+}
+
+const DEFAULT_JOB_LABELS: Record<JobType, string> = {
+  export_todos: "Export Todos to JSON",
+};
 
 export class JobRepository extends Repository<"job"> {
   constructor(db: DB) {
     super(db, "job");
+  }
+
+  /**
+   * Create a new job with sensible defaults.
+   * Only userId, type, and payload are required.
+   */
+  async createJob<T extends JobType>(options: CreateJobOptions<T>) {
+    const { userId, type, payload, label, maxRetries = 3 } = options;
+    const now = new Date();
+
+    return this.insertReturn({
+      id: crypto.randomUUID(),
+      userId,
+      type,
+      label: label ?? DEFAULT_JOB_LABELS[type] ?? type,
+      status: "pending" as JobStatus,
+      progress: 0,
+      payload,
+      result: null,
+      error: null,
+      retryCount: 0,
+      maxRetries,
+      startedAt: null,
+      completedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    });
   }
 
   /**

@@ -110,22 +110,10 @@ export const cancelJob = authedProcedure
 export const exportTodos = authedProcedure.handler(async ({ context }) => {
   const { repos } = context;
 
-  const job = await repos.job.insertReturn({
-    id: crypto.randomUUID(),
+  const job = await repos.job.createJob({
     userId: context.user.id,
     type: "export_todos",
-    label: "Export Todos to JSON",
-    status: "pending" as JobStatus,
-    progress: 0,
     payload: { userId: context.user.id },
-    result: null,
-    error: null,
-    retryCount: 0,
-    maxRetries: 3,
-    startedAt: null,
-    completedAt: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   });
 
   return job ?? null;
