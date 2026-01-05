@@ -1,15 +1,7 @@
+import type { JobPayload, JobType } from "@/worker/types";
 import type { DB } from "../init";
 import type { JobStatus } from "../schema/job";
-import type { JobType, JobPayload } from "@/worker/types";
 import { Repository } from "./base";
-
-export interface CreateJobOptions<T extends JobType> {
-  userId: string;
-  type: T;
-  payload: JobPayload<T>;
-  label?: string;
-  maxRetries?: number;
-}
 
 const DEFAULT_JOB_LABELS: Record<JobType, string> = {
   export_todos: "Export Todos to JSON",
@@ -23,8 +15,24 @@ export class JobRepository extends Repository<"job"> {
   /**
    * Create a new job with sensible defaults.
    * Only userId, type, and payload are required.
+   *
+   * @example
+   * ```ts
+   * // Generic type is inferred from `type` field - no need to specify it!
+   * const job = await repos.job.createJob({
+   *   userId: context.user.id,
+   *   type: "export_todos",
+   *   payload: { userId: context.user.id },
+   * });
+   * ```
    */
-  async createJob<T extends JobType>(options: CreateJobOptions<T>) {
+  async createJob<T extends JobType>(options: {
+    userId: string;
+    type: T;
+    payload: JobPayload<T>;
+    label?: string;
+    maxRetries?: number;
+  }) {
     const { userId, type, payload, label, maxRetries = 3 } = options;
     const now = new Date();
 
