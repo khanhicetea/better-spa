@@ -407,8 +407,39 @@ process.on("SIGINT", async () => {
 
 ### Running the Worker
 
+**Development:**
 ```bash
-pnpm worker  # tsx --env-file=.env scripts/worker.ts
+pnpm worker      # or pnpm worker:dev (tsx --env-file=.env scripts/worker.ts)
+```
+
+**Production:**
+```bash
+# 1. Build the worker
+pnpm worker:build  # Compiles to .output/worker/worker.js
+
+# 2. Run the compiled worker
+pnpm worker:start  # or: node .output/worker/worker.js
+```
+
+### Production Build Setup
+
+The worker uses **tsup** (`tsup.config.ts`) to compile TypeScript into a production-ready JavaScript bundle:
+
+**Build Output:**
+- Entry: `scripts/worker.ts`
+- Output: `.output/worker/worker.js`
+
+**Environment Variables:**
+- Development: Loaded from `.env` file via `--env-file` flag
+- Production: Set at system level (DATABASE_URL, NODE_ENV, etc.)
+
+**Running Server and Worker Together:**
+```bash
+# Terminal 1 - TanStack Start Server
+node .output/server/index.mjs
+
+# Terminal 2 - Job Worker
+node .output/worker/worker.js
 ```
 
 ### Multiple Workers
@@ -997,6 +1028,13 @@ src/rpc/handlers/
 
 scripts/
 └── worker.ts             # Worker startup script
+
+# Build Configuration
+tsup.config.ts            # Worker build configuration (tsup)
+
+# Build Output (generated, gitignored)
+.output/worker/
+└── worker.js             # Compiled worker bundle
 ```
 
 ---

@@ -28,8 +28,9 @@ COPY . .
 # Set environment variables for build
 ENV NODE_ENV=production
 
-# Build the application
+# Build both server and worker
 RUN BUILD_TARGET=node-server pnpm run build
+RUN pnpm run worker:build
 
 # Production image
 FROM node:24-slim as runner
@@ -40,11 +41,11 @@ ENV NODE_ENV=production
 ENV NITRO_PRESET=node-server
 ENV HOST=0.0.0.0
 
-# Copy built application
+# Copy built application (both server and worker)
 COPY --from=builder --chown=node:node /app/.output ./.output
 
-# Expose port
+# Expose port (for server process)
 EXPOSE 3000
 
-# Run the application
+# Default command (server)
 CMD ["node", ".output/server/index.mjs"]

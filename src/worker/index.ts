@@ -66,7 +66,10 @@ export class Worker {
   /**
    * Update job progress
    */
-  private async updateJobProgress(jobId: string, progress: number): Promise<void> {
+  private async updateJobProgress(
+    jobId: string,
+    progress: number,
+  ): Promise<void> {
     await this.db
       .updateTable("job")
       .set({
@@ -152,7 +155,8 @@ export class Worker {
         console.log(`Job type ${job.type} not found`);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       await this.failJob(job.id, errorMessage);
       console.error(`Job ${job.id} failed:`, errorMessage);
     }

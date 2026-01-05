@@ -47,7 +47,10 @@ pnpm deps                   # Update dependencies (interactive)
 pnpm deps:major             # Update to major versions (interactive)
 
 # Background Jobs (Job Queue Worker)
-pnpm worker                 # Start background job worker
+pnpm worker                 # Start background job worker (development)
+pnpm worker:dev             # Start worker in development mode
+pnpm worker:build           # Build worker for production
+pnpm worker:start           # Start production worker
 ```
 
 ## Essential Rules
@@ -325,7 +328,32 @@ const exportMutation = useMutation(
 - ✅ Type guards for status checking
 - ✅ React hooks with smart polling
 
-**Running Worker**: `pnpm worker`
+**Running Worker**:
+- Development: `pnpm worker` or `pnpm worker:dev`
+- Production: `pnpm worker:build` then `pnpm worker:start`
+
+**Production Build**:
+The worker uses `tsup` to compile TypeScript into a production-ready JavaScript bundle:
+- Entry: `scripts/worker.ts`
+- Output: `.output/worker/worker.js` (minified, bundled)
+- Config: `tsup.config.ts`
+- All dependencies bundled into single executable file
+
+**Production Deployment**:
+Run server and worker as separate processes:
+```bash
+# Build both
+pnpm build         # Build TanStack Start server
+pnpm worker:build  # Build worker
+
+# Run in production (separate processes)
+node .output/server/index.mjs    # Terminal 1 - Server
+node .output/worker/worker.js    # Terminal 2 - Worker
+```
+
+**Environment Variables**:
+- Development: Automatically loaded from `.env` file via `--env-file` flag
+- Production: Set at system level (NODE_ENV, DATABASE_URL, etc.)
 
 ### Router Configuration & Route Organization
 
