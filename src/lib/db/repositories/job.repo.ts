@@ -1,6 +1,7 @@
-import type { JobPayload, JobType } from "@/worker/types";
+import type { JobPayload, JobResult, JobType } from "@/worker/types";
 import type { DB } from "../init";
-import type { JobStatus } from "../schema/job";
+import type { Job, JobStatus } from "../schema/job";
+import { JobPriority } from "../schema/job";
 import { Repository } from "./base";
 
 const DEFAULT_JOB_LABELS: Record<JobType, string> = {
@@ -24,6 +25,22 @@ export class JobRepository extends Repository<"job"> {
    *   type: "export_todos",
    *   payload: { userId: context.user.id },
    * });
+   *
+   * // Schedule job to run in 5 minutes
+   * const scheduledJob = await repos.job.createJob({
+   *   userId: context.user.id,
+   *   type: "export_todos",
+   *   payload: { userId: context.user.id },
+   *   runAt: new Date(Date.now() + 5 * 60 * 1000),
+   * });
+   *
+   * // Create high priority job
+   * const urgentJob = await repos.job.createJob({
+   *   userId: context.user.id,
+   *   type: "export_todos",
+   *   payload: { userId: context.user.id },
+   *   priority: JobPriority.URGENT,
+   * });
    * ```
    */
   async createJob<T extends JobType>(options: {
@@ -32,8 +49,18 @@ export class JobRepository extends Repository<"job"> {
     payload: JobPayload<T>;
     label?: string;
     maxRetries?: number;
+    priority?: JobPriority | number;
+    runAt?: Date;
   }) {
-    const { userId, type, payload, label, maxRetries = 3 } = options;
+    const {
+      userId,
+      type,
+      payload,
+      label,
+      maxRetries = 3,
+      priority = JobPriority.NORMAL,
+      runAt,
+    } = options;
     const now = new Date();
 
     return this.insertReturn({
@@ -48,6 +75,8 @@ export class JobRepository extends Repository<"job"> {
       error: null,
       retryCount: 0,
       maxRetries,
+      priority,
+      runAt: runAt ?? now,
       startedAt: null,
       completedAt: null,
       createdAt: now,
@@ -58,20 +87,25 @@ export class JobRepository extends Repository<"job"> {
   /**
    * Find the next pending job and atomically mark it as processing.
    * Uses SELECT FOR UPDATE SKIP LOCKED for concurrent worker safety.
+   * Jobs are ordered by priority (DESC) then created time (ASC).
+   * Only jobs where runAt <= now() are claimed (scheduled jobs support).
    */
   async claimNextPendingJob() {
+    const now = new Date();
     const result = await this.db
       .updateTable("job")
       .set({
         status: "processing" as JobStatus,
-        startedAt: new Date(),
-        updatedAt: new Date(),
+        startedAt: now,
+        updatedAt: now,
       })
       .where("id", "=", (eb) =>
         eb
           .selectFrom("job")
           .select("id")
           .where("status", "=", "pending")
+          .where("runAt", "<=", now)
+          .orderBy("priority", "desc")
           .orderBy("createdAt", "asc")
           .limit(1)
           .forUpdate()
@@ -118,5 +152,53 @@ export class JobRepository extends Repository<"job"> {
       .where("startedAt", "<", threshold)
       .returningAll()
       .execute();
+  }
+
+  /**
+   * Get a job with type-safe result accessor.
+   * The result field is automatically typed based on the job type.
+   *
+   * @example
+   * ```ts
+   * const job = await repos.job.getJobWithResult<"export_todos">(jobId);
+   * if (job?.result) {
+   *   // ✅ result is typed as JobResult<"export_todos">
+   *   console.log(job.result.summary.totalItems);
+   * }
+   * ```
+   */
+  async getJobWithResult<T extends JobType>(
+    jobId: string,
+  ): Promise<(Job & { result: JobResult<T> | null }) | undefined> {
+    const job = await this.findById(jobId);
+    if (!job) return undefined;
+
+    // Parse JSON result if it's a string (stored as JSONB in DB)
+    const result =
+      typeof job.result === "string" ? JSON.parse(job.result) : job.result;
+
+    return { ...job, result: result as JobResult<T> | null };
+  }
+
+  /**
+   * Get a job with type-safe result accessor, or throw if not found.
+   *
+   * @example
+   * ```ts
+   * const job = await repos.job.getJobWithResultOrFail<"export_todos">(jobId);
+   * // ✅ job is guaranteed to exist, result is typed
+   * if (job.result) {
+   *   console.log(job.result.summary.totalItems);
+   * }
+   * ```
+   */
+  async getJobWithResultOrFail<T extends JobType>(
+    jobId: string,
+  ): Promise<Job & { result: JobResult<T> | null }> {
+    const job = await this.getJobWithResult<T>(jobId);
+    if (!job) {
+      throw new Error(`Job with id ${jobId} not found`);
+    }
+    return job;
   }
 }

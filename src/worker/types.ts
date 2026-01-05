@@ -7,6 +7,7 @@
  */
 
 import type { InferRouterInputs, InferRouterOutputs } from "@orpc/server";
+import type { Job, JobStatus } from "@/lib/db/schema/job";
 import type { workerRpc } from "./rpc";
 
 /**
@@ -59,3 +60,61 @@ export const DEFAULT_WORKER_CONFIG: WorkerConfig = {
   staleCheckIntervalMs: 60000,
   staleThresholdMinutes: 5,
 };
+
+/**
+ * Job with specific status type
+ */
+export type JobWithStatus<S extends JobStatus> = Job & { status: S };
+
+/**
+ * Type guard: Check if job is pending
+ */
+export function isPendingJob(job: Job): job is JobWithStatus<"pending"> {
+  return job.status === "pending";
+}
+
+/**
+ * Type guard: Check if job is processing
+ */
+export function isProcessingJob(job: Job): job is JobWithStatus<"processing"> {
+  return job.status === "processing";
+}
+
+/**
+ * Type guard: Check if job is completed
+ */
+export function isCompletedJob(job: Job): job is JobWithStatus<"completed"> {
+  return job.status === "completed";
+}
+
+/**
+ * Type guard: Check if job is failed
+ */
+export function isFailedJob(job: Job): job is JobWithStatus<"failed"> {
+  return job.status === "failed";
+}
+
+/**
+ * Type guard: Check if job is cancelled
+ */
+export function isCancelledJob(job: Job): job is JobWithStatus<"cancelled"> {
+  return job.status === "cancelled";
+}
+
+/**
+ * Type guard: Check if job is in a terminal state (completed, failed, or cancelled)
+ */
+export function isTerminalJob(
+  job: Job,
+): job is JobWithStatus<"completed" | "failed" | "cancelled"> {
+  return ["completed", "failed", "cancelled"].includes(job.status);
+}
+
+/**
+ * Type guard: Check if job is active (pending or processing)
+ */
+export function isActiveJob(
+  job: Job,
+): job is JobWithStatus<"pending" | "processing"> {
+  return ["pending", "processing"].includes(job.status);
+}

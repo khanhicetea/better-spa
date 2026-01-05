@@ -1,7 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/lib/orpc";
 import type { JobStatus, Job } from "@/lib/db/schema/job";
+import type { JobType, JobPayload, JobResult } from "@/worker/types";
 import { useEffect } from "react";
+
+/**
+ * Typed job with specific payload and result types
+ */
+export type TypedJob<T extends JobType> = Omit<Job, "payload" | "result"> & {
+  payload: JobPayload<T> | null;
+  result: JobResult<T> | null;
+};
 
 export const JOB_QUERY_KEYS = {
   userJobs: (filter?: { jobId?: string; status?: JobStatus }) =>
@@ -51,9 +60,24 @@ export function useUserJobs(options: UseUserJobsOptions = {}) {
 
 /**
  * Hook to subscribe to a single job with 1-second polling.
+ * Accepts a generic type parameter for type-safe payload and result access.
+ *
+ * @example
+ * ```tsx
+ * const { data: job } = useJob<"export_todos">(jobId);
+ * if (job?.result) {
+ *   job.result.summary.totalItems;  // ✅ Fully typed!
+ * }
+ * if (job?.payload) {
+ *   job.payload.userId;  // ✅ Fully typed!
+ * }
+ * ```
  */
-export function useJob(jobId: string, enabled = true) {
-  return useQuery({
+export function useJob<T extends JobType = JobType>(
+  jobId: string,
+  enabled = true,
+) {
+  const query = useQuery({
     ...orpc.job.getJob.queryOptions({
       input: { id: jobId },
     }),
@@ -70,9 +94,30 @@ export function useJob(jobId: string, enabled = true) {
     },
     refetchIntervalInBackground: false,
   });
+
+  return {
+    ...query,
+    data: query.data as TypedJob<T> | undefined,
+  };
 }
 
-export function useListenJob({
+/**
+ * Hook to listen to job status changes with event callbacks.
+ * Accepts a generic type parameter for type-safe payload and result access.
+ *
+ * @example
+ * ```tsx
+ * useListenJob<"export_todos">({
+ *   jobId: exportJobId,
+ *   onChange: (job) => setProgress(job.progress),
+ *   onSuccess: (job) => {
+ *     // job.result is fully typed!
+ *     console.log(job.result?.summary.totalItems);
+ *   },
+ * });
+ * ```
+ */
+export function useListenJob<T extends JobType = JobType>({
   jobId,
   enabled = true,
   onChange,
@@ -83,13 +128,13 @@ export function useListenJob({
 }: {
   jobId: string;
   enabled?: boolean;
-  onChange?: (job: Job) => void;
-  onSuccess?: (job: Job) => void;
-  onFailed?: (job: Job) => void;
-  onCancel?: (job: Job) => void;
-  onSettled?: (job: Job) => void;
+  onChange?: (job: TypedJob<T>) => void;
+  onSuccess?: (job: TypedJob<T>) => void;
+  onFailed?: (job: TypedJob<T>) => void;
+  onCancel?: (job: TypedJob<T>) => void;
+  onSettled?: (job: TypedJob<T>) => void;
 }) {
-  const query = useJob(jobId, enabled);
+  const query = useJob<T>(jobId, enabled);
   const job = query.data;
 
   useEffect(() => {

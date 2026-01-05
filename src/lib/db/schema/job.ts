@@ -13,6 +13,13 @@ export type JobStatus =
   | "failed"
   | "cancelled";
 
+export enum JobPriority {
+  LOW = 0,
+  NORMAL = 5,
+  HIGH = 10,
+  URGENT = 20,
+}
+
 export interface JobTable {
   id: Generated<string>;
   userId: string;
@@ -25,6 +32,8 @@ export interface JobTable {
   error: string | null;
   retryCount: ColumnType<number, number | undefined, number>;
   maxRetries: ColumnType<number, number | undefined, number>;
+  priority: ColumnType<number, number | undefined, number>;
+  runAt: ColumnType<Date, Date | undefined, Date>;
   startedAt: Date | null;
   completedAt: Date | null;
   createdAt: ColumnType<Date, Date | undefined, never>;

@@ -1,11 +1,11 @@
+import { createRouterClient } from "@orpc/server";
 import { CamelCasePlugin, Kysely, PostgresDialect } from "kysely";
 import pg from "pg";
+import { createRepos } from "@/lib/db/repositories";
 import type { Database } from "@/lib/db/schema";
 import type { Job, JobStatus } from "@/lib/db/schema/job";
-import { createRepos } from "@/lib/db/repositories";
-import { workerRpc, type JobType } from "./rpc";
+import { type JobType, workerRpc } from "./rpc";
 import { DEFAULT_WORKER_CONFIG, type WorkerConfig } from "./types";
-import { createRouterClient } from "@orpc/server";
 
 const { Pool } = pg;
 
@@ -29,21 +29,29 @@ export class Worker {
   }
 
   /**
-   * Claim the next pending job atomically using SELECT FOR UPDATE SKIP LOCKED
+   * Claim the next pending job atomically using SELECT FOR UPDATE SKIP LOCKED.
+   * Jobs are ordered by:
+   * 1. Priority (DESC) - higher priority jobs are processed first
+   * 2. Created time (ASC) - older jobs are processed first
+   *
+   * Only jobs where runAt <= now() are claimed (scheduled jobs support).
    */
   private async claimNextJob(): Promise<Job | undefined> {
+    const now = new Date();
     const result = await this.db
       .updateTable("job")
       .set({
         status: "processing" as JobStatus,
-        startedAt: new Date(),
-        updatedAt: new Date(),
+        startedAt: now,
+        updatedAt: now,
       })
       .where("id", "=", (eb) =>
         eb
           .selectFrom("job")
           .select("id")
           .where("status", "=", "pending")
+          .where("runAt", "<=", now)
+          .orderBy("priority", "desc")
           .orderBy("createdAt", "asc")
           .limit(1)
           .forUpdate()
@@ -241,7 +249,9 @@ export class Worker {
   }
 }
 
+export { workerProcedure } from "./base";
+// Re-export helpers
+export * from "./helpers";
+export { type JobType, workerRpc } from "./rpc";
 // Re-export types
 export * from "./types";
-export { workerProcedure } from "./base";
-export { workerRpc, type JobType } from "./rpc";

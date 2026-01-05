@@ -45,6 +45,9 @@ pnpm ui add <component>     # Add shadcn/ui component
 # Dependencies
 pnpm deps                   # Update dependencies (interactive)
 pnpm deps:major             # Update to major versions (interactive)
+
+# Background Jobs (Job Queue Worker)
+pnpm worker                 # Start background job worker
 ```
 
 ## Essential Rules
@@ -64,6 +67,12 @@ pnpm deps:major             # Update to major versions (interactive)
 - Use the Repository pattern for all DB operations
 - **NO OPTIMISTIC UPDATES**: Use pessimistic updates or concurrent-safe strategies to avoid inconsistencies
 
+### Background Tasks
+- **ALWAYS** use the job queue system for background tasks (exports, reports, emails, etc.)
+- **NEVER** execute long-running tasks directly in RPC handlers
+- See **[Job Queue Worker Documentation](docs/job-queue-worker.md)** for complete guide
+- Jobs provide: type safety, retry logic, progress tracking, priority queue, scheduling
+
 ## Architecture
 
 ### Core Stack
@@ -73,6 +82,7 @@ pnpm deps:major             # Update to major versions (interactive)
 - **oRPC**: Type-safe RPC layer (mobile/native ready)
 - **Better Auth**: Cookie-based authentication
 - **Kysely**: Type-safe SQL query builder with PostgreSQL
+- **Job Queue Worker**: PostgreSQL-backed background task system with priority & scheduling
 - **React 19**: With React Compiler for automatic memoization (no need for useCallback, useMemo, memo)
 - **shadcn/ui**: Accessible component library
 - **Tailwind CSS v4**: Utility-first styling
@@ -250,6 +260,72 @@ export const listUsers = adminProcedure
     return result;
   });
 ```
+
+### Job Queue System
+
+**IMPORTANT**: For background tasks, exports, reports, emails, or any long-running operation, **ALWAYS use the job queue system**.
+
+**Complete Documentation**: See **[docs/job-queue-worker.md](docs/job-queue-worker.md)** for comprehensive guide.
+
+**Quick Example**:
+
+```typescript
+// 1. Define job handler (src/worker/handlers/export-data.ts)
+import { workerProcedure } from "../base";
+import { z } from "zod";
+
+export default workerProcedure
+  .input(z.object({ userId: z.string() }))
+  .handler(async ({ input, context }) => {
+    const { userId } = input;
+    const { repos, updateProgress } = context;
+
+    await updateProgress(10);
+    const data = await repos.todoItem.find({ userId });
+    await updateProgress(50);
+    const exportData = transformData(data);
+    await updateProgress(100);
+
+    return { exportedAt: new Date().toISOString(), count: data.length };
+  });
+
+// 2. Register in worker router (src/worker/rpc.ts)
+export const workerRpc = {
+  export_data: exportDataJob,
+} as const;
+
+// 3. Create job in RPC handler (src/rpc/handlers/export.ts)
+import { createJobFactory, JobPriority } from "@/worker";
+
+const createExportJob = createJobFactory("export_data");
+
+export const startExport = authedProcedure.handler(async ({ context }) => {
+  return createExportJob(
+    context.repos,
+    context.user.id,
+    { userId: context.user.id },
+    { priority: JobPriority.HIGH }
+  );
+});
+
+// 4. Use in UI
+const exportMutation = useMutation(
+  orpc.export.startExport.mutationOptions({
+    onSuccess: (job) => toast.success("Export started"),
+  })
+);
+```
+
+**Key Features**:
+- ✅ Type-safe payloads and results (inferred from handlers)
+- ✅ Priority queue (LOW, NORMAL, HIGH, URGENT)
+- ✅ Scheduled jobs (runAt: Date)
+- ✅ Progress tracking (0-100%)
+- ✅ Automatic retry with configurable max attempts
+- ✅ Type guards for status checking
+- ✅ React hooks with smart polling
+
+**Running Worker**: `pnpm worker`
 
 ### Router Configuration & Route Organization
 
