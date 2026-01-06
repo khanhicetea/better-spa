@@ -2,7 +2,7 @@ import { handleRequest, type Router, route } from "@better-upload/server";
 import { custom } from "@better-upload/server/clients";
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from "@/env/server";
-import { generateUUID } from "@/lib/data";
+import { generateUUID, getFileExtFromMimeType } from "@/lib/helpers/data";
 
 const uploadRouter: Router = {
   client: custom({
@@ -21,7 +21,7 @@ const uploadRouter: Router = {
       onBeforeUpload: async () => {
         return {
           generateObjectInfo: async ({ file }) => {
-            const key = `images/${generateUUID()}`;
+            const key = `images/${generateUUID()}.${getFileExtFromMimeType(file.type)}`;
             return {
               key,
               metadata: {
@@ -31,7 +31,6 @@ const uploadRouter: Router = {
               cacheControl: "max-age=31536000; public; immutable",
             };
           },
-          bucketName: env.S3_BUCKET_NAME || undefined,
         };
       },
     }),

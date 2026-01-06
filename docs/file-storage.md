@@ -10,7 +10,6 @@ export interface S3File {
   key: string;
   metadata: {
     url: string;
-    bucket_name: string;
   };
 }
 
@@ -19,6 +18,7 @@ export interface S3Files {
 }
 
 // Schema
+import { S3File, S3Files } from "@/lib/types";
 export interface ProductTable {
   id: string;
   name: string;
@@ -46,25 +46,38 @@ Server route is pre-configured at `src/routes/api/upload.$.ts`.
 
 ```typescript
 import { useUploadFiles } from "@better-upload/client";
+import { S3File } from "@/lib/types";
 
 function ImageUploader({ onUpload }: { onUpload: (files: S3File[]) => void }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { uploadFiles, isUploading, progress } = useUploadFiles({
+    api: "/api/upload",
     route: "images",
+    onUploadComplete: ({ files }) => {
+      const mappedFiles: S3File[] = files.map((file) => ({
+        key: file.objectInfo.key,
+        metadata: {
+          url: file.objectInfo.metadata.url,
+        },
+      }));
+      setUploadedImages((prev) => [...prev, ...mappedFiles]);
+      toast.success(`Successfully uploaded ${files.length} image(s)`);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
   });
 
   const handleSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-
     const result = await uploadFiles(files);
-    if (result.success) {
-      onUpload(result.files);
-    }
   };
 
   return (
     <div>
-      <input type="file" multiple accept="image/*" onChange={handleSelect} />
+      <input ref={fileInputRef} type="file" multiple accept="image/*" onChange={handleSelect} />
       {isUploading && <span>Uploading... {progress}%</span>}
     </div>
   );
@@ -110,4 +123,5 @@ S3_REGION=us-east-1
 S3_ACCESS_KEY_ID=...
 S3_SECRET_ACCESS_KEY=...
 S3_ENDPOINT=https://s3.amazonaws.com  # or custom endpoint
+S3_URL=https://s3.amazonaws.com  # or prefix public url for s3
 ```

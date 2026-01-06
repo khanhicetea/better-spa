@@ -1,5 +1,5 @@
+import { generateUUID } from "@/lib/helpers/data";
 import type { JobPayload, JobResult, JobType } from "@/worker/types";
-import { generateUUID } from "@/lib/data";
 import type { DB } from "../init";
 import type { Job, JobStatus } from "../schema/job";
 import { JobPriority } from "../schema/job";
@@ -175,8 +175,7 @@ export class JobRepository extends Repository<"job"> {
     if (!job) return undefined;
 
     // Parse JSON result if it's a string (stored as JSONB in DB)
-    const result =
-      typeof job.result === "string" ? JSON.parse(job.result) : job.result;
+    const result = typeof job.result === "string" ? JSON.parse(job.result) : job.result;
 
     return { ...job, result: result as JobResult<T> | null };
   }

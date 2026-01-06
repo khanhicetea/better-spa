@@ -1,6 +1,6 @@
 import { pickBy } from "lodash-es";
 import { z } from "zod";
-import { generateUUID } from "@/lib/data";
+import { generateUUID } from "@/lib/helpers/data";
 import { authedProcedure } from "../base";
 
 export const listTodos = authedProcedure.handler(async ({ context }) => {
