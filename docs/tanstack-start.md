@@ -19,6 +19,7 @@ src/routes/
 │   ├── app/                # /app sub-routes
 │   └── settings/           # /settings sub-routes
 ├── admin/                  # Admin pages (path prefix: /admin)
+│   ├── -components/        # Added prefix "-" to skip the children route in file-routing
 │   ├── route.tsx           # Admin Layout
 │   └── index.tsx           # /admin
 └── api/                    # API Routes
