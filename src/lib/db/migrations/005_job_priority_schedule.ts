@@ -11,7 +11,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   // Add run_at column for scheduled jobs
   await db.schema
     .alterTable("job")
-    .addColumn("run_at", "timestamp", (col) =>
+    .addColumn("run_at", "timestamptz", (col) =>
       col.notNull().defaultTo(sql`now()`),
     )
     .execute();

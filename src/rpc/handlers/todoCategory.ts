@@ -1,4 +1,6 @@
+import { pickBy } from "lodash-es";
 import { z } from "zod";
+import { generateUUID } from "@/lib/data";
 import { authedProcedure } from "../base";
 
 export const listCategories = authedProcedure.handler(async ({ context }) => {
@@ -15,7 +17,7 @@ export const createCategory = authedProcedure
   .handler(async ({ input, context }) => {
     const { repos } = context;
     const newCategory = await repos.todoCategory.insertReturn({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       userId: context.user.id,
       name: input.name,
       createdAt: new Date(),
@@ -44,7 +46,7 @@ export const updateCategory = authedProcedure
     const updatedCategory = await repos.todoCategory.updateById({
       id,
       data: {
-        ...updates,
+        ...pickBy(updates, (value) => value !== undefined),
         updatedAt: new Date(),
       },
     });

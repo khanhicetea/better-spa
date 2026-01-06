@@ -12,10 +12,10 @@ export async function up(db: Kysely<any>): Promise<void> {
         .onUpdate("cascade"),
     )
     .addColumn("name", "text", (col) => col.notNull())
-    .addColumn("created_at", "timestamp", (col) =>
+    .addColumn("created_at", "timestamptz", (col) =>
       col.notNull().defaultTo("now()"),
     )
-    .addColumn("updated_at", "timestamp", (col) =>
+    .addColumn("updated_at", "timestamptz", (col) =>
       col.notNull().defaultTo("now()"),
     )
     .execute();
@@ -38,11 +38,11 @@ export async function up(db: Kysely<any>): Promise<void> {
         .onUpdate("cascade"),
     )
     .addColumn("content", "text", (col) => col.notNull())
-    .addColumn("completed_at", "timestamp")
-    .addColumn("created_at", "timestamp", (col) =>
+    .addColumn("completed_at", "timestamptz")
+    .addColumn("created_at", "timestamptz", (col) =>
       col.notNull().defaultTo("now()"),
     )
-    .addColumn("updated_at", "timestamp", (col) =>
+    .addColumn("updated_at", "timestamptz", (col) =>
       col.notNull().defaultTo("now()"),
     )
     .execute();

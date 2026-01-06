@@ -1,10 +1,11 @@
+import { pickBy } from "lodash-es";
 import { z } from "zod";
+import { generateUUID } from "@/lib/data";
 import { authedProcedure } from "../base";
 
 export const listTodos = authedProcedure.handler(async ({ context }) => {
   const { repos } = context;
   return repos.todoItem.findTodoItemsByUserId(context.user.id);
-  // return repos.todoItem.find({ userId: context.user.id });
 });
 
 export const createTodo = authedProcedure
@@ -17,7 +18,7 @@ export const createTodo = authedProcedure
   .handler(async ({ input, context }) => {
     const { repos } = context;
     const newTodo = await repos.todoItem.insertReturn({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       userId: context.user.id,
       categoryId: input.categoryId,
       content: input.content,
@@ -49,13 +50,7 @@ export const updateTodo = authedProcedure
     const updatedTodo = await repos.todoItem.updateById({
       id,
       data: {
-        ...(updates.content !== undefined && { content: updates.content }),
-        ...(updates.completedAt !== undefined && {
-          completedAt: updates.completedAt,
-        }),
-        ...(updates.categoryId !== undefined && {
-          categoryId: updates.categoryId,
-        }),
+        ...pickBy(updates, (value) => value !== undefined),
         updatedAt: new Date(),
       },
     });

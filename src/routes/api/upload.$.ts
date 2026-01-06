@@ -2,6 +2,7 @@ import { handleRequest, type Router, route } from "@better-upload/server";
 import { custom } from "@better-upload/server/clients";
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from "@/env/server";
+import { generateUUID } from "@/lib/data";
 
 const uploadRouter: Router = {
   client: custom({
@@ -17,6 +18,19 @@ const uploadRouter: Router = {
       multipleFiles: true,
       maxFiles: 10,
       maxFileSize: 1024 * 1024 * 10, // 10MB
+      onBeforeUpload: async () => {
+        return {
+          generateObjectInfo: async ({ file }) => {
+            const key = `images/${generateUUID()}`;
+            return {
+              key,
+              metadata: {
+                url: `${env.S3_URL}/${key}`,
+              },
+            };
+          },
+        };
+      },
     }),
   },
 };

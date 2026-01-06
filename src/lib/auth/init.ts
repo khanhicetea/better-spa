@@ -2,6 +2,7 @@ import { createServerOnlyFn } from "@tanstack/react-start";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
+import { CamelCasePlugin } from "kysely";
 import type { DB } from "@/lib/db/init";
 import { ac, admin as adminRole, user as userRole } from "./permissions";
 
@@ -11,8 +12,9 @@ export const getAuthConfig = createServerOnlyFn((db: DB) =>
       enabled: false,
     },
     database: {
-      db,
+      db: db.withoutPlugins().withPlugin(new CamelCasePlugin()),
       type: "postgres",
+      casing: "camel",
     },
     plugins: [
       tanstackStartCookies(),

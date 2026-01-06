@@ -1,4 +1,5 @@
 import type { JobPayload, JobResult, JobType } from "@/worker/types";
+import { generateUUID } from "@/lib/data";
 import type { DB } from "../init";
 import type { Job, JobStatus } from "../schema/job";
 import { JobPriority } from "../schema/job";
@@ -64,7 +65,7 @@ export class JobRepository extends Repository<"job"> {
     const now = new Date();
 
     return this.insertReturn({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       userId,
       type,
       label: label ?? DEFAULT_JOB_LABELS[type] ?? type,

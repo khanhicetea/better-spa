@@ -70,6 +70,33 @@ pnpm worker:start           # Start production worker
 - Use the Repository pattern for all DB operations
 - **NO OPTIMISTIC UPDATES**: Use pessimistic updates or concurrent-safe strategies to avoid inconsistencies
 
+### Date & Time Handling
+
+**Best Practices**:
+- **Database**: All timestamp columns use `timestamptz` (TIMESTAMP WITH TIME ZONE) - stores UTC internally
+- **Server**: Always work in UTC, use `Date.toISOString()` for server communication
+- **Frontend**: Use utilities from `src/lib/utils/date.ts` for timezone-aware formatting
+
+**Available Utilities** (`src/lib/utils/date.ts`):
+```typescript
+import { formatDate, formatRelativeTime, formatSmart } from "@/lib/utils/date";
+
+// Format with custom format: "Jan 6, 2026 3:45 PM"
+formatDate(date, "MMM d, yyyy h:mm a")
+
+// Relative time: "2 hours ago", "in 3 days"
+formatRelativeTime(date)
+
+// Smart display: "Today at 3:45 PM", "Yesterday at...", or full date
+formatSmart(date)
+
+// Time only: "3:45 PM"
+formatTime(date)
+
+// Date only: "Jan 6, 2026"
+formatDateOnly(date)
+```
+
 ### Background Tasks
 - **ALWAYS** use the job queue system for background tasks (exports, reports, emails, etc.)
 - **NEVER** execute long-running tasks directly in RPC handlers

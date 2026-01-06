@@ -1,4 +1,6 @@
+import { pickBy } from "lodash-es";
 import { z } from "zod";
+import { generateUUID } from "@/lib/data";
 import type { JobStatus } from "@/lib/db/schema/job";
 import { authedProcedure } from "../base";
 
@@ -22,7 +24,7 @@ export const createJob = authedProcedure
   .handler(async ({ input, context }) => {
     const { repos } = context;
     const job = await repos.job.insertReturn({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       userId: context.user.id,
       type: input.type,
       label: input.label,
@@ -64,21 +66,17 @@ export const listJobs = authedProcedure
   )
   .handler(async ({ input, context }) => {
     const { repos } = context;
+    const { limit, ...filter } = input;
 
-    return repos.job.find({
-      where: (qb) => {
-        let query = qb.where("userId", "=", context.user.id);
-
-        if (input.jobId) {
-          query = query.where("id", "=", input.jobId);
-        }
-        if (input.status) {
-          query = query.where("status", "=", input.status);
-        }
-
-        return query.orderBy("createdAt", "desc").limit(input.limit);
+    const jobs = await repos.job.find({
+      where: {
+        userId: context.user.id,
+        ...pickBy(filter, (v) => v !== undefined),
       },
+      modify: (qb) => qb.orderBy("createdAt", "desc").limit(limit),
     });
+
+    return jobs;
   });
 
 export const cancelJob = authedProcedure

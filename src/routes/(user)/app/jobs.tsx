@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { formatDistanceToNow } from "date-fns";
 import {
   AlertCircle,
   Briefcase,
@@ -11,6 +10,7 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
+import { formatRelativeTime } from "@/lib/utils/date";
 import { PagePending } from "@/components/common/page-pending";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
@@ -169,9 +169,7 @@ function JobCard({ job, onUpdated }: { job: Job; onUpdated: () => void }) {
               {job.label}
             </CardTitle>
             <span className="text-xs text-muted-foreground shrink-0">
-              {formatDistanceToNow(new Date(job.createdAt), {
-                addSuffix: true,
-              })}
+              {formatRelativeTime(job.createdAt)}
             </span>
           </div>
           {(job.status === "processing" ||

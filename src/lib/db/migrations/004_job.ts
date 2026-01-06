@@ -20,12 +20,12 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("error", "text")
     .addColumn("retry_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_retries", "integer", (col) => col.notNull().defaultTo(3))
-    .addColumn("started_at", "timestamp")
-    .addColumn("completed_at", "timestamp")
-    .addColumn("created_at", "timestamp", (col) =>
+    .addColumn("started_at", "timestamptz")
+    .addColumn("completed_at", "timestamptz")
+    .addColumn("created_at", "timestamptz", (col) =>
       col.notNull().defaultTo("now()"),
     )
-    .addColumn("updated_at", "timestamp", (col) =>
+    .addColumn("updated_at", "timestamptz", (col) =>
       col.notNull().defaultTo("now()"),
     )
     .execute();
