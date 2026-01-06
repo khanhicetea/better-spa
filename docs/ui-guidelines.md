@@ -149,6 +149,103 @@ function ProductItem({ item }: { item: Product }) {
 export const Route = createFileRoute(...)({ component: ProductPage });
 ```
 
+## File Upload in Forms
+
+For forms with image/file uploads, manage uploaded files as separate state:
+
+```tsx
+import { useUploadFiles } from "@better-upload/client";
+import type { S3File } from "@/lib/types";
+
+function FormWithImages({ initialImages = [] }: { initialImages?: S3File[] }) {
+  const [images, setImages] = useState<S3File[]>(initialImages);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { upload, progresses, isPending: isUploading } = useUploadFiles({
+    route: "images",
+    api: "/api/upload",
+    onUploadComplete: ({ files }) => {
+      const uploaded: S3File[] = files.map((f) => ({
+        key: f.objectInfo.key,
+        metadata: { url: f.objectInfo.metadata.url },
+      }));
+      setImages((prev) => [...prev, ...uploaded]);
+      setPreviews([]);
+      toast.success(`Uploaded ${files.length} image(s)`);
+    },
+    onUploadFail: ({ failedFiles }) => {
+      failedFiles.forEach((f) => toast.error(`Failed: ${f.raw.name}`));
+    },
+  });
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith("image/"));
+    if (!files.length) return;
+
+    // Generate previews
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviews((prev) => [...prev, reader.result as string]);
+      reader.readAsDataURL(file);
+    });
+
+    upload(files);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeImage = (index: number) => setImages((prev) => prev.filter((_, i) => i !== index));
+
+  // On submit, include images: { files: images }
+}
+```
+
+### Image Grid with Upload Progress
+
+```tsx
+<div className="space-y-2">
+  <label className="text-sm font-medium">Images</label>
+
+  {(images.length > 0 || (isUploading && previews.length > 0)) && (
+    <div className="grid grid-cols-4 gap-2">
+      {/* Uploaded images */}
+      {images.map((image, index) => (
+        <div key={image.key} className="group relative aspect-square">
+          <img src={image.metadata.url} className="size-full rounded-md object-cover" />
+          <button
+            type="button"
+            onClick={() => removeImage(index)}
+            className="bg-destructive absolute -right-1 -top-1 rounded-full p-1 opacity-0 group-hover:opacity-100"
+          >
+            <X className="text-white size-3" />
+          </button>
+        </div>
+      ))}
+
+      {/* Upload progress previews */}
+      {isUploading && previews.map((preview, index) => (
+        <div key={index} className="relative aspect-square">
+          <img src={preview} className="size-full rounded-md object-cover opacity-60" />
+          {progresses[index] && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-md">
+              <span className="text-sm font-semibold text-white">
+                {Math.round(progresses[index].progress * 100)}%
+              </span>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+
+  <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileSelect} className="hidden" />
+  <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+    <Upload data-icon="inline-start" />
+    {isUploading ? "Uploading..." : "Add Images"}
+  </Button>
+</div>
+```
+
 ## Navigation Links
 
 Add feature links to appropriate sidebars:
