@@ -95,6 +95,7 @@ src/
 | Database | [docs/database-repository.md](docs/database-repository.md) |
 | DB Schema | [docs/db-schema.md](docs/db-schema.md) |
 | Job Queue | [docs/job-queue-worker.md](docs/job-queue-worker.md) |
+| Feature Development | [docs/development-guides.md](docs/development-guides.md) |
 | UI/UX | [docs/ui-guidelines.md](docs/ui-guidelines.md) |
 | Utilities | [docs/utilities.md](docs/utilities.md) |
 | File Storage | [docs/file-storage.md](docs/file-storage.md) |

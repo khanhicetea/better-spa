@@ -44,18 +44,30 @@ See demo: `src/routes/(test)/hello-form.tsx`
 - **Delete/Confirm**: Use `Dialog` component
 
 ```tsx
-// Sheet for create/edit
+// Dialog for create/edit if form has 1-3 fields
+<Dialog>
+  <DialogTrigger render={<Button>Add Item</Button>}></DialogTrigger>
+  <DialogContent>
+  <DialogHeader><DialogTitle>Add Item</DialogTitle></DialogHeader>
+    {/* Form */}
+  </DialogContent>
+</Dialog>
+
+// Sheet for create/edit if form more than 3 fields
 <Sheet>
-  <SheetTrigger asChild><Button>Add Item</Button></SheetTrigger>
+  <SheetTrigger render={<Button>Add Item</Button>}></SheetTrigger>
   <SheetContent>
-    <SheetHeader><SheetTitle>Add Item</SheetTitle></SheetHeader>
+  <SheetHeader><SheetTitle>Add Item</SheetTitle></SheetHeader>
     {/* Form */}
   </SheetContent>
 </Sheet>
 
+// Use separate page route for create/edit if form has more than 5 fields, but try to re-use the form component
+// Example /product for listing so /product/form/[id] for create/edit form (id = empty ? new mode : edit mode)
+
 // Dialog for delete confirmation
 <AlertDialog>
-  <AlertDialogTrigger asChild><Button variant="destructive">Delete</Button></AlertDialogTrigger>
+  <AlertDialogTrigger render={<Button variant="destructive">Delete</Button>}></AlertDialogTrigger>
   <AlertDialogContent>
     <AlertDialogHeader>
       <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -71,7 +83,8 @@ See demo: `src/routes/(test)/hello-form.tsx`
 
 ## Tables
 
-- Use **TanStack Table** with column definitions
+- Use shadcn table for simple table without pagination
+- Use **TanStack Table** with column definitions for more complex tables
 - No sorting or column visibility toggles
 - Row actions in last column with `justify-end`
 
@@ -113,7 +126,7 @@ import { Empty } from "@/components/ui/empty";
 ## Component Organization
 
 - **Single-use components**: Co-locate in same file as page route
-- **Reusable components**: Place in `src/components/`
+- **Reusable components**: Place in `src/components/` or `src/[route]/-components/` (prefix `-` dir for skipping file-routing)
 - **Each list item**: Render in separate component for independent mutation/status
 
 ```tsx
