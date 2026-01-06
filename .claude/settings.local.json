@@ -9,7 +9,9 @@
       "Bash(ls:*)",
       "Bash(grep:*)",
       "Bash(pnpm lint:*)",
-      "Bash(pnpm kysely:*)"
+      "Bash(pnpm kysely:*)",
+      "Bash(wc:*)",
+      "Bash(tree:*)"
     ]
   }
 }

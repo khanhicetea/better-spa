@@ -1,34 +1,74 @@
-# Common Commands
+# Commands Reference
 
 ## Development
 
-- `pnpm dev`: Start development server (Port 3000)
-- `pnpm ui add [shadcn-component]`: Add Shadcn UI component
-- `pnpm run check`: Run linting, formatting, and type checking sequentially
+```bash
+pnpm dev                    # Start dev server (port 3000)
+pnpm build                  # Build for production
+pnpm preview                # Preview production build
+pnpm start                  # Start production server
+```
+
+## Code Quality
+
+```bash
+pnpm check                  # Format + lint + type-check (runs all)
+pnpm format                 # Format with Biome
+pnpm lint                   # Lint with Biome
+pnpm check-types            # TypeScript type checking
+```
 
 ## Database (Kysely)
 
-- `pnpm run db:migrate [command]`: Run Kysely migrations
-  - `up`: Run the next migration that has not yet been run
-  - `down`: Undo the last/specified migration that was run
-  - `latest`: Update the database schema to the latest version
-  - `list`: List both completed and pending migrations
-  - `make [name]`: Create a new migration file
-  - `rollback`: Rollback all the completed migrations
+```bash
+pnpm kysely migrate latest  # Run all pending migrations
+pnpm kysely migrate up      # Run next migration
+pnpm kysely migrate down    # Undo last migration
+pnpm kysely migrate list    # List migration status
+pnpm kysely migrate make <name>  # Create new migration
+pnpm kysely codegen         # Generate TypeScript types from DB
+pnpm kysely sql "QUERY" -f json  # Run raw SQL query (debugging)
+```
+
+Note: DB uses snake_case, backend uses camelCase. Use snake_case for raw queries.
 
 ## Authentication (Better Auth)
 
-- `pnpm run auth:secret`: Generate a new authentication secret
-- `pnpm run auth:generate`: Generate authentication client code based on the config
+```bash
+pnpm auth:secret            # Generate auth secret for .env
+pnpm auth:generate          # Generate types from auth config
+```
 
-## Dependency Management
+## UI Components (shadcn/ui)
 
-- `pnpm run deps`: Update dependencies interactively (minor/patch)
-- `pnpm run deps:major`: Update dependencies interactively (including major versions)
+```bash
+pnpm ui add <component>     # Add shadcn/ui component
+```
 
-## Testing & Quality
+## Dependencies
 
-- `pnpm lint`: Run Biome linting
-- `pnpm format`: Run Biome formatting
-- `pnpm check-types`: Run TypeScript type checking
-- `pnpm test`: Run tests (if configured)
+```bash
+pnpm deps                   # Update dependencies (interactive, minor/patch)
+pnpm deps:major             # Update including major versions
+```
+
+## Background Jobs
+
+```bash
+pnpm worker                 # Start worker (development)
+pnpm worker:dev             # Start worker in dev mode
+pnpm worker:build           # Build worker for production
+pnpm worker:start           # Start production worker
+```
+
+## Production Deployment
+
+```bash
+# Build both server and worker
+pnpm build                  # Build TanStack Start server
+pnpm worker:build           # Build worker
+
+# Run in production (separate processes)
+node .output/server/index.mjs    # Server
+node .output/worker/worker.js    # Worker
+```

@@ -1,6 +1,79 @@
-## JS runtimes:
+# DevOps & Deployment
 
-- NodeJS 24+ runtime : use copy `vite.config.node.ts` into `vite.config.ts` (can use vite^8)
-- Cloudflare Worker runtime : see [docs/cloudflare.md](./cloudflare.md)
+## Runtime Options
 
-**Important** : modify `src/server.ts` to use `createNodeHandler`, and dive into the code for modify the how `RequestContext` is created, and passing global variables into a `AsyncLocalStorage` instance in `src/server/context.ts`
+### Node.js (Default)
+
+1. Use `vite.config.node.ts` as `vite.config.ts`
+2. In `src/server.ts`, use `createNodeHandler` from `src/server/node-server.ts`
+
+```bash
+pnpm build
+node .output/server/index.mjs
+```
+
+### Cloudflare Workers
+
+See [docs/cloudflare.md](./cloudflare.md) for full guide.
+
+1. Use `vite.config.cf.ts` as `vite.config.ts`
+2. Update `src/server.ts` to use Cloudflare handler
+3. Modify `RequestContext` creation for Cloudflare environment
+
+## Request Context
+
+The server uses `AsyncLocalStorage` (`src/server/context.ts`) to provide request-scoped context:
+
+```typescript
+// Available in any server code
+import { getCurrentDB, getCurrentAuth, getCurrentSession, getCurrentRepos, getRequestHeaders } from "@/server/context";
+
+const repos = getCurrentRepos();
+const user = getCurrentSession()?.user;
+```
+
+## Environment Variables
+
+### Development
+
+Variables loaded automatically from `.env` file.
+
+### Production
+
+Set at system/container level:
+
+```env
+NODE_ENV=production
+DATABASE_URL=postgresql://...
+BETTER_AUTH_SECRET=...
+VITE_BASE_URL=https://your-domain.com
+```
+
+## Production Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐
+│  TanStack Start │     │   Job Worker    │
+│     Server      │     │    Process      │
+│                 │     │                 │
+│ .output/server/ │     │ .output/worker/ │
+│   index.mjs     │     │   worker.js     │
+└────────┬────────┘     └────────┬────────┘
+         │                       │
+         └───────────┬───────────┘
+                     │
+              ┌──────┴──────┐
+              │  PostgreSQL │
+              │   Database  │
+              └─────────────┘
+```
+
+Both server and worker share the same database and can run on same or different machines.
+
+## Docker
+
+See `Dockerfile` for containerized deployment.
+
+## Fly.io
+
+See `fly.toml` for Fly.io specific configuration.
