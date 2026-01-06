@@ -8,6 +8,7 @@
 - **Table names**: Singular form (e.g., `user`, `todo_category`, `job`)
 - **Column names**: `snake_case` in database, `camelCase` in TypeScript code
 - **Reserved keyword note**: `user` is a reserved keyword in PostgreSQL, always quote as `"user"` in raw SQL
+- **No numbered array JSON fields**: Avoid using JSON fields with directly numbered keys (e.g., `[item1, item2]`), wrap them in an object with a string key (e.g., `{"items": [...]}` or  `{"values": [...]}`).
 
 ---
 

@@ -26,11 +26,12 @@ const uploadRouter: Router = {
               key,
               metadata: {
                 url: `${env.S3_URL}/${key}`,
-                cacheControl: "max-age=31536000; public",
+                bucketName: env.S3_BUCKET_NAME || "default-bucket",
               },
+              cacheControl: "max-age=31536000; public; immutable",
             };
           },
-          bucketName: env.S3_BUCKET_NAME || "default-bucket",
+          bucketName: env.S3_BUCKET_NAME || undefined,
         };
       },
     }),

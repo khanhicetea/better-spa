@@ -7,11 +7,10 @@ Always wrap file arrays in an object with `files` key for future extensibility:
 ```typescript
 // Types
 export interface S3File {
-  bucket: string;
   key: string;
   metadata: {
     url: string;
-    cacheControl: string;
+    bucketName: string;
   };
 }
 
