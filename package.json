@@ -12,7 +12,7 @@
     "format": "biome format --write",
     "check-types": "tsc --noEmit",
     "check": "pnpm format && pnpm lint && pnpm check-types",
-    "db:migrate": "kysely migrate",
+    "kysely": "kysely",
     "deps": "pnpx taze@latest -Ilw",
     "deps:major": "pnpx taze@latest major -Ilw",
     "ui": "pnpx shadcn@latest",

@@ -28,12 +28,9 @@ pnpm lint                   # Lint with Biome
 pnpm check-types            # TypeScript type checking
 
 # Database (Kysely)
-pnpm db:migrate up          # Run next migration
-pnpm db:migrate down        # Undo last migration
-pnpm db:migrate latest      # Update to latest schema
-pnpm db:migrate list        # List migrations
-pnpm db:migrate make <name> # Create new migration
-pnpm db:migrate rollback    # Rollback all migrations
+pnpm kysely migrate <command>  # Run Kysely migrate CLI
+pnpm kysely codegen           # Generate TypeScript types from database
+pnpm kysely sql "QUERY" -f json  # Run query and return JSON output, agent LLM can use for run query debuging. IMPORTANT : db store in snake case, backend use camel case , so use snake case for run raw query. Read docs/db-schema.md for more information. NEVER  run drop table or drop column without confirmation asking (adding Cancel option as first option for safety)
 
 # Authentication (Better Auth)
 pnpm auth:secret            # Generate auth secret for .env
@@ -69,6 +66,8 @@ pnpm worker:start           # Start production worker
 - All server data operations **must** go through the RPC layer
 - Use the Repository pattern for all DB operations
 - **NO OPTIMISTIC UPDATES**: Use pessimistic updates or concurrent-safe strategies to avoid inconsistencies
+
+IMPORTANT: After creating a new migration, update docs/db-schema.md
 
 ### Date & Time Handling
 
@@ -235,6 +234,10 @@ OAuth callback URLs: `http://localhost:3000/api/auth/callback/<provider>`
   - `base.ts`: BaseRepository class with common methods
   - `index.ts`: Exports `createRepos()` factory
   - `*.repo.ts`: Domain-specific repositories
+
+**Database Schema Reference**: See **[docs/db-schema.md](docs/db-schema.md)** for complete table definitions, column types, indexes, foreign keys, and SQL query examples for debugging.
+
+**IMPORTANT**: Always update `docs/db-schema.md` after creating a new migration to keep the schema documentation current.
 
 **Repository Pattern Guidelines**:
 
