@@ -1,4 +1,8 @@
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   AlertCircle,
@@ -29,7 +33,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useUserJobs } from "@/lib/hooks/jobs";
 import { orpc } from "@/lib/orpc";
 import { formatRelativeTime } from "@/lib/utils/date";
@@ -85,7 +93,9 @@ function JobsPage() {
               <Briefcase className="h-6 w-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Background Jobs</h1>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Background Jobs
+              </h1>
               <p className="text-sm text-muted-foreground">
                 Monitor your running tasks and exports
               </p>
@@ -170,7 +180,8 @@ function JobCard({ job, onUpdated }: { job: Job; onUpdated: () => void }) {
   };
 
   const config =
-    statusConfig[job.status as keyof typeof statusConfig] || statusConfig.pending;
+    statusConfig[job.status as keyof typeof statusConfig] ||
+    statusConfig.pending;
   const StatusIcon = config.icon;
 
   return (

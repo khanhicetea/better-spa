@@ -1,5 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { Briefcase, LayoutDashboard, type LucideIcon, UsersIcon } from "lucide-react";
+import {
+  Briefcase,
+  LayoutDashboard,
+  type LucideIcon,
+  UsersIcon,
+} from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupLabel,

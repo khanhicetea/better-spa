@@ -75,7 +75,7 @@ pnpm worker:start           # Start production worker
 **Best Practices**:
 - **Database**: All timestamp columns use `timestamptz` (TIMESTAMP WITH TIME ZONE) - stores UTC internally
 - **Server**: Always work in UTC, use `Date.toISOString()` for server communication
-- **Frontend**: Use utilities from `src/lib/utils/date.ts` for timezone-aware formatting
+- **Frontend**: Use utilities from `src/lib/utils/date.ts` (powered by `date-fns`) for timezone-aware formatting
 
 **Available Utilities** (`src/lib/utils/date.ts`):
 ```typescript
@@ -95,6 +95,40 @@ formatTime(date)
 
 // Date only: "Jan 6, 2026"
 formatDateOnly(date)
+```
+
+**For advanced date operations**, use `date-fns` directly:
+```typescript
+import { addDays, differenceInHours, isBefore, format } from "date-fns";
+
+addDays(new Date(), 7);
+differenceInHours(date1, date2);
+isBefore(date1, date2);
+```
+
+### Utility Libraries
+
+**date-fns** - Date manipulation and formatting (tree-shakeable):
+```typescript
+import { addDays, subMonths, format, isValid, parseISO } from "date-fns";
+```
+
+**lodash-es** - Utility functions (tree-shakeable ES modules):
+```typescript
+import { cloneDeep, debounce, throttle, uniqBy, groupBy } from "lodash-es";
+
+// Deep clone objects
+const copy = cloneDeep(original);
+
+// Debounce function calls
+const debouncedSearch = debounce(handleSearch, 300);
+
+// Throttle function calls
+const throttledScroll = throttle(handleScroll, 100);
+
+// Array operations
+const unique = uniqBy(items, "id");
+const grouped = groupBy(items, "category");
 ```
 
 ### Background Tasks
@@ -207,41 +241,64 @@ OAuth callback URLs: `http://localhost:3000/api/auth/callback/<provider>`
 All database operations should go through repositories available in RPC handlers via `context.repos`.
 
 **BaseRepository Methods**:
-- `find(conditions?)` - Find multiple records
-- `findSelect(columns, conditions?)` - Find with specific columns only
+- `find({ where?, modify? })` - Find multiple records
+- `findSelect({ select[], where?, modify? })` - Find with specific columns only
 - `findById(id)` - Find by ID
 - `findByIdOrFail(id)` - Find by ID or throw NotFoundError
-- `findOne(conditions)` - Find single record
-- `findOneOrFail(conditions)` - Find single or throw NotFoundError
-- `findAll()` - Get all records
-- `findPaginated(page, pageSize, conditions?)` - Paginated results
-- `count(conditions?)` - Count records
+- `findOne({ where, modify? })` - Find single record
+- `findOneOrFail({ where, modify? })` - Find single or throw NotFoundError
+- `findAll(modify?)` - Get all records
+- `findPaginated({ page, pageSize, where?, modify? })` - Paginated results with metadata
+- `count(where?)` - Count records
 - `exists(id)` - Check if exists by ID
-- `existsBy(conditions)` - Check if any match
+- `existsBy(where)` - Check if any match conditions
 - `deleteById(id)` - Delete by ID
-- `deleteMany(conditions)` - Delete multiple
-- `updateById(id, data)` - Update by ID
-- `updateMany(conditions, data)` - Update multiple
+- `deleteMany(where)` - Delete multiple by conditions
+- `updateById({ id, data })` - Update by ID and return updated record
+- `updateMany({ where, data })` - Update multiple and return updated records
 - `insertReturn(data)` - Insert and return record
-- `insertMany(data[])` - Insert multiple and return
-- `upsert(data, conflictColumns, updateData?)` - Insert or update on conflict
+- `insertMany(data[])` - Insert multiple and return records
+- `upsert({ data, conflictColumns[], updateData? })` - Insert or update on conflict
 
-**Query Conditions** - Two types supported:
+**Query Options** - All methods accept options objects:
+
+**`where`** - Filter conditions (two types):
 
 1. Simple object (partial matches):
 ```typescript
-const users = await repos.user.find({ email: "test@test.com", role: "admin" });
+await repos.user.find({
+  where: { email: "test@test.com", role: "admin" }
+});
 ```
 
-2. Query builder function (complex queries):
+2. Query builder function (complex conditions):
 ```typescript
-const users = await repos.user.find((qb) =>
-  qb
+await repos.user.find({
+  where: (qb) => qb
     .where("email", "=", "test@test.com")
     .where("role", "=", "admin")
+});
+```
+
+**`modify`** - Additional query modifiers (orderBy, limit, etc.):
+```typescript
+await repos.user.find({
+  where: { role: "admin" },
+  modify: (qb) => qb
     .orderBy("createdAt", "desc")
     .limit(10)
-);
+});
+```
+
+**Combined example** - Use `where` for filtering and `modify` for sorting/pagination:
+```typescript
+const result = await repos.user.findPaginated({
+  page: 1,
+  pageSize: 20,
+  where: { status: "active" },
+  modify: (qb) => qb.orderBy("createdAt", "desc")
+});
+// Returns: { items, totalCount, pageCount, page, pageSize }
 ```
 
 **Repository Design Guidelines**:
@@ -284,9 +341,11 @@ export const listUsers = adminProcedure
   .input(z.object({ page: z.number().int().positive() }))
   .handler(async ({ input, context }) => {
     const { repos } = context;
-    const result = await repos.user.findPaginated(input.page, 10, (qb) =>
-      qb.orderBy("createdAt", "desc")
-    );
+    const result = await repos.user.findPaginated({
+      page: input.page,
+      pageSize: 10,
+      modify: (qb) => qb.orderBy("createdAt", "desc")
+    });
     return result;
   });
 ```
