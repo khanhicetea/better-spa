@@ -5,16 +5,16 @@
 Always wrap file arrays in an object with `files` key for future extensibility:
 
 ```typescript
-// Types
+// Types, metadata key should be snake_case
 export interface S3File {
   key: string;
   metadata: {
     url: string;
-    bucketName: string;
+    bucket_name: string;
   };
 }
 
-export interface ProductImages {
+export interface S3Files {
   files: S3File[];
 }
 
@@ -22,7 +22,7 @@ export interface ProductImages {
 export interface ProductTable {
   id: string;
   name: string;
-  images: ProductImages;  // NOT: images: S3File[]
+  images: S3Files;  // NOT: images: S3File[]
 }
 ```
 

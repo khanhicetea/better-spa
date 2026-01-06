@@ -26,7 +26,7 @@ const uploadRouter: Router = {
               key,
               metadata: {
                 url: `${env.S3_URL}/${key}`,
-                bucketName: env.S3_BUCKET_NAME || "default-bucket",
+                bucket_name: env.S3_BUCKET_NAME || "default-bucket",
               },
               cacheControl: "max-age=31536000; public; immutable",
             };
