@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { LayoutDashboard, type LucideIcon, UsersIcon } from "lucide-react";
+import { Briefcase, LayoutDashboard, type LucideIcon, UsersIcon } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -24,12 +24,17 @@ export function NavMain() {
       url: "/admin/users",
       icon: UsersIcon,
     },
+    {
+      title: "Jobs",
+      url: "/admin/jobs",
+      icon: Briefcase,
+    },
   ];
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Admin Navigation</SidebarGroupLabel>
-      <SidebarMenu>
+      <SidebarMenu className="space-y-1">
         {items.map((item) => (
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton

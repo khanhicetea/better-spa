@@ -15,6 +15,7 @@ import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminJobsRouteImport } from './routes/admin/jobs'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as userSettingsRouteRouteImport } from './routes/(user)/settings/route'
@@ -25,7 +26,6 @@ import { Route as ApiUploadSplatRouteImport } from './routes/api/upload.$'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as userAppTodoRouteImport } from './routes/(user)/app/todo'
-import { Route as userAppJobsRouteImport } from './routes/(user)/app/jobs'
 import { Route as userAppHelloFormRouteImport } from './routes/(user)/app/hello-form'
 
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -54,6 +54,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminJobsRoute = AdminJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const authSignupRoute = authSignupRouteImport.update({
@@ -106,11 +111,6 @@ const userAppTodoRoute = userAppTodoRouteImport.update({
   path: '/todo',
   getParentRoute: () => userAppRouteRoute,
 } as any)
-const userAppJobsRoute = userAppJobsRouteImport.update({
-  id: '/jobs',
-  path: '/jobs',
-  getParentRoute: () => userAppRouteRoute,
-} as any)
 const userAppHelloFormRoute = userAppHelloFormRouteImport.update({
   id: '/hello-form',
   path: '/hello-form',
@@ -124,10 +124,10 @@ export interface FileRoutesByFullPath {
   '/settings': typeof userSettingsRouteRouteWithChildren
   '/login': typeof authLoginRoute
   '/signup': typeof authSignupRoute
+  '/admin/jobs': typeof AdminJobsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/': typeof AdminIndexRoute
   '/app/hello-form': typeof userAppHelloFormRoute
-  '/app/jobs': typeof userAppJobsRoute
   '/app/todo': typeof userAppTodoRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
@@ -139,10 +139,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof authLoginRoute
   '/signup': typeof authSignupRoute
+  '/admin/jobs': typeof AdminJobsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin': typeof AdminIndexRoute
   '/app/hello-form': typeof userAppHelloFormRoute
-  '/app/jobs': typeof userAppJobsRoute
   '/app/todo': typeof userAppTodoRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
@@ -160,10 +160,10 @@ export interface FileRoutesById {
   '/(user)/settings': typeof userSettingsRouteRouteWithChildren
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/signup': typeof authSignupRoute
+  '/admin/jobs': typeof AdminJobsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/': typeof AdminIndexRoute
   '/(user)/app/hello-form': typeof userAppHelloFormRoute
-  '/(user)/app/jobs': typeof userAppJobsRoute
   '/(user)/app/todo': typeof userAppTodoRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
@@ -180,10 +180,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/login'
     | '/signup'
+    | '/admin/jobs'
     | '/admin/users'
     | '/admin/'
     | '/app/hello-form'
-    | '/app/jobs'
     | '/app/todo'
     | '/api/auth/$'
     | '/api/rpc/$'
@@ -195,10 +195,10 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/admin/jobs'
     | '/admin/users'
     | '/admin'
     | '/app/hello-form'
-    | '/app/jobs'
     | '/app/todo'
     | '/api/auth/$'
     | '/api/rpc/$'
@@ -215,10 +215,10 @@ export interface FileRouteTypes {
     | '/(user)/settings'
     | '/(auth)/login'
     | '/(auth)/signup'
+    | '/admin/jobs'
     | '/admin/users'
     | '/admin/'
     | '/(user)/app/hello-form'
-    | '/(user)/app/jobs'
     | '/(user)/app/todo'
     | '/api/auth/$'
     | '/api/rpc/$'
@@ -279,6 +279,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/jobs': {
+      id: '/admin/jobs'
+      path: '/jobs'
+      fullPath: '/admin/jobs'
+      preLoaderRoute: typeof AdminJobsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/(auth)/signup': {
@@ -351,13 +358,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof userAppTodoRouteImport
       parentRoute: typeof userAppRouteRoute
     }
-    '/(user)/app/jobs': {
-      id: '/(user)/app/jobs'
-      path: '/jobs'
-      fullPath: '/app/jobs'
-      preLoaderRoute: typeof userAppJobsRouteImport
-      parentRoute: typeof userAppRouteRoute
-    }
     '/(user)/app/hello-form': {
       id: '/(user)/app/hello-form'
       path: '/hello-form'
@@ -384,14 +384,12 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 
 interface userAppRouteRouteChildren {
   userAppHelloFormRoute: typeof userAppHelloFormRoute
-  userAppJobsRoute: typeof userAppJobsRoute
   userAppTodoRoute: typeof userAppTodoRoute
   userAppIndexRoute: typeof userAppIndexRoute
 }
 
 const userAppRouteRouteChildren: userAppRouteRouteChildren = {
   userAppHelloFormRoute: userAppHelloFormRoute,
-  userAppJobsRoute: userAppJobsRoute,
   userAppTodoRoute: userAppTodoRoute,
   userAppIndexRoute: userAppIndexRoute,
 }
@@ -426,11 +424,13 @@ const userRouteRouteWithChildren = userRouteRoute._addFileChildren(
 )
 
 interface AdminRouteRouteChildren {
+  AdminJobsRoute: typeof AdminJobsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminJobsRoute: AdminJobsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }

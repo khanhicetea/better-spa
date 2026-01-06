@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   AlertCircle,
@@ -10,8 +10,8 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
-import { formatRelativeTime } from "@/lib/utils/date";
 import { PagePending } from "@/components/common/page-pending";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import {
@@ -29,24 +29,47 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUserJobs } from "@/lib/hooks/jobs";
 import { orpc } from "@/lib/orpc";
+import { formatRelativeTime } from "@/lib/utils/date";
 import type { Outputs } from "@/rpc/types";
 
-export const Route = createFileRoute("/(user)/app/jobs")({
+export const Route = createFileRoute("/admin/jobs")({
   component: JobsPage,
   pendingComponent: PagePending,
+  loader: async ({ context }) => {
+    context.queryClient.prefetchQuery(
+      orpc.job.listAllJobs.queryOptions({
+        input: { limit: 100 },
+      }),
+    );
+  },
 });
 
 type Job = Outputs["job"]["listJobs"][number];
 
 function JobsPage() {
-  const { data: jobs, isLoading, refetch } = useUserJobs({ limit: 50 });
+  const {
+    data: jobs,
+    isLoading,
+    refetch,
+  } = useSuspenseQuery(
+    orpc.job.listAllJobs.queryOptions({
+      input: { limit: 100 },
+      refetchInterval: (query) => {
+        // Stop polling if all jobs are in terminal states
+        const jobs = query.state.data;
+        if (!jobs || jobs.length === 0) return 1000;
+
+        const hasActiveJobs = jobs.some(
+          (job) => job.status === "pending" || job.status === "processing",
+        );
+
+        return hasActiveJobs ? 1000 : 5000;
+      },
+    }),
+  );
 
   if (isLoading) {
     return <PagePending />;
@@ -62,9 +85,7 @@ function JobsPage() {
               <Briefcase className="h-6 w-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                Background Jobs
-              </h1>
+              <h1 className="text-2xl font-bold tracking-tight">Background Jobs</h1>
               <p className="text-sm text-muted-foreground">
                 Monitor your running tasks and exports
               </p>
@@ -102,11 +123,9 @@ function JobsPage() {
 }
 
 function JobCard({ job, onUpdated }: { job: Job; onUpdated: () => void }) {
-  const queryClient = useQueryClient();
   const cancelMutation = useMutation(
     orpc.job.cancelJob.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["job"] });
         onUpdated();
       },
     }),
@@ -151,13 +170,12 @@ function JobCard({ job, onUpdated }: { job: Job; onUpdated: () => void }) {
   };
 
   const config =
-    statusConfig[job.status as keyof typeof statusConfig] ||
-    statusConfig.pending;
+    statusConfig[job.status as keyof typeof statusConfig] || statusConfig.pending;
   const StatusIcon = config.icon;
 
   return (
     <Card className="transition-all hover:shadow-md">
-      <div className="flex items-center gap-3 p-3">
+      <div className="flex items-center gap-3 p-2 py-1">
         <div className={`p-1.5 rounded-lg ${config.bgColor} shrink-0`}>
           <StatusIcon
             className={`h-4 w-4 ${config.color} ${config.animate ? "animate-spin" : ""}`}
@@ -165,8 +183,9 @@ function JobCard({ job, onUpdated }: { job: Job; onUpdated: () => void }) {
         </div>
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-sm font-medium truncate">
-              {job.label}
+            <CardTitle className="text-sm font-medium truncate flex flex-col gap-1">
+              <span>{job.label}</span>
+              <Badge>UserID : {job.userId}</Badge>
             </CardTitle>
             <span className="text-xs text-muted-foreground shrink-0">
               {formatRelativeTime(job.createdAt)}

@@ -2,7 +2,7 @@ import { pickBy } from "lodash-es";
 import { z } from "zod";
 import { generateUUID } from "@/lib/data";
 import type { JobStatus } from "@/lib/db/schema/job";
-import { authedProcedure } from "../base";
+import { adminProcedure, authedProcedure } from "../base";
 
 const jobStatusSchema = z.enum([
   "pending",
@@ -54,6 +54,27 @@ export const getJob = authedProcedure
     }
 
     return job;
+  });
+
+export const listAllJobs = adminProcedure
+  .input(
+    z.object({
+      status: jobStatusSchema.optional(),
+      limit: z.number().int().min(1).max(100).default(20),
+    }),
+  )
+  .handler(async ({ input, context }) => {
+    const { repos } = context;
+    const { limit, ...filter } = input;
+
+    const jobs = await repos.job.find({
+      where: {
+        ...pickBy(filter, (v) => v !== undefined),
+      },
+      modify: (qb) => qb.orderBy("createdAt", "desc").limit(limit),
+    });
+
+    return jobs;
   });
 
 export const listJobs = authedProcedure
