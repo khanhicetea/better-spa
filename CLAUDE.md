@@ -515,6 +515,39 @@ function UsersPage() {
 
 ## Development Guidelines
 
+### File Storage Pattern (S3/better-upload)
+
+When storing uploaded files (images, documents, etc.) in database:
+- **ALWAYS** wrap file arrays in an object with a `files` key: `{ files: [...] }`
+- This provides flexibility to add metadata alongside files in the future
+- Example schema:
+  ```typescript
+  export interface ProductImages {
+    files: S3File[];
+  }
+
+  export interface ProductTable {
+    // ...
+    images: ProductImages; // NOT: images: S3File[]
+    // ...
+  }
+
+  export interface S3File {
+    bucket: string;
+    key: string;
+    metadata: {
+      url: string;
+      cacheControl: string;
+    };
+  }
+  ```
+- When inserting/updating: `images: { files: uploadedImages }`
+- When accessing: `product.images.files[0]` (not `product.images[0]`)
+
+**Using better-upload in components**:
+- Server route: `src/routes/api/upload.$.ts` (already configured for S3 images)
+- Client hook: `useUploadFiles({ route: "images" })` from `@better-upload/client`
+
 ### New Feature Implementation Checklist
 
 1. **Plan first, ask first, implement later**
