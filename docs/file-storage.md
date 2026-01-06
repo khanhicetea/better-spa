@@ -84,6 +84,10 @@ function ImageUploader({ onUpload }: { onUpload: (files: S3File[]) => void }) {
 }
 ```
 
+### For single file upload
+
+Use the hook `useUploadFile` from `@better-upload/client`, the props and returned value hooks change `files` to `file`.
+
 ## Form Integration
 
 ```typescript
