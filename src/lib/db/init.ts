@@ -5,18 +5,20 @@ import type { Database } from "./schema";
 
 const { Pool } = pg;
 
-export const getDatabasePooling = createServerOnlyFn(
-  (connectionString: string) => {
-    const pool = new Pool({
-      connectionString,
-      max: parseInt(process.env.DATABASE_MAX_CONNECTIONS || "2", 10),
-    });
-    return new Kysely<Database>({
-      dialect: new PostgresDialect({ pool }),
-      plugins: [new CamelCasePlugin()],
-    });
-  },
-);
+export const getDatabasePooling = createServerOnlyFn((connectionString: string) => {
+  const pool = new Pool({
+    connectionString,
+    max: parseInt(process.env.DATABASE_MAX_CONNECTIONS || "2", 10),
+  });
+  return new Kysely<Database>({
+    dialect: new PostgresDialect({ pool }),
+    plugins: [
+      new CamelCasePlugin({
+        maintainNestedObjectKeys: true,
+      }),
+    ],
+  });
+});
 
 export const getDatabase = createServerOnlyFn((connectionString: string) => {
   return getDatabasePooling(connectionString);
