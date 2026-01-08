@@ -26,7 +26,6 @@ pnpm kysely migrate up      # Run next migration
 pnpm kysely migrate down    # Undo last migration
 pnpm kysely migrate list    # List migration status
 pnpm kysely migrate make <name>  # Create new migration
-pnpm kysely codegen         # Generate TypeScript types from DB
 pnpm kysely sql "QUERY" -f json  # Run raw SQL query (debugging)
 ```
 

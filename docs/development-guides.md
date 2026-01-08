@@ -406,7 +406,8 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema.createIndex("idx_[feature]_user_id").on("[feature]").column("user_id").execute();
 }
 ```
-Run: `pnpm kysely migrate latest && pnpm kysely codegen`
+
+Run: `pnpm kysely migrate latest`
 
 ### Step 2: Schema Types
 ```typescript
