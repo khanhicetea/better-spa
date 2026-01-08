@@ -14,7 +14,16 @@ export default defineConfig({
     }),
     tanstackStart(),
     // https://tanstack.com/start/latest/docs/framework/react/guide/hosting
-    nitro({ preset: process.env.NITRO_PRESET || undefined }),
+    nitro({
+      preset: process.env.NITRO_PRESET || undefined,
+      scanDirs: ["src/nitro"],
+      experimental: {
+        tasks: true,
+      },
+      scheduledTasks: {
+        "* * * * *": ["hello"],
+      },
+    }),
     viteReact({
       // https://react.dev/learn/react-compiler
       babel: {

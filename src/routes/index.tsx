@@ -7,12 +7,14 @@ import {
   Globe,
   Lock,
   Menu,
+  Moon,
   Sparkles,
+  Sun,
   X,
   Zap,
 } from "lucide-react";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { ThemeToggle } from "@/components/spa/theme-toggle";
+import { useTheme } from "@/components/spa/theme-provider";
 import { Button } from "@/components/ui/button";
 import { authQueryOptions } from "@/lib/queries";
 import { cn } from "@/lib/utils";
@@ -173,6 +175,111 @@ function TypingText() {
 }
 
 // ============================================================================
+// LOGO COMPONENT
+// ============================================================================
+
+function Logo({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 40 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn("size-8", className)}
+    >
+      {/* Outer shell */}
+      <rect
+        x="2"
+        y="2"
+        width="36"
+        height="36"
+        rx="8"
+        className="fill-foreground"
+      />
+      {/* Inner cutout creating depth */}
+      <rect
+        x="6"
+        y="6"
+        width="28"
+        height="28"
+        rx="5"
+        className="fill-background"
+      />
+      {/* Abstract "S" shape */}
+      <path
+        d="M14 12C14 12 18 12 22 12C26 12 28 14 28 17C28 20 26 21 22 21H18C14 21 12 23 12 26C12 29 14 31 18 31C22 31 26 31 26 31"
+        className="stroke-foreground"
+        strokeWidth="3"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* Accent dot */}
+      <circle cx="30" cy="12" r="3" className="fill-foreground" />
+    </svg>
+  );
+}
+
+// ============================================================================
+// SIMPLE THEME TOGGLE
+// ============================================================================
+
+function SimpleThemeToggle({ className }: { className?: string }) {
+  const { theme, setTheme } = useTheme();
+  const [isDark, setIsDark] = useState(false);
+
+  // Determine actual theme (resolve "system" to actual value)
+  useEffect(() => {
+    const checkDark = () => {
+      if (theme === "system") {
+        setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+      } else {
+        setIsDark(theme === "dark");
+      }
+    };
+
+    checkDark();
+
+    // Listen for system preference changes
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    media.addEventListener("change", checkDark);
+    return () => media.removeEventListener("change", checkDark);
+  }, [theme]);
+
+  const toggle = () => {
+    setTheme(isDark ? "light" : "dark");
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className={cn(
+        "bg-muted hover:bg-muted/80 relative inline-flex h-8 w-14 items-center rounded-full p-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+        className,
+      )}
+      aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+    >
+      {/* Track icons */}
+      <Sun className="text-muted-foreground absolute left-2 size-4" />
+      <Moon className="text-muted-foreground absolute right-2 size-4" />
+
+      {/* Sliding thumb */}
+      <span
+        className={cn(
+          "bg-foreground flex size-6 items-center justify-center rounded-full shadow-sm transition-transform duration-300",
+          isDark ? "translate-x-6" : "translate-x-0",
+        )}
+      >
+        {isDark ? (
+          <Moon className="text-background size-3.5" />
+        ) : (
+          <Sun className="text-background size-3.5" />
+        )}
+      </span>
+    </button>
+  );
+}
+
+// ============================================================================
 // MAIN PAGE
 // ============================================================================
 
@@ -221,8 +328,8 @@ function Navbar() {
     <header className="border-border/50 bg-background/80 fixed top-0 right-0 left-0 z-50 border-b backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <div className="bg-foreground size-8 rounded-lg" />
+        <Link to="/" className="flex items-center gap-2.5">
+          <Logo />
           <span className="text-lg font-semibold tracking-tight">ShellSPA</span>
         </Link>
 
@@ -249,7 +356,7 @@ function Navbar() {
 
         {/* Auth Buttons */}
         <div className="hidden items-center gap-3 md:flex">
-          <ThemeToggle />
+          <SimpleThemeToggle />
           <Suspense
             fallback={
               <div className="bg-muted h-8 w-24 animate-pulse rounded-lg" />
@@ -293,7 +400,7 @@ function Navbar() {
               </a>
             ))}
             <div className="border-border mt-2 flex items-center gap-3 border-t pt-4">
-              <ThemeToggle />
+              <SimpleThemeToggle />
               <Suspense
                 fallback={
                   <div className="bg-muted h-8 w-24 animate-pulse rounded-lg" />
@@ -834,38 +941,83 @@ function CTASection() {
   return (
     <section className="py-24 md:py-32">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="bg-foreground text-background relative overflow-hidden rounded-3xl px-8 py-16 text-center md:px-16 md:py-24">
-          {/* Background decoration */}
+        <div className="bg-foreground text-background relative overflow-hidden rounded-3xl px-8 py-20 text-center md:px-16 md:py-28">
+          {/* Animated background decoration */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -top-1/2 -left-1/4 h-full w-1/2 rounded-full bg-current opacity-[0.03]" />
-            <div className="absolute -right-1/4 -bottom-1/2 h-full w-1/2 rounded-full bg-current opacity-[0.03]" />
+            {/* Gradient orbs */}
+            <div className="animate-pulse-slow absolute -top-1/3 -left-1/4 h-[500px] w-[500px] rounded-full bg-current opacity-[0.04] blur-3xl" />
+            <div className="animate-pulse-slow absolute -right-1/4 -bottom-1/3 h-[600px] w-[600px] rounded-full bg-current opacity-[0.04] blur-3xl [animation-delay:1s]" />
+
+            {/* Grid pattern */}
+            <div
+              className="absolute inset-0 opacity-[0.03]"
+              style={{
+                backgroundImage: `linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)`,
+                backgroundSize: "60px 60px",
+              }}
+            />
+
+            {/* Floating shapes */}
+            <div className="animate-float absolute top-10 left-[15%] size-3 rounded-full bg-current opacity-20" />
+            <div className="animate-float absolute top-20 right-[20%] size-2 rounded-full bg-current opacity-15 [animation-delay:0.5s]" />
+            <div className="animate-float absolute bottom-16 left-[25%] size-4 rounded-full bg-current opacity-10 [animation-delay:1s]" />
+            <div className="animate-float absolute bottom-24 right-[15%] size-2 rounded-full bg-current opacity-20 [animation-delay:1.5s]" />
           </div>
 
           <div className="relative">
+            {/* Badge */}
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-current/20 bg-current/10 px-4 py-1.5 text-sm">
+              <Sparkles className="size-4" />
+              <span>14-day free trial, no credit card required</span>
+            </div>
+
             <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl">
-              Ready to transform your workflow?
+              Ready to transform
+              <br />
+              your workflow?
             </h2>
             <p className="text-background/70 mx-auto mt-6 max-w-xl text-lg">
               Join thousands of teams already using ShellSPA to build better
-              products, faster.
+              products, faster. Get started in minutes.
             </p>
+
+            {/* CTA Buttons */}
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Button
                 size="lg"
-                className="bg-background text-foreground hover:bg-background/90"
+                className="bg-background text-foreground hover:bg-background/90 group h-12 px-8 text-base shadow-lg transition-all hover:shadow-xl"
                 render={<Link to="/signup" />}
               >
                 Start Free Trial
-                <ArrowRight className="size-4" data-icon="inline-end" />
+                <ArrowRight
+                  className="size-4 transition-transform group-hover:translate-x-1"
+                  data-icon="inline-end"
+                />
               </Button>
               <Button
                 variant="ghost"
                 size="lg"
-                className="text-background hover:bg-background/10 hover:text-background"
+                className="text-background hover:bg-background/10 hover:text-background h-12 px-8 text-base"
                 render={<a href="#pricing" />}
               >
                 View Pricing
               </Button>
+            </div>
+
+            {/* Trust indicators */}
+            <div className="text-background/50 mt-10 flex flex-wrap items-center justify-center gap-6 text-sm">
+              <span className="flex items-center gap-2">
+                <Check className="size-4" />
+                Free 14-day trial
+              </span>
+              <span className="flex items-center gap-2">
+                <Check className="size-4" />
+                No credit card required
+              </span>
+              <span className="flex items-center gap-2">
+                <Check className="size-4" />
+                Cancel anytime
+              </span>
             </div>
           </div>
         </div>
@@ -892,8 +1044,8 @@ function Footer() {
         <div className="grid gap-12 lg:grid-cols-5">
           {/* Brand Column */}
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="bg-foreground size-8 rounded-lg" />
+            <Link to="/" className="flex items-center gap-2.5">
+              <Logo />
               <span className="text-lg font-semibold tracking-tight">
                 ShellSPA
               </span>
@@ -929,7 +1081,7 @@ function Footer() {
             &copy; {new Date().getFullYear()} ShellSPA. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <ThemeToggle />
+            <SimpleThemeToggle />
           </div>
         </div>
       </div>

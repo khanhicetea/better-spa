@@ -12,7 +12,8 @@
       "Bash(pnpm kysely:*)",
       "Bash(wc:*)",
       "Bash(tree:*)",
-      "Bash(pnpm format:*)"
+      "Bash(pnpm format:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }
