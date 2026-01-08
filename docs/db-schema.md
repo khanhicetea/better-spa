@@ -1,5 +1,7 @@
 # Database Schema
 
+**For Agents**: Read this doc to understand the current database structure.
+
 > **IMPORTANT**: This file must be updated after every database migration. See CLAUDE.md for instructions.
 
 **Last Updated**: 2026-01-06

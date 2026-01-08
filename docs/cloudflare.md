@@ -1,5 +1,9 @@
 # Cloudflare Worker Support
 
+**For Agents**: Read this doc when deploying to Cloudflare Workers.
+
+---
+
 To deploy this application on Cloudflare Workers, follow these instructions.
 
 ## Prerequisites

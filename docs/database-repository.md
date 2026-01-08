@@ -1,5 +1,11 @@
 # Database and Repository Pattern
 
+**For Agents**: Read this doc when implementing database queries or creating new repositories.
+
+**CRITICAL**: No Kysely codegen. Types are manually defined in `src/lib/db/schema/`.
+
+---
+
 ## Database Schema
 
 Kysely uses TypeScript interfaces for type-safe database queries. Schema definitions are organized in `src/lib/db/schema/`:

@@ -1,5 +1,11 @@
 # RPC Architecture
 
+**For Agents**: Read this doc when creating API endpoints or working with RPC.
+
+**CRITICAL**: This project uses **oRPC**, NOT tRPC. The APIs are different.
+
+---
+
 Type-safe RPC layer using **oRPC** (not tRPC).
 
 ## Structure

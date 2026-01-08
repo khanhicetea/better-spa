@@ -1,5 +1,9 @@
 # Shell SPA Architecture
 
+**For Agents**: Read this doc when you need to understand the overall project architecture.
+
+---
+
 ## Key Concepts
 
 ### Shell SPA Pattern

@@ -1,7 +1,8 @@
 # Job Queue Worker System
 
-**Target Audience**: LLM Agents (Claude Code, etc.)
-**Last Updated**: 2025-01-05
+**For Agents**: Read this doc when implementing background tasks, exports, emails, or reports.
+
+**CRITICAL**: ALWAYS use job queue for long-running tasks. NEVER run them directly in RPC handlers.
 
 This document describes the type-safe, oRPC-based job queue system for background task processing.
 

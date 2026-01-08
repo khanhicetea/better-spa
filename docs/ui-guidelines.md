@@ -1,11 +1,101 @@
 # UI/UX Guidelines
 
+**For Agents**: Read this doc when implementing any UI work (forms, dialogs, tables, layouts).
+
+---
+
+## CRITICAL: Base UI (NOT Radix)
+
+This project uses **Base UI** (`@base-ui/react`), NOT Radix UI. The API is different.
+
+### Render Prop Pattern (MUST USE)
+
+```tsx
+// WRONG - Radix asChild pattern (will NOT work)
+<DialogTrigger asChild>
+  <Button>Open</Button>
+</DialogTrigger>
+
+// CORRECT - Base UI render prop pattern
+<DialogTrigger render={<Button />}>
+  Open
+</DialogTrigger>
+
+// CORRECT - With additional props
+<SheetTrigger render={<Button variant="outline" size="sm" />}>
+  Add Item
+</SheetTrigger>
+
+// CORRECT - Icon button
+<AlertDialogTrigger render={<Button variant="destructive" size="icon-sm" />}>
+  <Trash2 />
+</AlertDialogTrigger>
+```
+
+### Common Dialog/Sheet Patterns
+
+```tsx
+// Dialog with trigger
+<Dialog>
+  <DialogTrigger render={<Button>Open Dialog</Button>} />
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Dialog Title</DialogTitle>
+    </DialogHeader>
+    {/* Content */}
+    <DialogFooter>
+      <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+      <Button onClick={handleSubmit}>Submit</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+// AlertDialog for confirmations
+<AlertDialog>
+  <AlertDialogTrigger render={<Button variant="destructive" size="icon-sm" />}>
+    <Trash2 />
+  </AlertDialogTrigger>
+  <AlertDialogContent size="sm">
+    <AlertDialogHeader>
+      <AlertDialogMedia><Trash2 className="text-destructive" /></AlertDialogMedia>
+      <AlertDialogTitle>Delete Item</AlertDialogTitle>
+      <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+      <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={isPending}>
+        {isPending ? "Deleting..." : "Delete"}
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+---
+
 ## Styling
 
-- Use **shadcn/ui** components and **Tailwind CSS v4**
+- Use **shadcn/ui** components with **Base UI** primitives
+- Use **Tailwind CSS v4**
 - Use theme color variables: `primary`, `secondary`, `muted`, `accent`, `destructive`
-- No specific colors (e.g., `bg-blue-500`) without asking first
+- **No specific colors** (e.g., `bg-blue-500`) without asking first
 - UI should be responsive, compact, and clean
+
+### Theme Colors
+
+```tsx
+// Backgrounds
+bg-primary bg-secondary bg-muted bg-accent bg-destructive bg-background
+
+// Foregrounds (text)
+text-primary-foreground text-secondary-foreground text-muted-foreground
+text-accent-foreground text-destructive-foreground text-foreground
+
+// Borders
+border-border border-primary border-destructive
+```
+
+---
 
 ## Icons
 
@@ -16,9 +106,15 @@
 ```tsx
 import { Trash2, Pencil, Plus } from "lucide-react";
 
-<Button variant="ghost" size="icon"><Trash2 className="h-4 w-4" /></Button>
-<Button><Plus className="h-4 w-4 mr-2" />Add Item</Button>
+// Icon-only button
+<Button variant="ghost" size="icon-sm"><Trash2 /></Button>
+
+// Icon with text (use data-icon attribute for proper spacing)
+<Button><Plus data-icon="inline-start" />Add Item</Button>
+<Button>Save<Check data-icon="inline-end" /></Button>
 ```
+
+---
 
 ## Forms
 
@@ -38,48 +134,50 @@ import { Trash2, Pencil, Plus } from "lucide-react";
 
 See demo: `src/routes/(test)/hello-form.tsx`
 
+---
+
 ## CRUD Operations
 
-- **Add/Edit**: Use `Sheet` component for simple forms
-- **Delete/Confirm**: Use `Dialog` component
+- **Add/Edit (1-3 fields)**: Use `Dialog` component
+- **Add/Edit (4-5 fields)**: Use `Sheet` component
+- **Add/Edit (6+ fields)**: Use separate page route
+- **Delete/Confirm**: Use `AlertDialog` component
 
 ```tsx
-// Dialog for create/edit if form has 1-3 fields
-<Dialog>
-  <DialogTrigger render={<Button>Add Item</Button>}></DialogTrigger>
-  <DialogContent>
-  <DialogHeader><DialogTitle>Add Item</DialogTitle></DialogHeader>
+// Dialog for create/edit (1-3 fields)
+<Dialog open={open} onOpenChange={setOpen}>
+  <DialogTrigger render={<Button>Add Item</Button>} />
+  <DialogContent showCloseButton={false}>
+    <DialogHeader>
+      <DialogTitle>Add Item</DialogTitle>
+    </DialogHeader>
     {/* Form */}
+    <DialogFooter>
+      <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+      <Button type="submit" disabled={isPending}>
+        {isPending ? "Saving..." : "Save"}
+      </Button>
+    </DialogFooter>
   </DialogContent>
 </Dialog>
 
-// Sheet for create/edit if form more than 3 fields
-<Sheet>
-  <SheetTrigger render={<Button>Add Item</Button>}></SheetTrigger>
+// Sheet for create/edit (4-5 fields)
+<Sheet open={open} onOpenChange={setOpen}>
+  <SheetTrigger render={<Button>Add Item</Button>} />
   <SheetContent>
-  <SheetHeader><SheetTitle>Add Item</SheetTitle></SheetHeader>
+    <SheetHeader>
+      <SheetTitle>Add Item</SheetTitle>
+    </SheetHeader>
     {/* Form */}
   </SheetContent>
 </Sheet>
 
-// Use separate page route for create/edit if form has more than 5 fields, but try to re-use the form component
-// Example /product for listing so /product/form/[id] for create/edit form (id = empty ? new mode : edit mode)
-
-// Dialog for delete confirmation
-<AlertDialog>
-  <AlertDialogTrigger render={<Button variant="destructive">Delete</Button>}></AlertDialogTrigger>
-  <AlertDialogContent>
-    <AlertDialogHeader>
-      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-      <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-    </AlertDialogHeader>
-    <AlertDialogFooter>
-      <AlertDialogCancel>Cancel</AlertDialogCancel>
-      <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-    </AlertDialogFooter>
-  </AlertDialogContent>
-</AlertDialog>
+// Use separate page route for 6+ fields
+// Example: /product for listing, /product/form/[id] for create/edit
+// id = empty ? new mode : edit mode
 ```
+
+---
 
 ## Tables
 
@@ -104,6 +202,8 @@ const columns: ColumnDef<Product>[] = [
 ];
 ```
 
+---
+
 ## Empty States
 
 Use the Empty component from `src/components/ui/empty.tsx`:
@@ -122,6 +222,8 @@ import { Empty } from "@/components/ui/empty";
   <DataTable columns={columns} data={items} />
 )}
 ```
+
+---
 
 ## Component Organization
 
@@ -148,6 +250,8 @@ function ProductItem({ item }: { item: Product }) {
 
 export const Route = createFileRoute(...)({ component: ProductPage });
 ```
+
+---
 
 ## File Upload in Forms
 
@@ -245,6 +349,8 @@ function FormWithImages({ initialImages = [] }: { initialImages?: S3File[] }) {
   </Button>
 </div>
 ```
+
+---
 
 ## Navigation Links
 

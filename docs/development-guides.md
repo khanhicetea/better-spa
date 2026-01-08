@@ -1,5 +1,31 @@
 # Development Guides
 
+**For Agents**: Read this doc when implementing new features or CRUD operations.
+
+---
+
+## Agent Pre-Implementation Checklist
+
+Before writing any code:
+
+1. **Read CLAUDE.md first** - Contains critical rules that differ from typical projects
+2. **List relevant docs** - Identify which docs apply to your task
+3. **Read those docs** - Understand patterns before implementing
+4. **Find an example** - Look at existing similar code in the codebase
+5. **Plan before code** - For new features, draft the approach first
+
+### Example Reference Files
+
+| Task Type | Reference File |
+|-----------|----------------|
+| CRUD page | `src/routes/(user)/app/todo.tsx` |
+| RPC handler | `src/rpc/handlers/todoItem.ts` |
+| Repository | `src/lib/db/repositories/todoItem.repo.ts` |
+| Migration | `src/lib/db/migrations/003_todo.ts` |
+| Schema types | `src/lib/db/schema/todo.ts` |
+
+---
+
 ## Data Management
 
 All server data operations should go through RPC layer for centralized management:
@@ -10,6 +36,8 @@ All server data operations should go through RPC layer for centralized managemen
 - **Mutations**: Centralize all data modifications in RPC procedures
 - **NO OPTIMISTIC UPDATES**: Don't use optimistic updates as a anti-pattern, as it can lead to inconsistencies and bugs. Instead, use pessimistic updates or implement a more robust optimistic update strategy (support concurrent updates)
 - This ensures type safety, consistent error handling, and maintainable code structure
+
+---
 
 ## RPC Procedures
 
@@ -58,6 +86,8 @@ export const listUsers = adminProcedure
     };
   });
 ```
+
+---
 
 ## Adding New Features/Components
 
@@ -144,11 +174,13 @@ function UsersPage() {
 - App user feature, add link into `src/components/app/app-sidebar.tsx`
 - Admin feature, add link into `src/components/admin/admin-sidebar.tsx`
 
+---
+
 ## Component Patterns
 
 ### Combined Create/Edit Form Dialog
 
-Use a single dialog component for both create and edit modes:
+Use a single dialog component for both create and edit modes. **Remember: Use `render` prop, NOT `asChild`**.
 
 ```tsx
 interface FormDialogProps {
@@ -230,7 +262,9 @@ function DeleteItemDialog({ item, onSuccess }: { item: Item; onSuccess: () => vo
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger render={<Button variant="destructive" size="icon-sm"><Trash2 /></Button>} />
+      <AlertDialogTrigger render={<Button variant="destructive" size="icon-sm" />}>
+        <Trash2 />
+      </AlertDialogTrigger>
       <AlertDialogContent size="sm">
         <AlertDialogHeader>
           <AlertDialogMedia><Trash2 className="text-destructive" /></AlertDialogMedia>
@@ -327,6 +361,8 @@ function ItemCard({ item, onUpdate }: { item: Item; onUpdate: () => void }) {
 )}
 ```
 
+---
+
 ## RPC Handler Patterns
 
 ### Ownership Validation
@@ -373,9 +409,11 @@ const s3FilesSchema = z.object({
 }))
 ```
 
+---
+
 ## UI and UX Guidelines
 
-- **Style**: Using shadcn UI components, tailwind css v4
+- **Style**: Using shadcn UI components with Base UI primitives, tailwind css v4
 - **Colors**: Using shadcn theme color variables like primary, secondary, muted, accent, etc. No specific color should be used directly without asking.
 - **Responsiveness**: UI should be responsive, compact and nice
 - **Icons**: Buttons should has icon from Lucide icons, if icon can common for its purpose, skip text label
@@ -383,6 +421,8 @@ const s3FilesSchema = z.object({
 - **CRUD**: If form action is simple, use `Sheet` for adding/editing or `Dialog` component for deleting, confirmation.
 - **Tables**: Table should use Tanstack Table using columns def. No sorting, no column visibility, row actions is last column within 'justify-end'
 - **Empty States**: Use shadcn Empty component in `src/components/ui/empty.tsx`
+
+---
 
 ## CRUD Feature Implementation Guide
 

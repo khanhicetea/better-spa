@@ -2,6 +2,116 @@
 
 Guidance for Claude Code when working with this Shell SPA boilerplate.
 
+---
+
+## CRITICAL AGENT RULES (READ FIRST)
+
+These rules differ from typical projects. **MUST follow or risk breaking the build.**
+
+### Technology Differences
+
+| Standard | This Project | Critical Note |
+|----------|--------------|---------------|
+| tRPC | **oRPC** | Completely different API. See [docs/rpc-architecture.md](docs/rpc-architecture.md) |
+| Radix UI | **Base UI** (`@base-ui/react`) | Use `render` prop, NOT `asChild` |
+| Manual memoization | **React Compiler** | NEVER use `useCallback`, `useMemo`, `memo` |
+| Tailwind v3 | **Tailwind v4** | No specific colors (e.g., `bg-blue-500`) unless user requests |
+| Testing required | **NO TESTING** | Only add tests if explicitly requested |
+| DB seeding | **NO SEEDING** | Never create seed files |
+| Kysely codegen | **NO CODEGEN** | Types are manually defined in `src/lib/db/schema/` |
+
+### Base UI Render Prop Pattern (CRITICAL)
+
+```tsx
+// WRONG - Radix asChild pattern
+<DialogTrigger asChild>
+  <Button>Open</Button>
+</DialogTrigger>
+
+// CORRECT - Base UI render prop pattern
+<DialogTrigger render={<Button />}>
+  Open
+</DialogTrigger>
+
+// CORRECT - With props
+<AlertDialogAction render={<Button variant="destructive" />}>
+  Delete
+</AlertDialogAction>
+```
+
+### React Compiler (CRITICAL)
+
+```tsx
+// WRONG - Don't do this
+const handleClick = useCallback(() => { ... }, [deps]);
+const computed = useMemo(() => expensive(), [deps]);
+const MemoComponent = memo(Component);
+
+// CORRECT - Just write normal code
+const handleClick = () => { ... };
+const computed = expensive();
+function Component() { ... }
+```
+
+### Tailwind Colors (CRITICAL)
+
+```tsx
+// WRONG - Specific colors
+<div className="bg-blue-500 text-white">
+
+// CORRECT - Theme variables
+<div className="bg-primary text-primary-foreground">
+<div className="bg-muted text-muted-foreground">
+<div className="bg-destructive text-destructive-foreground">
+```
+
+---
+
+## Agent Workflow Rules
+
+### Before Starting Any Task
+
+1. **List relevant docs first**:
+   ```
+   Available docs:
+   - docs/ui-guidelines.md (UI/forms/dialogs)
+   - docs/rpc-architecture.md (RPC handlers)
+   - docs/database-repository.md (DB operations)
+   - docs/development-guides.md (feature implementation)
+   - docs/job-queue-worker.md (background tasks)
+   - docs/file-storage.md (S3/uploads)
+   - docs/tanstack-start.md (routing)
+   - docs/shell-spa-architecture.md (architecture)
+   ```
+2. **Read the relevant docs** before implementing
+3. **For sub-agents**: Pass the doc paths to read in the prompt
+
+### When to Use Plan Mode
+
+**USE plan mode for:**
+- Implementing a whole new feature (new pages, new entities)
+- Major refactoring or architectural changes
+- Complex bugs requiring investigation
+
+**SKIP plan mode for:**
+- Simple bug fixes
+- Minor UI tweaks
+- Adding fields to existing forms
+- Small enhancements to existing features
+
+**In plan mode:**
+- Write the plan to the plan file BEFORE exiting
+- Include DB schema changes, file changes, implementation order
+
+### Explore Subagent Rules
+
+When exploring codebase:
+1. List directory structure first
+2. Pick at least 1 existing file as reference example
+3. Understand current patterns before suggesting changes
+
+---
+
 ## Shell SPA Pattern
 
 **SSR the shell** (auth, settings, minimal UI) + **SPA everything else** (routing, data, state).
@@ -14,9 +124,8 @@ Guidance for Claude Code when working with this Shell SPA boilerplate.
 
 ```bash
 pnpm dev              # Dev server (port 3000)
-pnpm check            # Format + lint + type-check
+pnpm check            # Format + lint + type-check (RUN AFTER FINISHING)
 pnpm kysely migrate latest   # Run migrations
-pnpm kysely codegen   # Generate DB types
 pnpm ui add <name>    # Add shadcn/ui component
 pnpm worker           # Start job worker
 ```
@@ -29,9 +138,9 @@ Full reference: [docs/commands.md](docs/commands.md)
 - **NEVER** expose/log/commit secrets and keys
 - Use TypeScript for type safety
 
-### Testing
-- **NO TESTING IF NOT MENTIONED**
+### Code Quality
 - Run `pnpm check` after finishing tasks
+- **NO TESTING IF NOT MENTIONED**
 
 ### Data & Database
 - All server data operations through RPC layer
@@ -51,11 +160,11 @@ Full reference: [docs/commands.md](docs/commands.md)
 | Framework | TanStack Start (SSR) |
 | Routing | TanStack Router (file-based) |
 | State | TanStack Query |
-| RPC | oRPC |
+| RPC | oRPC (NOT tRPC) |
 | Auth | Better Auth (cookie-based) |
 | DB | Kysely + PostgreSQL |
 | Jobs | PostgreSQL-backed queue |
-| UI | React 19 + shadcn/ui + Tailwind v4 |
+| UI | React 19 + shadcn/ui (Base UI) + Tailwind v4 |
 
 React Compiler enabled - no manual useCallback/useMemo/memo needed.
 
@@ -73,35 +182,36 @@ src/
 │   └── router.ts     # Main router
 ├── lib/db/           # Database layer
 │   ├── repositories/ # Data access
-│   └── schema/       # Type definitions
+│   └── schema/       # Type definitions (manual, no codegen)
 └── worker/           # Background jobs
 ```
 
 ## Implementation Checklist
 
-1. **Plan first, ask first** - Draft DB schema changes, get confirmation
-2. **Order**: DB schema > RPC handlers > Page route > UI > `pnpm check`
-3. Co-locate single-use components in page route file
-4. Each list item: separate component for independent mutation/status
-5. Add nav links: `src/components/app/app-sidebar.tsx` or `admin-sidebar.tsx`
+1. **Read relevant docs first** - Check documentation table below
+2. **Plan first, ask first** - Draft DB schema changes, get confirmation
+3. **Order**: DB schema > RPC handlers > Page route > UI > `pnpm check`
+4. Co-locate single-use components in page route file
+5. Each list item: separate component for independent mutation/status
+6. Add nav links: `src/components/app/app-sidebar.tsx` or `admin-sidebar.tsx`
 
 ## Detailed Documentation
 
-| Topic | Doc |
-|-------|-----|
-| Architecture | [docs/shell-spa-architecture.md](docs/shell-spa-architecture.md) |
-| Routing | [docs/tanstack-start.md](docs/tanstack-start.md) |
-| RPC Layer | [docs/rpc-architecture.md](docs/rpc-architecture.md) |
-| Database | [docs/database-repository.md](docs/database-repository.md) |
-| DB Schema | [docs/db-schema.md](docs/db-schema.md) |
-| Job Queue | [docs/job-queue-worker.md](docs/job-queue-worker.md) |
-| Feature Development | [docs/development-guides.md](docs/development-guides.md) |
-| UI/UX | [docs/ui-guidelines.md](docs/ui-guidelines.md) |
-| Utilities | [docs/utilities.md](docs/utilities.md) |
-| File Storage | [docs/file-storage.md](docs/file-storage.md) |
-| Commands | [docs/commands.md](docs/commands.md) |
-| DevOps | [docs/devops.md](docs/devops.md) |
-| Cloudflare | [docs/cloudflare.md](docs/cloudflare.md) |
+| Topic | Doc | When to Read |
+|-------|-----|--------------|
+| Architecture | [docs/shell-spa-architecture.md](docs/shell-spa-architecture.md) | Understanding project structure |
+| Routing | [docs/tanstack-start.md](docs/tanstack-start.md) | Adding pages, route guards |
+| RPC Layer | [docs/rpc-architecture.md](docs/rpc-architecture.md) | Creating API endpoints |
+| Database | [docs/database-repository.md](docs/database-repository.md) | DB queries, repositories |
+| DB Schema | [docs/db-schema.md](docs/db-schema.md) | Understanding current schema |
+| Job Queue | [docs/job-queue-worker.md](docs/job-queue-worker.md) | Background tasks |
+| Feature Development | [docs/development-guides.md](docs/development-guides.md) | Full CRUD implementation |
+| UI/UX | [docs/ui-guidelines.md](docs/ui-guidelines.md) | Forms, dialogs, tables |
+| Utilities | [docs/utilities.md](docs/utilities.md) | Date, lodash utils |
+| File Storage | [docs/file-storage.md](docs/file-storage.md) | S3, file uploads |
+| Commands | [docs/commands.md](docs/commands.md) | Available CLI commands |
+| DevOps | [docs/devops.md](docs/devops.md) | Deployment |
+| Cloudflare | [docs/cloudflare.md](docs/cloudflare.md) | Cloudflare Workers |
 
 ## Quick Reference
 

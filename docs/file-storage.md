@@ -1,5 +1,9 @@
 # File Storage (S3 / better-upload)
 
+**For Agents**: Read this doc when implementing file uploads or image handling.
+
+---
+
 ## Schema Pattern
 
 Always wrap file arrays in an object with `files` key for future extensibility:

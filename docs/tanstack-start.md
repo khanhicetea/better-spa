@@ -1,5 +1,9 @@
 # TanStack Start Routing Guide
 
+**For Agents**: Read this doc when adding new pages, working with route guards, or data loading.
+
+---
+
 This project uses **TanStack Start** (with **TanStack Router**) for type-safe, file-based routing. The routing system handles both Server-Side Rendering (SSR) and Client-Side Rendering (SPA) transitions seamlessly.
 
 ## Project Route Structure

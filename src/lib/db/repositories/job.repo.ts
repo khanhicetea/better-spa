@@ -175,7 +175,8 @@ export class JobRepository extends Repository<"job"> {
     if (!job) return undefined;
 
     // Parse JSON result if it's a string (stored as JSONB in DB)
-    const result = typeof job.result === "string" ? JSON.parse(job.result) : job.result;
+    const result =
+      typeof job.result === "string" ? JSON.parse(job.result) : job.result;
 
     return { ...job, result: result as JobResult<T> | null };
   }

@@ -1,5 +1,9 @@
 # Utility Libraries
 
+**For Agents**: Read this doc when working with dates or object/array utilities.
+
+---
+
 ## Date Handling (date-fns)
 
 ### Project Utilities

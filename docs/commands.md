@@ -1,5 +1,11 @@
 # Commands Reference
 
+**For Agents**: Reference for available CLI commands.
+
+**CRITICAL**: Always run `pnpm check` after completing tasks.
+
+---
+
 ## Development
 
 ```bash
