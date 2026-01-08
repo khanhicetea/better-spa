@@ -6,7 +6,7 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     devtools(),
     tsConfigPaths({
@@ -16,13 +16,18 @@ export default defineConfig({
     // https://tanstack.com/start/latest/docs/framework/react/guide/hosting
     nitro({
       preset: process.env.NITRO_PRESET || undefined,
-      scanDirs: ["src/nitro"],
-      experimental: {
-        tasks: true,
-      },
-      scheduledTasks: {
-        "* * * * *": ["hello"],
-      },
+      ...(command === "build"
+        ? {
+            scanDirs: ["src/nitro"],
+            experimental: {
+              tasks: true,
+              vite: {
+                serverReload: true,
+              },
+            },
+            scheduledTasks: { "* * * * *": ["hello"] },
+          }
+        : {}),
     }),
     viteReact({
       // https://react.dev/learn/react-compiler
@@ -39,4 +44,4 @@ export default defineConfig({
     }),
     tailwindcss(),
   ],
-});
+}));
