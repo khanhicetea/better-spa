@@ -6,6 +6,7 @@ import {
   getCurrentDB,
   getCurrentRepos,
   getCurrentSession,
+  getWaitUntil,
 } from "@/server/context";
 
 export const dbMiddleware = createMiddleware().server(async ({ next }) => {
@@ -32,7 +33,8 @@ export const tryAuthMiddleware = createMiddleware()
   .server(async ({ next, request }) => {
     const headers = request.headers;
     const session = getCurrentSession();
-    return next({ context: { session, headers } });
+    const waitUntil = getWaitUntil();
+    return next({ context: { session, headers, waitUntil } });
   });
 
 /**

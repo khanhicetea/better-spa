@@ -9,6 +9,7 @@ export type RequestContext = {
   session: ServerAuthSession;
   db: DB;
   repos: Repositories;
+  waitUntil: (promise: Promise<unknown>) => void;
 };
 
 // For Async Local Storage
@@ -43,4 +44,9 @@ export function getCurrentSession() {
 export function getCurrentRepos() {
   const ctx = getCurrentRequestContext();
   return ctx.repos;
+}
+
+export function getWaitUntil() {
+  const ctx = getCurrentRequestContext();
+  return ctx.waitUntil;
 }

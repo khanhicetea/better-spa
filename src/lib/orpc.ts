@@ -12,6 +12,7 @@ import {
   getCurrentRepos,
   getCurrentSession,
   getRequestHeaders,
+  getWaitUntil,
 } from "@/server/context";
 
 export type RPCClient = RouterClient<typeof rpcRouter>;
@@ -27,6 +28,7 @@ const getORPCClient = createIsomorphicFn()
           session: getCurrentSession(),
           auth: getCurrentAuth(),
           repos: getCurrentRepos(),
+          waitUntil: getWaitUntil(),
         };
       },
     }),

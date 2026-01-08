@@ -110,7 +110,7 @@ function useCountUp(
       const progress = Math.min((timestamp - startTime) / duration, 1);
 
       // Easing function for smooth animation
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      const easeOutQuart = 1 - (1 - progress) ** 4;
       setCount(Math.floor(easeOutQuart * end));
 
       if (progress < 1) {
@@ -664,11 +664,11 @@ function StatCounter({
   decimals?: number;
 }) {
   const { count, ref } = useCountUp(
-    decimals > 0 ? value * Math.pow(10, decimals) : value,
+    decimals > 0 ? value * 10 ** decimals : value,
     2000,
   );
   const displayValue =
-    decimals > 0 ? (count / Math.pow(10, decimals)).toFixed(decimals) : count;
+    decimals > 0 ? (count / 10 ** decimals).toFixed(decimals) : count;
 
   return (
     <div ref={ref} className="text-4xl font-bold tracking-tight md:text-5xl">

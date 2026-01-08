@@ -12,6 +12,8 @@ This document describes the type-safe, oRPC-based job queue system for backgroun
 
 This is a **PostgreSQL-backed, polling-based job queue** that leverages oRPC's type inference to provide end-to-end type safety without manual type definitions.
 
+**For quick background tasks, see the alternative:** [waitUntil in RPC Architecture](rpc-architecture.md#background-tasks-with-waituntil)
+
 ### Key Features
 
 - ✅ **Type-Safe**: Full type inference from job definition to execution
@@ -39,6 +41,53 @@ This is a **PostgreSQL-backed, polling-based job queue** that leverages oRPC's t
                         │  React Hook  │
                         │  (polling)   │
                         └──────────────┘
+```
+
+---
+
+## When to Use Job Queue vs waitUntil
+
+**Use Job Queue when:**
+- ✅ Task takes more than 5 seconds
+- ✅ Task must complete reliably (cannot be lost)
+- ✅ Task needs to be scheduled for later
+- ✅ Task needs progress tracking
+- ✅ Task should be retried on failure
+- ✅ Task is user-facing (exports, reports, emails)
+
+**Use waitUntil instead when:**
+- ✅ Task is very quick (< 1 second)
+- ✅ Task is optional (analytics, webhooks)
+- ✅ Task doesn't need persistence
+- ✅ Task doesn't need retries or scheduling
+- ✅ Examples: logging, cache updates, webhooks
+
+### Quick Comparison
+
+```typescript
+// Use waitUntil - lightweight, no persistence
+export const createPost = authedProcedure.handler(async ({ context }) => {
+  const post = await context.repos.post.create(...);
+
+  // Track analytics - can be lost, fast operation
+  context.waitUntil(
+    fetch("https://analytics.example.com/track", { method: "POST" })
+  );
+
+  return post;
+});
+
+// Use Job Queue - long-running, needs persistence
+export const exportPosts = authedProcedure.handler(async ({ context }) => {
+  // Create a persistent job that will retry on failure
+  const job = await repos.job.createJob({
+    type: "export_posts",
+    payload: { userId: context.user.id },
+    priority: JobPriority.HIGH,
+  });
+
+  return job;
+});
 ```
 
 ---

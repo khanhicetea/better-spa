@@ -16,6 +16,7 @@ export const baseProcedure = os
     db: DB;
     auth: ServerAuth;
     repos: Repositories;
+    waitUntil: (promise: Promise<unknown>) => void;
   }>()
   .errors({
     RATE_LIMITED: {

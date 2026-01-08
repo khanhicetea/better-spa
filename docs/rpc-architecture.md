@@ -132,8 +132,75 @@ interface ProcedureContext {
   user?: User;              // Authenticated user (authedProcedure/adminProcedure)
   session?: Session;        // Session data
   db: DB;                   // Direct Kysely access (prefer repos)
+  headers: Headers;         // HTTP request headers
+  auth: ServerAuth;         // Authentication service
+  waitUntil: (promise: Promise<unknown>) => void;  // Background task execution
 }
 ```
+
+## Background Tasks with waitUntil
+
+For lightweight background tasks that don't require persistence or complex error handling, use `waitUntil` to run work after the response is sent:
+
+```typescript
+export const createOrder = authedProcedure
+  .input(orderSchema)
+  .handler(async ({ input, context }) => {
+    const { repos, waitUntil, user } = context;
+
+    // Return response immediately
+    const order = await repos.order.create({
+      userId: user.id,
+      items: input.items,
+      status: "pending",
+    });
+
+    // Run these after response is sent (non-blocking)
+    waitUntil(sendOrderConfirmationEmail(user.email, order));
+    waitUntil(updateInventory(input.items));
+    waitUntil(
+      fetch("https://analytics.example.com/track", {
+        method: "POST",
+        body: JSON.stringify({ event: "order_created", orderId: order.id })
+      })
+    );
+
+    return { orderId: order.id };
+  });
+```
+
+### waitUntil vs Job Queue
+
+| Feature | waitUntil | Job Queue |
+|---------|-----------|-----------|
+| **Execution** | After response | Queued & persistent |
+| **Persistence** | No - lost if server crashes | Yes - database backed |
+| **Retries** | No | Yes - automatic retries |
+| **Scheduling** | No | Yes - schedule future execution |
+| **Priority** | No | Yes - priority-based |
+| **Progress Tracking** | No | Yes - real-time progress (0-100%) |
+| **Use Cases** | Analytics, webhooks, minor tasks | Exports, emails, reports |
+| **Guarantee** | Best-effort only | Reliable execution |
+
+**Use waitUntil for:**
+- Analytics tracking
+- Webhook notifications
+- Cache invalidation
+- Minor cleanup tasks
+- Optional features
+
+**Use Job Queue for:**
+- Long-running tasks (see [docs/job-queue-worker.md](job-queue-worker.md))
+- Tasks that must complete reliably
+- Scheduled/delayed execution
+- Tasks with progress tracking
+- User-facing operations
+
+### Runtime Support
+
+- **Production (Cloudflare Workers, etc.)**: Uses native `waitUntil()` API
+- **Development (Node/Vite)**: Promises are collected and awaited after response
+- Multiple `waitUntil` calls stack into a promise pool
 
 ## Error Handling
 

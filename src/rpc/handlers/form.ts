@@ -8,7 +8,13 @@ export const hello = baseProcedure
       email: z.email(),
     }),
   )
-  .handler(async ({ input }) => {
+  .handler(async ({ input, context }) => {
+    context.waitUntil(
+      fetch("https://myip.wtf/json")
+        .then((r) => r.json())
+        .then((json) => console.log(json)),
+    );
+
     return {
       message: `Hello ${input.name}, your email is ${input.email}!`,
     };

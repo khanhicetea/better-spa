@@ -32,7 +32,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useListenJob } from "@/lib/hooks/jobs";
 import { orpc } from "@/lib/orpc";
 import type { Outputs } from "@/rpc/types";
@@ -93,7 +97,9 @@ function TodoPage() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [activeTodo, setActiveTodo] = useState<TodoItem | null>(null);
   const [exportingJobId, setExportingJobId] = useState<string | null>(null);
-  const [exportingProgress, setExportingProgress] = useState<number | null>(null);
+  const [exportingProgress, setExportingProgress] = useState<number | null>(
+    null,
+  );
 
   const { data: categories, refetch: refetchCategories } = useSuspenseQuery(
     orpc.todoCategory.listCategories.queryOptions(),
@@ -269,8 +275,12 @@ function TodoPage() {
                     <ListTodo className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold text-foreground">{totalTodos}</div>
-                    <div className="text-xs text-muted-foreground font-medium">Tasks</div>
+                    <div className="text-lg font-bold text-foreground">
+                      {totalTodos}
+                    </div>
+                    <div className="text-xs text-muted-foreground font-medium">
+                      Tasks
+                    </div>
                   </div>
                 </div>
                 <div className="h-8 w-px bg-border/60" />
@@ -279,8 +289,12 @@ function TodoPage() {
                     <CheckCircle2 className="h-4 w-4 text-primary" />
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold text-primary">{completedTodos}</div>
-                    <div className="text-xs text-muted-foreground font-medium">Done</div>
+                    <div className="text-lg font-bold text-primary">
+                      {completedTodos}
+                    </div>
+                    <div className="text-xs text-muted-foreground font-medium">
+                      Done
+                    </div>
                   </div>
                 </div>
                 <div className="h-8 w-px bg-border/60" />
@@ -364,10 +378,12 @@ function TodoPage() {
             <div className="p-4 rounded-full bg-muted/50 mb-4">
               <Sparkles className="h-10 w-10 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Get Started with Your Board</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              Get Started with Your Board
+            </h3>
             <p className="text-muted-foreground max-w-md mb-6">
-              Create your first category to start organizing your tasks. Categories help
-              you group related todos together.
+              Create your first category to start organizing your tasks.
+              Categories help you group related todos together.
             </p>
           </div>
         )}
@@ -393,10 +409,17 @@ function TodoCardPreview({ todo }: { todo: TodoItem }) {
   );
 }
 
-function TodoCard({ todo, onRefetch }: { todo: TodoItem; onRefetch: () => void }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: todo.id,
-  });
+function TodoCard({
+  todo,
+  onRefetch,
+}: {
+  todo: TodoItem;
+  onRefetch: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: todo.id,
+    });
 
   const [isEditingContent, setIsEditingContent] = useState(false);
   const [editingContent, setEditingContent] = useState(todo.content);
@@ -681,7 +704,10 @@ function CategoryColumn({
             </div>
 
             <div className="flex items-center gap-1.5">
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 font-normal">
+              <Badge
+                variant="secondary"
+                className="text-xs px-2 py-0.5 font-normal"
+              >
                 {completedCount}/{todos.length}
               </Badge>
               {todos.length === 0 && (
@@ -714,7 +740,9 @@ function CategoryColumn({
 
           {isOver && (
             <div className="rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 h-14 flex items-center justify-center">
-              <span className="text-sm text-primary/70 font-medium">Drop here</span>
+              <span className="text-sm text-primary/70 font-medium">
+                Drop here
+              </span>
             </div>
           )}
 

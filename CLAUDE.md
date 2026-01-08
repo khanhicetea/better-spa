@@ -258,6 +258,27 @@ loader: async ({ context }) => {
 const { data, refetch } = useSuspenseQuery(orpc.product.list.queryOptions({ input: { page } }));
 ```
 
+### Background Tasks
+
+```typescript
+// Use waitUntil for lightweight tasks (analytics, webhooks, cache updates)
+export const createProduct = authedProcedure
+  .input(productSchema)
+  .handler(async ({ input, context }) => {
+    const product = await context.repos.product.create(input);
+
+    // Non-blocking background tasks
+    context.waitUntil(trackAnalytics({ event: "product_created" }));
+    context.waitUntil(invalidateCache("products"));
+    context.waitUntil(sendWebhook({ type: "product.created", product }));
+
+    return product;
+  });
+
+// Use Job Queue for long-running, persistent tasks (see docs/job-queue-worker.md)
+// Examples: exports, emails, reports - tasks that need retries & scheduling
+```
+
 ### Environment Variables
 
 ```env
