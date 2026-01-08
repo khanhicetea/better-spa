@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import type { ServerAuth, ServerAuthSession } from "@/lib/auth/init";
 import type { DB } from "@/lib/db/init";
 import type { Repositories } from "@/lib/db/repositories";
+import type { Worker } from "@/worker";
 
 export type RequestContext = {
   headers: Headers;
@@ -9,6 +10,7 @@ export type RequestContext = {
   session: ServerAuthSession;
   db: DB;
   repos: Repositories;
+  worker: Worker;
   waitUntil: (promise: Promise<unknown>) => void;
 };
 
@@ -49,4 +51,9 @@ export function getCurrentRepos() {
 export function getWaitUntil() {
   const ctx = getCurrentRequestContext();
   return ctx.waitUntil;
+}
+
+export function getCurrentWorker() {
+  const ctx = getCurrentRequestContext();
+  return ctx.worker;
 }

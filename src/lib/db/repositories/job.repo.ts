@@ -175,8 +175,7 @@ export class JobRepository extends Repository<"job"> {
     if (!job) return undefined;
 
     // Parse JSON result if it's a string (stored as JSONB in DB)
-    const result =
-      typeof job.result === "string" ? JSON.parse(job.result) : job.result;
+    const result = typeof job.result === "string" ? JSON.parse(job.result) : job.result;
 
     return { ...job, result: result as JobResult<T> | null };
   }
@@ -201,5 +200,56 @@ export class JobRepository extends Repository<"job"> {
       throw new Error(`Job with id ${jobId} not found`);
     }
     return job;
+  }
+
+  /**
+   * Update job progress (0-100)
+   */
+  async updateJobProgress(
+    jobId: string,
+    updates: { progress?: number; status?: JobStatus },
+  ): Promise<void> {
+    await this.db
+      .updateTable("job")
+      .set({
+        progress: updates.progress,
+        status: updates.status,
+        updatedAt: new Date(),
+      })
+      .where("id", "=", jobId)
+      .execute();
+  }
+
+  /**
+   * Mark job as completed with result
+   */
+  async completeJob(jobId: string, result: unknown): Promise<void> {
+    await this.db
+      .updateTable("job")
+      .set({
+        status: "completed" as JobStatus,
+        progress: 100,
+        result: JSON.stringify(result),
+        completedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where("id", "=", jobId)
+      .execute();
+  }
+
+  /**
+   * Mark job as failed with error message and increment retry count
+   */
+  async failJob(jobId: string, error: string): Promise<void> {
+    await this.db
+      .updateTable("job")
+      .set((eb) => ({
+        status: "failed" as JobStatus,
+        error,
+        retryCount: eb("retryCount", "+", 1),
+        updatedAt: new Date(),
+      }))
+      .where("id", "=", jobId)
+      .execute();
   }
 }

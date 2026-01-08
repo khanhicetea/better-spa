@@ -16,7 +16,7 @@ const exportTodosProcedure = workerProcedure
     const { userId } = input;
     const { repos, updateProgress } = context;
 
-    await updateProgress(10);
+    await updateProgress({ progress: 10 });
     await new Promise((r) => setTimeout(r, 2000));
 
     // Fetch categories
@@ -24,7 +24,7 @@ const exportTodosProcedure = workerProcedure
       where: { userId },
     });
 
-    await updateProgress(30);
+    await updateProgress({ progress: 30 });
     await new Promise((r) => setTimeout(r, 2000));
 
     // Fetch todo items
@@ -32,7 +32,7 @@ const exportTodosProcedure = workerProcedure
       where: { userId },
     });
 
-    await updateProgress(60);
+    await updateProgress({ progress: 60 });
     await new Promise((r) => setTimeout(r, 2000));
 
     // Build export data
@@ -58,13 +58,11 @@ const exportTodosProcedure = workerProcedure
       },
     };
 
-    await updateProgress(90);
+    await updateProgress({ progress: 90 });
     await new Promise((r) => setTimeout(r, 2000));
 
     // Simulate some processing time for demo
     await new Promise((resolve) => setTimeout(resolve, 500));
-
-    await updateProgress(100);
 
     return exportData;
   });

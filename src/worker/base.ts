@@ -1,7 +1,7 @@
 import { os } from "@orpc/server";
 import type { DB } from "@/lib/db/init";
 import type { Repositories } from "@/lib/db/repositories";
-import type { Job } from "@/lib/db/schema/job";
+import type { Job, JobStatus } from "@/lib/db/schema/job";
 
 /**
  * Worker-specific base procedure
@@ -16,5 +16,11 @@ export const workerProcedure = os.$context<{
   db: DB;
   repos: Repositories;
   job: Job;
-  updateProgress: (progress: number) => Promise<void>;
+  updateProgress: ({
+    progress,
+    status,
+  }: {
+    progress?: number;
+    status?: JobStatus;
+  }) => Promise<void>;
 }>();

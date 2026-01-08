@@ -1,16 +1,24 @@
+import { env } from "../src/env/server";
+import { getDatabase } from "../src/lib/db/init";
+import { createRepos } from "../src/lib/db/repositories";
 import { Worker } from "../src/worker";
 
 async function main() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
+  if (!env.DATABASE_URL) {
     throw new Error("DATABASE_URL environment variable is required");
   }
 
-  const worker = new Worker(connectionString);
+  // Initialize db and repos
+  const db = getDatabase(env.DATABASE_URL);
+  const repos = createRepos(db);
+
+  // Create worker with dependencies
+  const worker = new Worker(db, repos);
   worker.start();
 
   const shutdown = async () => {
     await worker.shutdown();
+    await db.destroy();
     process.exit(0);
   };
 

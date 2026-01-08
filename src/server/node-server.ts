@@ -4,13 +4,15 @@ import { env } from "@/env/server";
 import { getAuthConfig } from "@/lib/auth/init";
 import { getDatabase } from "@/lib/db/init";
 import { createRepos } from "@/lib/db/repositories";
+import { Worker } from "@/worker";
 import { workerCtx } from "./context";
 
 export function createNodeHandler(serverEntry: ServerEntry) {
-  // Singleton DB, Auth
+  // Singleton DB, Auth, Repos, Worker
   const db = getDatabase(env.DATABASE_URL);
   const auth = getAuthConfig(db);
   const repos = createRepos(db);
+  const worker = new Worker(db, repos);
 
   return {
     async fetch(request: Request, opts?: RequestOptions<undefined>) {
@@ -40,6 +42,7 @@ export function createNodeHandler(serverEntry: ServerEntry) {
         auth,
         session,
         repos,
+        worker,
         waitUntil,
       };
 

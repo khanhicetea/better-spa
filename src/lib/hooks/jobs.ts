@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { orpc } from "@/lib/orpc";
-import type { JobStatus, Job } from "@/lib/db/schema/job";
-import type { JobType, JobPayload, JobResult } from "@/worker/types";
 import { useEffect } from "react";
+import type { Job, JobStatus } from "@/lib/db/schema/job";
+import { orpc } from "@/lib/orpc";
+import type { JobPayload, JobResult, JobType } from "@/worker/types";
 
 /**
  * Typed job with specific payload and result types
@@ -73,10 +73,7 @@ export function useUserJobs(options: UseUserJobsOptions = {}) {
  * }
  * ```
  */
-export function useJob<T extends JobType = JobType>(
-  jobId: string,
-  enabled = true,
-) {
+export function useJob<T extends JobType = JobType>(jobId: string, enabled = true) {
   const query = useQuery({
     ...orpc.job.getJob.queryOptions({
       input: { id: jobId },
@@ -87,9 +84,7 @@ export function useJob<T extends JobType = JobType>(
       if (!job) return 1000;
 
       // Stop polling when job is complete/failed/cancelled
-      const isTerminal = ["completed", "failed", "cancelled"].includes(
-        job.status,
-      );
+      const isTerminal = ["completed", "failed", "cancelled"].includes(job.status);
       return isTerminal ? false : 1000;
     },
     refetchIntervalInBackground: false,
@@ -134,11 +129,12 @@ export function useListenJob<T extends JobType = JobType>({
   onCancel?: (job: TypedJob<T>) => void;
   onSettled?: (job: TypedJob<T>) => void;
 }) {
-  const query = useJob<T>(jobId, enabled);
-  const job = query.data;
+  const { data: job } = useJob<T>(jobId, enabled);
 
   useEffect(() => {
     if (!job) return;
+
+    console.log("change", job);
 
     // Call onChange for any status change
     onChange?.(job);
@@ -154,7 +150,16 @@ export function useListenJob<T extends JobType = JobType>({
       onCancel?.(job);
       onSettled?.(job);
     }
-  }, [job?.status, job?.progress]);
+  }, [
+    job?.status,
+    job?.progress,
+    job,
+    onChange,
+    onSuccess,
+    onFailed,
+    onCancel,
+    onSettled,
+  ]);
 
-  return query;
+  return job;
 }
