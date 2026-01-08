@@ -11,7 +11,8 @@
       "Bash(pnpm lint:*)",
       "Bash(pnpm kysely:*)",
       "Bash(wc:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(pnpm format:*)"
     ]
   }
 }
