@@ -669,12 +669,12 @@ const sendEmailProcedure = workerProcedure
     const { to, subject, body } = input;
     const { updateProgress } = context;
 
-    await updateProgress(10);
+    await updateProgress({ progress: 10, status: "processing" });
 
     // Send email logic here
     const messageId = await sendEmail(to, subject, body);
 
-    await updateProgress(100);
+    await updateProgress({ progress: 100 });
 
     return {
       messageId,
@@ -1026,8 +1026,12 @@ import { useUserJobs, useJob, useListenJob, type TypedJob } from "@/lib/hooks/jo
 ### Common Operations
 
 ```typescript
-// Create job
+// Create job without id (auto-generated uuid)
 await repos.job.createJob({ type, payload, userId, priority, runAt });
+
+// Create job with predefined id for tracking (previous source)
+await repos.job.createJob({ id, type, payload, userId, priority, runAt });
+
 
 // Create with factory
 const create = createJobFactory("export_todos");

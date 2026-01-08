@@ -45,7 +45,7 @@ export class JobRepository extends Repository<"job"> {
    * ```
    */
   async createJob<T extends JobType>(options: {
-    id: string;
+    id?: string;
     userId: string;
     type: T;
     payload: JobPayload<T>;
