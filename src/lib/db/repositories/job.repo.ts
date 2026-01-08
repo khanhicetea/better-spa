@@ -45,6 +45,7 @@ export class JobRepository extends Repository<"job"> {
    * ```
    */
   async createJob<T extends JobType>(options: {
+    id: string;
     userId: string;
     type: T;
     payload: JobPayload<T>;
@@ -54,6 +55,7 @@ export class JobRepository extends Repository<"job"> {
     runAt?: Date;
   }) {
     const {
+      id,
       userId,
       type,
       payload,
@@ -65,7 +67,7 @@ export class JobRepository extends Repository<"job"> {
     const now = new Date();
 
     return this.insertReturn({
-      id: generateUUID(),
+      id: id || generateUUID(),
       userId,
       type,
       label: label ?? DEFAULT_JOB_LABELS[type] ?? type,
