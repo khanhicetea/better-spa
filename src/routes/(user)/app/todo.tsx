@@ -48,37 +48,43 @@ export const Route = createFileRoute("/(user)/app/todo")({
 
 type TodoItem = Outputs["todoItem"]["listTodos"][number];
 
-// Color palette for categories
+// Theme-based color palette for categories
 const categoryColors = [
   {
-    bg: "from-violet-500/20 to-purple-500/10",
-    border: "border-violet-500/30",
-    accent: "bg-violet-500",
+    bg: "from-primary/15 via-primary/8 to-background",
+    border: "border-primary/20",
+    accent: "bg-primary",
+    text: "text-primary-foreground",
   },
   {
-    bg: "from-blue-500/20 to-cyan-500/10",
-    border: "border-blue-500/30",
-    accent: "bg-blue-500",
+    bg: "from-secondary/15 via-secondary/8 to-background",
+    border: "border-secondary/20",
+    accent: "bg-secondary",
+    text: "text-secondary-foreground",
   },
   {
-    bg: "from-emerald-500/20 to-teal-500/10",
-    border: "border-emerald-500/30",
-    accent: "bg-emerald-500",
+    bg: "from-accent/15 via-accent/8 to-background",
+    border: "border-accent/20",
+    accent: "bg-accent",
+    text: "text-accent-foreground",
   },
   {
-    bg: "from-orange-500/20 to-amber-500/10",
-    border: "border-orange-500/30",
-    accent: "bg-orange-500",
+    bg: "from-muted/20 via-muted/10 to-background",
+    border: "border-muted/30",
+    accent: "bg-muted",
+    text: "text-muted-foreground",
   },
   {
-    bg: "from-pink-500/20 to-rose-500/10",
-    border: "border-pink-500/30",
-    accent: "bg-pink-500",
+    bg: "from-destructive/10 via-destructive/5 to-background",
+    border: "border-destructive/20",
+    accent: "bg-destructive",
+    text: "text-destructive-foreground",
   },
   {
-    bg: "from-indigo-500/20 to-blue-500/10",
-    border: "border-indigo-500/30",
-    accent: "bg-indigo-500",
+    bg: "from-foreground/10 via-foreground/5 to-background",
+    border: "border-foreground/20",
+    accent: "bg-foreground",
+    text: "text-foreground",
   },
 ];
 
@@ -149,7 +155,7 @@ function TodoPage() {
         description: "Your todos have been exported successfully.",
         action: {
           label: "View Jobs",
-          onClick: () => navigate({ to: "/app/jobs" }),
+          onClick: () => navigate({ to: "/admin/jobs" }),
         },
       });
     },
@@ -233,50 +239,73 @@ function TodoPage() {
     totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      <div className="flex flex-col gap-6 p-6 max-w-[100vw]">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-accent/5 relative overflow-hidden">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
+
+      <div className="relative flex flex-col gap-8 p-8 max-w-[100vw] animate-fade-in">
         {/* Header Section */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/20">
-              <LayoutGrid className="h-6 w-6 text-primary-foreground" />
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div
+            className="flex items-center gap-4 animate-slide-up"
+            style={{ animationDelay: "0.1s" }}
+          >
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 shadow-xl shadow-primary/25 ring-1 ring-primary/20">
+              <LayoutGrid className="h-7 w-7 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
                 Todo Kanban Board
               </h1>
-              <p className="text-sm text-muted-foreground">
-                Organize your tasks with drag & drop
+              <p className="text-base text-muted-foreground font-medium">
+                Organize your tasks with elegant drag & drop
               </p>
             </div>
           </div>
 
           {/* Progress Stats and Export */}
-          <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-4 animate-slide-up"
+            style={{ animationDelay: "0.2s" }}
+          >
             {totalTodos > 0 && (
-              <div className="flex items-center gap-4 p-3 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm">
-                <div className="flex items-center gap-2">
-                  <ListTodo className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">
-                    {totalTodos} Tasks
-                  </span>
+              <div className="flex items-center gap-6 p-4 rounded-2xl bg-card/60 backdrop-blur-md border border-border/40 shadow-lg ring-1 ring-border/20">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-muted/50">
+                    <ListTodo className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-foreground">
+                      {totalTodos}
+                    </div>
+                    <div className="text-xs text-muted-foreground font-medium">
+                      Tasks
+                    </div>
+                  </div>
                 </div>
-                <div className="h-4 w-px bg-border" />
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  <span className="text-sm font-medium">
-                    {completedTodos} Done
-                  </span>
+                <div className="h-8 w-px bg-border/60" />
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-primary">
+                      {completedTodos}
+                    </div>
+                    <div className="text-xs text-muted-foreground font-medium">
+                      Done
+                    </div>
+                  </div>
                 </div>
-                <div className="h-4 w-px bg-border" />
-                <div className="flex items-center gap-2">
-                  <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
+                <div className="h-8 w-px bg-border/60" />
+                <div className="flex items-center gap-3">
+                  <div className="w-20 h-3 rounded-full bg-muted/60 overflow-hidden ring-1 ring-border/30">
                     <div
-                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500 ease-out"
+                      className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary/60 transition-all duration-700 ease-out shadow-sm"
                       style={{ width: `${progressPercentage}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-muted-foreground">
+                  <span className="text-sm font-semibold text-foreground min-w-[2.5rem] text-center">
                     {progressPercentage}%
                   </span>
                 </div>
@@ -309,13 +338,17 @@ function TodoPage() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex gap-4 pb-4 -mx-2 px-2">
+          <div
+            className="flex gap-6 pb-6 overflow-x-auto animate-slide-up"
+            style={{ animationDelay: "0.3s" }}
+          >
             {categories.map((category, index) => (
               <CategoryColumn
                 key={category.id}
                 category={category}
                 todos={groupedTodos[category.id] || []}
                 colorScheme={getCategoryColor(index)}
+                index={index}
                 onRefetch={() => {
                   refetchTodos();
                   refetchCategories();
@@ -435,9 +468,9 @@ function TodoCard({
     <Card
       ref={setNodeRef}
       style={style}
-      className={`group relative transition-all duration-200 border-border/50 hover:border-border hover:shadow-md ${
-        isDragging ? "opacity-40 scale-95" : ""
-      } ${todo.completedAt ? "bg-muted/30" : "bg-card hover:bg-card/80"}`}
+      className={`group relative transition-all duration-300 border border-border/40 hover:border-primary/30 hover:shadow-lg ring-1 ring-border/5 ${
+        isDragging ? "opacity-50 scale-95 rotate-2" : "hover:scale-[1.02]"
+      } ${todo.completedAt ? "bg-muted/20 opacity-75" : "bg-card/90 backdrop-blur-sm hover:bg-card"}`}
     >
       <CardContent className="p-3">
         <div className="flex items-start gap-3">
@@ -451,7 +484,7 @@ function TodoCard({
                     disabled={updateMutation.isPending}
                     className={`h-5 w-5 rounded-full transition-all ${
                       todo.completedAt
-                        ? "border-emerald-500 bg-emerald-500 text-white"
+                        ? "border-primary bg-primary text-primary-foreground"
                         : "border-muted-foreground/40 hover:border-primary"
                     }`}
                   />
@@ -481,7 +514,6 @@ function TodoCard({
                 }}
                 className="w-full text-sm leading-relaxed resize-none border-none p-0 focus:ring-0 bg-transparent outline-none"
                 rows={Math.max(1, editingContent.split("\n").length)}
-                autoFocus
               />
             ) : (
               <p
@@ -546,6 +578,7 @@ interface CategoryColumnProps {
   category: { id: string; name: string };
   todos: TodoItem[];
   colorScheme: { bg: string; border: string; accent: string };
+  index: number;
   onRefetch: () => void;
 }
 
@@ -553,6 +586,7 @@ function CategoryColumn({
   category,
   todos,
   colorScheme,
+  index,
   onRefetch,
 }: CategoryColumnProps) {
   const [isAdding, setIsAdding] = useState(false);
@@ -619,17 +653,24 @@ function CategoryColumn({
   const completedCount = todos.filter((t) => t.completedAt).length;
 
   return (
-    <div className="shrink-0 w-72">
+    <div
+      className="shrink-0 w-80 animate-fade-in"
+      style={{ animationDelay: `${0.1 * index}s` }}
+    >
       <div
         ref={setNodeRef}
-        className={`rounded-xl border backdrop-blur-sm transition-all duration-200 overflow-hidden ${colorScheme.border} ${
+        className={`rounded-2xl border backdrop-blur-md transition-all duration-300 overflow-hidden shadow-lg ring-1 ring-border/10 ${colorScheme.border} ${
           isOver
-            ? "animate-bounce-subtle shadow-xl shadow-primary/20"
-            : "hover:shadow-md"
+            ? "scale-105 shadow-2xl shadow-primary/30 ring-primary/20 animate-pulse-subtle"
+            : "hover:shadow-xl hover:scale-[1.02]"
         }`}
       >
         {/* Category Header */}
-        <div className={`p-4 rounded-t-xl bg-gradient-to-br ${colorScheme.bg}`}>
+        <div
+          className={`p-5 rounded-t-2xl bg-gradient-to-br ${colorScheme.bg} relative overflow-hidden`}
+        >
+          {/* Subtle pattern overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <div className={`w-2 h-2 rounded-full ${colorScheme.accent}`} />
@@ -646,18 +687,19 @@ function CategoryColumn({
                     }
                   }}
                   className="h-6 text-sm font-semibold border-none p-0 focus-visible:ring-0 bg-transparent"
-                  autoFocus
                 />
               ) : (
-                <span
-                  className="font-semibold text-sm truncate cursor-pointer hover:opacity-80 transition-opacity"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 font-semibold text-sm truncate hover:opacity-80 transition-opacity justify-start"
                   onClick={() => {
                     setIsEditingName(true);
                     setEditingName(category.name);
                   }}
                 >
                   {category.name}
-                </span>
+                </Button>
               )}
             </div>
 
@@ -728,7 +770,6 @@ function CategoryColumn({
                   }
                 }}
                 className="h-9 text-sm"
-                autoFocus
               />
               <div className="flex gap-2">
                 <Button
@@ -807,7 +848,6 @@ function AddCategoryColumn({
                 }
               }}
               className="h-10"
-              autoFocus
             />
             <div className="flex gap-2">
               <Button
