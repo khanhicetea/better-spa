@@ -75,5 +75,5 @@ pnpm worker:build           # Build worker
 
 # Run in production (separate processes)
 node .output/server/index.mjs    # Server
-node .output/worker/worker.js    # Worker
+node .output/worker/runner.js    # Worker
 ```

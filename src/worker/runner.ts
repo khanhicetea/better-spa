@@ -1,7 +1,7 @@
-import { env } from "../src/env/server";
-import { getDatabase } from "../src/lib/db/init";
-import { createRepos } from "../src/lib/db/repositories";
-import { Worker } from "../src/worker";
+import { env } from "@/env/server";
+import { getDatabase } from "@/lib/db/init";
+import { createRepos } from "@/lib/db/repositories";
+import { Worker } from "./worker";
 
 async function main() {
   if (!env.DATABASE_URL) {

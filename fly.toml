@@ -17,7 +17,7 @@ primary_region = 'iad'
 # Process groups - Define different processes to run
 [processes]
   app = "node .output/server/index.mjs"       # Web server
-  worker = "node .output/worker/worker.js"    # Background job worker
+  worker = "node .output/worker/runner.js"    # Background job worker
 
 # HTTP service configuration (server only)
 [http_service]

@@ -1,7 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["scripts/worker.ts"],
+  entry: ["src/worker/runner.ts"],
   outDir: ".output/worker",
   format: ["esm"],
   target: "node20",

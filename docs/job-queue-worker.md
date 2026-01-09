@@ -465,10 +465,10 @@ pnpm worker      # or pnpm worker:dev (tsx --env-file=.env scripts/worker.ts)
 **Production:**
 ```bash
 # 1. Build the worker
-pnpm worker:build  # Compiles to .output/worker/worker.js
+pnpm worker:build  # Compiles to .output/worker/runner.js
 
 # 2. Run the compiled worker
-pnpm worker:start  # or: node .output/worker/worker.js
+pnpm worker:start  # or: node .output/worker/runner.js
 ```
 
 ### Production Build Setup
@@ -477,7 +477,7 @@ The worker uses **tsup** (`tsup.config.ts`) to compile TypeScript into a product
 
 **Build Output:**
 - Entry: `scripts/worker.ts`
-- Output: `.output/worker/worker.js`
+- Output: `.output/worker/runner.js`
 
 **Environment Variables:**
 - Development: Loaded from `.env` file via `--env-file` flag
@@ -489,7 +489,7 @@ The worker uses **tsup** (`tsup.config.ts`) to compile TypeScript into a product
 node .output/server/index.mjs
 
 # Terminal 2 - Job Worker
-node .output/worker/worker.js
+node .output/worker/runner.js
 ```
 
 ### Multiple Workers

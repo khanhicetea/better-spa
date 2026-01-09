@@ -21,7 +21,7 @@
     "worker": "tsx --env-file=.env scripts/worker.ts",
     "worker:dev": "tsx --env-file=.env scripts/worker.ts",
     "worker:build": "tsup",
-    "worker:start": "node .output/worker/worker.js"
+    "worker:start": "node .output/worker/runner.js"
   },
   "dependencies": {
     "@better-upload/client": "^3.0.12",
