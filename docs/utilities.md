@@ -8,10 +8,10 @@
 
 ### Project Utilities
 
-Use `src/lib/utils/date.ts` for common formatting:
+Use `src/lib/helpers/date.ts` for common formatting:
 
 ```typescript
-import { formatDate, formatRelativeTime, formatSmart, formatTime, formatDateOnly } from "@/lib/utils/date";
+import { formatDate, formatRelativeTime, formatSmart, formatTime, formatDateOnly } from "@/lib/helpers/date";
 
 formatDate(date, "MMM d, yyyy h:mm a")  // "Jan 6, 2026 3:45 PM"
 formatRelativeTime(date)                 // "2 hours ago", "in 3 days"
