@@ -224,15 +224,17 @@ function Logo({ className }: { className?: string }) {
 
 function SimpleThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
-  const [isDark, setIsDark] = useState(false);
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
 
   // Determine actual theme (resolve "system" to actual value)
   useEffect(() => {
     const checkDark = () => {
       if (theme === "system") {
-        setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+        setIsDarkTheme(
+          window.matchMedia("(prefers-color-scheme: dark)").matches,
+        );
       } else {
-        setIsDark(theme === "dark");
+        setIsDarkTheme(theme === "dark");
       }
     };
 
@@ -245,7 +247,7 @@ function SimpleThemeToggle({ className }: { className?: string }) {
   }, [theme]);
 
   const toggle = () => {
-    setTheme(isDark ? "light" : "dark");
+    setTheme(isDarkTheme ? "light" : "dark");
   };
 
   return (
@@ -256,7 +258,7 @@ function SimpleThemeToggle({ className }: { className?: string }) {
         "bg-muted hover:bg-muted/80 relative inline-flex h-8 w-14 items-center rounded-full p-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
         className,
       )}
-      aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+      aria-label={`Switch to ${isDarkTheme ? "light" : "dark"} mode`}
     >
       {/* Track icons */}
       <Sun className="text-muted-foreground absolute left-2 size-4" />
@@ -266,10 +268,10 @@ function SimpleThemeToggle({ className }: { className?: string }) {
       <span
         className={cn(
           "bg-foreground flex size-6 items-center justify-center rounded-full shadow-sm transition-transform duration-300",
-          isDark ? "translate-x-6" : "translate-x-0",
+          isDarkTheme ? "translate-x-6" : "translate-x-0",
         )}
       >
-        {isDark ? (
+        {isDarkTheme ? (
           <Moon className="text-background size-3.5" />
         ) : (
           <Sun className="text-background size-3.5" />
@@ -321,7 +323,7 @@ function NavbarSkeleton() {
 }
 
 function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openMobileMenu, setOpenMobileMenu] = useState(false);
   const activeSection = useScrollSpy();
 
   return (
@@ -370,9 +372,9 @@ function Navbar() {
         <button
           type="button"
           className="text-foreground md:hidden"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          onClick={() => setOpenMobileMenu(!openMobileMenu)}
         >
-          {mobileMenuOpen ? (
+          {openMobileMenu ? (
             <X className="size-6" />
           ) : (
             <Menu className="size-6" />
@@ -381,14 +383,14 @@ function Navbar() {
       </div>
 
       {/* Mobile Menu */}
-      {mobileMenuOpen && (
+      {openMobileMenu && (
         <div className="border-border/50 bg-background border-t md:hidden">
           <nav className="flex flex-col gap-4 px-6 py-4">
             {NAV_SECTIONS.map((section) => (
               <a
                 key={section}
                 href={`#${section}`}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => setOpenMobileMenu(false)}
                 className={cn(
                   "text-sm transition-colors",
                   activeSection === section

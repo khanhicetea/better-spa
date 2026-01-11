@@ -101,8 +101,8 @@ function UsersPage() {
   );
   const navigate = Route.useNavigate();
   const [rowSelection, setRowSelection] = useState({});
-  const [bannedUser, setBannedUser] = useState<User | null>(null);
-  const [changePasswordUser, setChangePasswordUser] = useState<User | null>(
+  const [userToBan, setUserToBan] = useState<User | null>(null);
+  const [userToChangePassword, setUserToChangePassword] = useState<User | null>(
     null,
   );
 
@@ -126,7 +126,7 @@ function UsersPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setBannedUser(user);
+                  setUserToBan(user);
                 }}
               >
                 <BanIcon />
@@ -137,7 +137,7 @@ function UsersPage() {
               variant="outline"
               size="sm"
               onClick={() => {
-                setChangePasswordUser(user);
+                setUserToChangePassword(user);
               }}
             >
               <KeyIcon />
@@ -260,25 +260,25 @@ function UsersPage() {
           />
         </div>
       </div>
-      {bannedUser && (
+      {userToBan && (
         <BanUserForm
-          key={bannedUser.id}
-          user={bannedUser}
-          onOpenChange={(v) => v || setBannedUser(null)}
+          key={userToBan.id}
+          user={userToBan}
+          onOpenChange={(v) => v || setUserToBan(null)}
           onSuccess={() => {
             refetchUsers();
-            toast.success(`User ${bannedUser.email} has been banned !`);
+            toast.success(`User ${userToBan.email} has been banned !`);
           }}
         />
       )}
-      {changePasswordUser && (
+      {userToChangePassword && (
         <ChangePasswordForm
-          key={changePasswordUser.id}
-          user={changePasswordUser}
-          onOpenChange={(v) => v || setChangePasswordUser(null)}
+          key={userToChangePassword.id}
+          user={userToChangePassword}
+          onOpenChange={(v) => v || setUserToChangePassword(null)}
           onSuccess={() => {
             toast.success(
-              `Password for user ${changePasswordUser.email} has been changed`,
+              `Password for user ${userToChangePassword.email} has been changed`,
             );
           }}
         />
@@ -334,17 +334,17 @@ function UnbanUserButton({
   user: User;
   onSuccess: () => void;
 }) {
-  const [isPendingUnban, setIsPendingUnban] = useState(false);
+  const [isUnbanningUser, setIsUnbanningUser] = useState(false);
 
   const handleUnban = async () => {
-    setIsPendingUnban(true);
+    setIsUnbanningUser(true);
     const res = await authClient.admin.unbanUser({
       userId: user.id,
     });
     if (res.error === null) {
       onSuccess();
     } else {
-      setIsPendingUnban(false);
+      setIsUnbanningUser(false);
     }
   };
 
@@ -353,7 +353,7 @@ function UnbanUserButton({
       size="sm"
       variant="outline"
       onClick={handleUnban}
-      disabled={isPendingUnban}
+      disabled={isUnbanningUser}
     >
       <FlagIcon /> Unban
     </Button>
@@ -596,7 +596,7 @@ function CreateUserForm({
   trigger: ReactElement;
   onSuccess: (user: UserWithRole) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [isCreateUserDialogOpen, setIsCreateUserDialogOpen] = useState(false);
 
   const form = useForm<CreateUser>({
     defaultValues: {
@@ -623,7 +623,7 @@ function CreateUserForm({
       return res.data;
     },
     onSuccess: (data) => {
-      setOpen(false);
+      setIsCreateUserDialogOpen(false);
       form.reset();
       onSuccess(data.user);
     },
@@ -633,7 +633,10 @@ function CreateUserForm({
   });
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet
+      open={isCreateUserDialogOpen}
+      onOpenChange={setIsCreateUserDialogOpen}
+    >
       <SheetTrigger render={trigger} />
       <SheetContent>
         <Form {...form}>

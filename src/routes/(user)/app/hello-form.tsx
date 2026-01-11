@@ -90,19 +90,23 @@ function RouteComponent() {
 }
 
 function ImageUploadForm() {
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { upload, progresses, isPending } = useUploadFiles({
+  const {
+    upload,
+    progresses,
+    isPending: isUploadingImages,
+  } = useUploadFiles({
     route: "images",
     api: "/api/upload",
     onUploadComplete: ({ files }) => {
       toast.success(`Successfully uploaded ${files.length} image(s)`);
 
       // Clear files
-      setSelectedFiles([]);
-      setPreviews([]);
+      setSelectedImageFiles([]);
+      setImagePreviews([]);
     },
     onUploadFail: ({ failedFiles }) => {
       for (const file of failedFiles) {
@@ -118,13 +122,13 @@ function ImageUploadForm() {
     const files = Array.from(e.target.files || []);
     const imageFiles = files.filter((file) => file.type.startsWith("image/"));
 
-    setSelectedFiles((prev) => [...prev, ...imageFiles]);
+    setSelectedImageFiles((prev) => [...prev, ...imageFiles]);
 
     // Generate previews
     imageFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviews((prev) => [...prev, reader.result as string]);
+        setImagePreviews((prev) => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
     });
@@ -135,18 +139,18 @@ function ImageUploadForm() {
     }
   };
 
-  const removeFile = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-    setPreviews((prev) => prev.filter((_, i) => i !== index));
+  const removeImageFile = (index: number) => {
+    setSelectedImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleUpload = () => {
-    if (selectedFiles.length === 0) {
+  const handleImageUpload = () => {
+    if (selectedImageFiles.length === 0) {
       toast.error("Please select at least one image");
       return;
     }
 
-    upload(selectedFiles);
+    upload(selectedImageFiles);
   };
 
   return (
@@ -175,27 +179,27 @@ function ImageUploadForm() {
           </Button>
         </div>
 
-        {selectedFiles.length > 0 && (
+        {selectedImageFiles.length > 0 && (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              {selectedFiles.length} image(s) selected
+              {selectedImageFiles.length} image(s) selected
             </p>
             <div className="grid grid-cols-3 gap-2">
-              {previews.map((preview, index) => (
+              {imagePreviews.map((preview, index) => (
                 <div key={index} className="group relative aspect-square">
                   <img
                     src={preview}
-                    alt={selectedFiles[index].name}
+                    alt={selectedImageFiles[index].name}
                     className="size-full rounded object-cover"
                   />
                   <button
                     type="button"
-                    onClick={() => removeFile(index)}
+                    onClick={() => removeImageFile(index)}
                     className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 opacity-0 transition-opacity group-hover:opacity-100"
                   >
                     <X className="size-3 text-destructive-foreground" />
                   </button>
-                  {isPending && progresses[index] !== undefined && (
+                  {isUploadingImages && progresses[index] !== undefined && (
                     <div className="absolute inset-0 flex items-center justify-center rounded bg-black/50">
                       <span className="text-sm font-semibold text-white">
                         {Math.round(progresses[index].progress * 100)}%
@@ -209,11 +213,11 @@ function ImageUploadForm() {
         )}
 
         <Button
-          onClick={handleUpload}
-          disabled={selectedFiles.length === 0 || isPending}
+          onClick={handleImageUpload}
+          disabled={selectedImageFiles.length === 0 || isUploadingImages}
           className="w-full"
         >
-          {isPending ? "Uploading..." : "Upload Images"}
+          {isUploadingImages ? "Uploading..." : "Upload Images"}
         </Button>
       </div>
     </div>

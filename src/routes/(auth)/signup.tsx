@@ -17,7 +17,7 @@ function SignupForm() {
   const { redirectUrl } = Route.useRouteContext();
   const navigate = useNavigate();
 
-  const { mutate: signupMutate, isPending } = useMutation({
+  const { mutate: signupMutate, isPending: isSubmittingSignup } = useMutation({
     mutationFn: async (data: {
       name: string;
       email: string;
@@ -42,7 +42,7 @@ function SignupForm() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isPending) return;
+    if (isSubmittingSignup) return;
 
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
@@ -84,7 +84,7 @@ function SignupForm() {
                 name="name"
                 type="text"
                 placeholder="John Doe"
-                readOnly={isPending}
+                readOnly={isSubmittingSignup}
                 required
               />
             </div>
@@ -95,7 +95,7 @@ function SignupForm() {
                 name="email"
                 type="email"
                 placeholder="hello@example.com"
-                readOnly={isPending}
+                readOnly={isSubmittingSignup}
                 required
               />
             </div>
@@ -106,7 +106,7 @@ function SignupForm() {
                 name="password"
                 type="password"
                 placeholder="Password"
-                readOnly={isPending}
+                readOnly={isSubmittingSignup}
                 required
               />
             </div>
@@ -117,7 +117,7 @@ function SignupForm() {
                 name="confirm_password"
                 type="password"
                 placeholder="Confirm Password"
-                readOnly={isPending}
+                readOnly={isSubmittingSignup}
                 required
               />
             </div>
@@ -125,10 +125,10 @@ function SignupForm() {
               type="submit"
               className="mt-2 w-full"
               size="lg"
-              disabled={isPending}
+              disabled={isSubmittingSignup}
             >
-              {isPending && <LoaderCircle className="animate-spin" />}
-              {isPending ? "Signing up..." : "Sign up"}
+              {isSubmittingSignup && <LoaderCircle className="animate-spin" />}
+              {isSubmittingSignup ? "Signing up..." : "Sign up"}
             </Button>
           </div>
           <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
@@ -140,7 +140,7 @@ function SignupForm() {
             <SignInSocialButton
               provider="github"
               callbackURL={redirectUrl}
-              disabled={isPending}
+              disabled={isSubmittingSignup}
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                   <path
@@ -153,7 +153,7 @@ function SignupForm() {
             <SignInSocialButton
               provider="google"
               callbackURL={redirectUrl}
-              // disabled={isPending}
+              // disabled={isSubmittingSignup}
               disabled={true} // TODO disabled just for the preview deployment at https://tanstarter.nize.ph
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">

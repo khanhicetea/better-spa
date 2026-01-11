@@ -17,27 +17,30 @@ function LoginForm() {
   const navigate = Route.useNavigate();
   const { redirectUrl } = Route.useRouteContext();
 
-  const { mutate: emailLoginMutate, isPending } = useMutation({
-    mutationFn: async (data: { email: string; password: string }) =>
-      await authClient.signIn.email(
-        {
-          ...data,
-          callbackURL: redirectUrl,
-        },
-        {
-          onError: ({ error }) => {
-            toast.error(error.message || "An error occurred while signing in.");
+  const { mutate: emailLoginMutate, isPending: isSubmittingLogin } =
+    useMutation({
+      mutationFn: async (data: { email: string; password: string }) =>
+        await authClient.signIn.email(
+          {
+            ...data,
+            callbackURL: redirectUrl,
           },
-          onSuccess: () => {
-            navigate({ to: redirectUrl, reloadDocument: true });
+          {
+            onError: ({ error }) => {
+              toast.error(
+                error.message || "An error occurred while signing in.",
+              );
+            },
+            onSuccess: () => {
+              navigate({ to: redirectUrl, reloadDocument: true });
+            },
           },
-        },
-      ),
-  });
+        ),
+    });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isPending) return;
+    if (isSubmittingLogin) return;
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
@@ -72,7 +75,7 @@ function LoginForm() {
                 name="email"
                 type="email"
                 placeholder="hello@example.com"
-                readOnly={isPending}
+                readOnly={isSubmittingLogin}
                 required
               />
             </div>
@@ -83,7 +86,7 @@ function LoginForm() {
                 name="password"
                 type="password"
                 placeholder="Enter password here"
-                readOnly={isPending}
+                readOnly={isSubmittingLogin}
                 required
               />
             </div>
@@ -91,10 +94,10 @@ function LoginForm() {
               type="submit"
               className="mt-2 w-full"
               size="lg"
-              disabled={isPending}
+              disabled={isSubmittingLogin}
             >
-              {isPending && <LoaderCircle className="animate-spin" />}
-              {isPending ? "Logging in..." : "Login"}
+              {isSubmittingLogin && <LoaderCircle className="animate-spin" />}
+              {isSubmittingLogin ? "Logging in..." : "Login"}
             </Button>
           </div>
           <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
@@ -106,7 +109,7 @@ function LoginForm() {
             <SignInSocialButton
               provider="github"
               callbackURL={redirectUrl}
-              disabled={isPending}
+              disabled={isSubmittingLogin}
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                   <path
@@ -119,7 +122,7 @@ function LoginForm() {
             <SignInSocialButton
               provider="google"
               callbackURL={redirectUrl}
-              // disabled={isPending}
+              // disabled={isSubmittingLogin}
               disabled={true} // TODO disabled just for the preview deployment at https://tanstarter.nize.ph
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">

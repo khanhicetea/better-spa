@@ -57,11 +57,7 @@ export const Route = createFileRoute("/admin/jobs")({
 type Job = Outputs["job"]["listJobs"][number];
 
 function JobsPage() {
-  const {
-    data: jobs,
-    isLoading,
-    refetch,
-  } = useSuspenseQuery(
+  const { data: jobs, refetch } = useSuspenseQuery(
     orpc.job.listAllJobs.queryOptions({
       input: { limit: 100 },
       refetchInterval: (query) => {
@@ -77,10 +73,6 @@ function JobsPage() {
       },
     }),
   );
-
-  if (isLoading) {
-    return <PagePending />;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
