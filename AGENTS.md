@@ -120,6 +120,9 @@ When exploring codebase:
 - Implemented in `src/routes/__root.tsx`
 - Uses **oRPC** (NOT tRPC)
 - React Query caching during SSR, then client takes over
+- RPC handler is running in the server-side, then return serialized data into frontend
+- `orpc` is a helper library for frontend to interact with RPC handlers. It uses dot notation to access nested properties (router > group-handler > handler). So the handler should be named in a way that makes sense for the frontend to access it easily. Eg: orpc.user.getProfile or orpc.product.listProducts
+- **ONLY** passing serialized data from frontend into input of orpc
 
 ## Quick Commands
 
