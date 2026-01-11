@@ -16,13 +16,8 @@ Before writing any code:
 
 ### Example Reference Files
 
-| Task Type | Reference File |
-|-----------|----------------|
-| CRUD page | `src/routes/(user)/app/todo.tsx` |
-| RPC handler | `src/rpc/handlers/todoItem.ts` |
-| Repository | `src/lib/db/repositories/todoItem.repo.ts` |
-| Migration | `src/lib/db/migrations/003_todo.ts` |
-| Schema types | `src/lib/db/schema/todo.ts` |
+- Example admin user management : checking `src/routes/admin/users.tsx`
+- Example Blog CRUD (Listing pagination, Tanstack Table, Single Form for create/update) : checking `docs/example-crud-blog.md`
 
 ---
 
