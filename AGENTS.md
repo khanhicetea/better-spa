@@ -211,6 +211,7 @@ src/
 | Job Queue | [docs/job-queue-worker.md](docs/job-queue-worker.md) | Background tasks |
 | Feature Development | [docs/development-guides.md](docs/development-guides.md) | Full CRUD implementation |
 | React Conventions | [docs/react-conventions.md](docs/react-conventions.md) | React conventions for writing good React code |
+| Example CRUD Blog | [docs/example-crud-blog.md](docs/example-crud-blog.md) | CRUD implementation example, must reading when implementing full CRUD features |
 | UI/UX | [docs/ui-guidelines.md](docs/ui-guidelines.md) | Forms, dialogs, tables |
 | Utilities | [docs/utilities.md](docs/utilities.md) | Date, lodash utils |
 | File Storage | [docs/file-storage.md](docs/file-storage.md) | S3, file uploads |
