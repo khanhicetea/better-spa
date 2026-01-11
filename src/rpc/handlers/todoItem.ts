@@ -12,7 +12,6 @@ export const createTodo = authedProcedure
   .input(
     z.object({
       content: z.string().min(1),
-      categoryId: z.string(),
     }),
   )
   .handler(async ({ input, context }) => {
@@ -20,7 +19,6 @@ export const createTodo = authedProcedure
     const newTodo = await repos.todoItem.insertReturn({
       id: generateUUID(),
       userId: context.user.id,
-      categoryId: input.categoryId,
       content: input.content,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -34,7 +32,6 @@ export const updateTodo = authedProcedure
       id: z.string(),
       content: z.string().min(1).optional(),
       completedAt: z.date().nullable().optional(),
-      categoryId: z.string().optional(),
     }),
   )
   .handler(async ({ input, context, errors }) => {

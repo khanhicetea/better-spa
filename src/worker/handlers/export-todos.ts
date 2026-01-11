@@ -4,7 +4,7 @@ import { workerProcedure } from "../base";
 /**
  * Export todos job handler
  *
- * This handler exports all todos for a user, including categories and items.
+ * This handler exports all todos for a user.
  * Progress is updated at multiple stages: 10% → 30% → 60% → 90% → 100%
  */
 
@@ -17,15 +17,7 @@ const exportTodosProcedure = workerProcedure
     const { repos, updateProgress } = context;
 
     await updateProgress({ progress: 10 });
-    await new Promise((r) => setTimeout(r, 2000));
-
-    // Fetch categories
-    const categories = await repos.todoCategory.find({
-      where: { userId },
-    });
-
-    await updateProgress({ progress: 30 });
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 1000));
 
     // Fetch todo items
     const todoItems = await repos.todoItem.find({
@@ -33,36 +25,25 @@ const exportTodosProcedure = workerProcedure
     });
 
     await updateProgress({ progress: 60 });
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 1000));
 
     // Build export data
     const exportData = {
       exportedAt: new Date().toISOString(),
-      categories: categories.map((cat) => ({
-        id: cat.id,
-        name: cat.name,
-        createdAt: cat.createdAt,
-        items: todoItems
-          .filter((item) => item.categoryId === cat.id)
-          .map((item) => ({
-            id: item.id,
-            content: item.content,
-            completedAt: item.completedAt,
-            createdAt: item.createdAt,
-          })),
+      items: todoItems.map((item) => ({
+        id: item.id,
+        content: item.content,
+        completedAt: item.completedAt,
+        createdAt: item.createdAt,
       })),
       summary: {
-        totalCategories: categories.length,
         totalItems: todoItems.length,
         completedItems: todoItems.filter((item) => item.completedAt).length,
       },
     };
 
     await updateProgress({ progress: 90 });
-    await new Promise((r) => setTimeout(r, 2000));
-
-    // Simulate some processing time for demo
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((r) => setTimeout(r, 1000));
 
     return exportData;
   });

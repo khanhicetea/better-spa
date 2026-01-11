@@ -1,6 +1,5 @@
 import type { DB } from "../init";
 import { JobRepository } from "./job.repo";
-import { TodoCategoryRepository } from "./todoCategory.repo";
 import { TodoItemRepository } from "./todoItem.repo";
 import { UserRepository } from "./user.repo";
 
@@ -9,7 +8,6 @@ export type Repositories = ReturnType<typeof createRepos>;
 export function createRepos(db: DB) {
   const repos = {
     user: new UserRepository(db),
-    todoCategory: new TodoCategoryRepository(db),
     todoItem: new TodoItemRepository(db),
     job: new JobRepository(db),
   };
@@ -23,7 +21,6 @@ export function createRepos(db: DB) {
 }
 
 export { JobRepository } from "./job.repo";
-export { TodoCategoryRepository } from "./todoCategory.repo";
 export { TodoItemRepository } from "./todoItem.repo";
 export { UserRepository } from "./user.repo";
 export {

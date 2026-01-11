@@ -45,7 +45,8 @@ export class Worker {
             }: {
               progress?: number;
               status?: JobStatus;
-            }) => this.repos.job.updateJobProgress(job.id, { progress, status }),
+            }) =>
+              this.repos.job.updateJobProgress(job.id, { progress, status }),
           };
         },
       });
@@ -66,7 +67,8 @@ export class Worker {
         console.log(`Job type ${job.type} not found`);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       await this.repos.job.failJob(job.id, errorMessage);
       console.error(`Job ${job.id} failed:`, errorMessage);
     }

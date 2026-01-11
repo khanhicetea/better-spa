@@ -7,6 +7,9 @@ export class TodoItemRepository extends Repository<"todoItem"> {
   }
 
   async findTodoItemsByUserId(userId: string) {
-    return this.find({ where: { userId } });
+    return this.find({
+      where: { userId },
+      modify: (qb) => qb.orderBy("createdAt", "desc"),
+    });
   }
 }

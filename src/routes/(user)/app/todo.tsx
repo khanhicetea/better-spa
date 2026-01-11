@@ -1,38 +1,19 @@
-import {
-  DndContext,
-  type DragEndEvent,
-  DragOverlay,
-  type DragStartEvent,
-  MouseSensor,
-  TouchSensor,
-  useDraggable,
-  useDroppable,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   CheckCircle2,
   Download,
-  GripVertical,
-  LayoutGrid,
-  ListTodo,
   Loader2,
+  ListTodo,
   Plus,
-  Sparkles,
   Trash2,
-  X,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PagePending } from "@/components/common/page-pending";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useListenJob } from "@/lib/hooks/jobs";
 import { orpc } from "@/lib/orpc";
 import type { Outputs } from "@/rpc/types";
@@ -44,70 +25,24 @@ export const Route = createFileRoute("/(user)/app/todo")({
 
 type TodoItem = Outputs["todoItem"]["listTodos"][number];
 
-// Theme-based color palette for categories
-const categoryColors = [
-  {
-    bg: "from-primary/15 via-primary/8 to-background",
-    border: "border-primary/20",
-    accent: "bg-primary",
-    text: "text-primary-foreground",
-  },
-  {
-    bg: "from-secondary/15 via-secondary/8 to-background",
-    border: "border-secondary/20",
-    accent: "bg-secondary",
-    text: "text-secondary-foreground",
-  },
-  {
-    bg: "from-accent/15 via-accent/8 to-background",
-    border: "border-accent/20",
-    accent: "bg-accent",
-    text: "text-accent-foreground",
-  },
-  {
-    bg: "from-muted/20 via-muted/10 to-background",
-    border: "border-muted/30",
-    accent: "bg-muted",
-    text: "text-muted-foreground",
-  },
-  {
-    bg: "from-destructive/10 via-destructive/5 to-background",
-    border: "border-destructive/20",
-    accent: "bg-destructive",
-    text: "text-destructive-foreground",
-  },
-  {
-    bg: "from-foreground/10 via-foreground/5 to-background",
-    border: "border-foreground/20",
-    accent: "bg-foreground",
-    text: "text-foreground",
-  },
-];
-
-function getCategoryColor(index: number) {
-  return categoryColors[index % categoryColors.length];
-}
-
 function TodoPage() {
-  const navigate = useNavigate();
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [activeTodo, setActiveTodo] = useState<TodoItem | null>(null);
+  // 1. State hooks
+  const [newTodoContent, setNewTodoContent] = useState("");
   const [exportingJobId, setExportingJobId] = useState<string | null>(null);
-  const [exportingProgress, setExportingProgress] = useState<number | null>(null);
-
-  const { data: categories, refetch: refetchCategories } = useSuspenseQuery(
-    orpc.todoCategory.listCategories.queryOptions(),
+  const [exportingProgress, setExportingProgress] = useState<number | null>(
+    null,
   );
 
+  // 2. Query and mutation hooks
   const { data: todos, refetch: refetchTodos } = useSuspenseQuery(
     orpc.todoItem.listTodos.queryOptions(),
   );
 
-  const createCategoryMutation = useMutation(
-    orpc.todoCategory.createCategory.mutationOptions({
+  const createTodoMutation = useMutation(
+    orpc.todoItem.createTodo.mutationOptions({
       onSuccess: () => {
-        refetchCategories();
-        setNewCategoryName("");
+        refetchTodos();
+        setNewTodoContent("");
       },
     }),
   );
@@ -118,18 +53,13 @@ function TodoPage() {
         if (job) {
           setExportingJobId(job.id);
           setExportingProgress(0);
-
-          toast.success("Export job started", {
-            description: "You can view the progress in the Jobs page.",
-            action: {
-              label: "View Jobs",
-              onClick: () => navigate({ to: "/admin/jobs" }),
-            },
+          toast.success("Export started", {
+            description: "Your todos are being exported.",
           });
         }
       },
       onError: (error) => {
-        toast.error("Failed to start export", {
+        toast.error("Export failed", {
           description: error.message,
         });
       },
@@ -141,17 +71,12 @@ function TodoPage() {
     enabled: !!exportingJobId,
     onChange: (job) => {
       if (job.status === "processing") {
-        console.log("Processing export job", job.progress);
         setExportingProgress(job.progress);
       }
     },
-    onSuccess: (job) => {
+    onSuccess: () => {
       toast.success("Export completed", {
         description: "Your todos have been exported successfully.",
-        action: {
-          label: "View Jobs",
-          onClick: () => navigate({ to: "/admin/jobs" }),
-        },
       });
     },
     onFailed: (job) => {
@@ -159,249 +84,136 @@ function TodoPage() {
         description: job.error || "An error occurred during export.",
       });
     },
-    onCancel: (job) => {
-      toast.warning("Export cancelled", {
-        description: "The export job was cancelled.",
-      });
-    },
-    onSettled: (job) => {
+    onSettled: () => {
       setExportingJobId(null);
     },
   });
 
-  const handleAddCategory = () => {
-    if (newCategoryName.trim()) {
-      createCategoryMutation.mutate({ name: newCategoryName.trim() });
-    }
-  };
-
-  const groupedTodos = todos.reduce(
-    (acc, todo) => {
-      if (!acc[todo.categoryId]) acc[todo.categoryId] = [];
-      acc[todo.categoryId].push(todo);
-      return acc;
-    },
-    {} as Record<string, TodoItem[]>,
-  );
-
-  const mouseSensor = useSensor(MouseSensor, {
-    activationConstraint: {
-      distance: 8,
-    },
-  });
-  const touchSensor = useSensor(TouchSensor, {
-    activationConstraint: {
-      delay: 200,
-      tolerance: 8,
-    },
-  });
-  const sensors = useSensors(mouseSensor, touchSensor);
-
-  const updateTodoMutation = useMutation(
-    orpc.todoItem.updateTodo.mutationOptions({
-      onSuccess: () => {
-        refetchTodos();
-      },
-    }),
-  );
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const todo = todos.find((t) => t.id === event.active.id);
-    if (todo) setActiveTodo(todo);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveTodo(null);
-    const { active, over } = event;
-
-    if (!over) return;
-
-    const todoId = active.id as string;
-    const newCategoryId = over.id as string;
-
-    const todo = todos.find((t) => t.id === todoId);
-    if (!todo || todo.categoryId === newCategoryId) return;
-
-    updateTodoMutation.mutate({
-      id: todoId,
-      categoryId: newCategoryId,
-    });
-  };
+  // 3. Derived values
+  const isExporting = !!exportingJobId;
+  const isCreating = createTodoMutation.isPending;
 
   const totalTodos = todos.length;
   const completedTodos = todos.filter((t) => t.completedAt).length;
   const progressPercentage =
     totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
 
+  // 4. Render
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-accent/5 relative overflow-hidden">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
-
-      <div className="relative flex flex-col gap-8 p-8 max-w-[100vw] animate-fade-in">
-        {/* Header Section */}
-        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div
-            className="flex items-center gap-4 animate-slide-up"
-            style={{ animationDelay: "0.1s" }}
-          >
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 shadow-xl shadow-primary/25 ring-1 ring-primary/20">
-              <LayoutGrid className="h-7 w-7 text-primary-foreground" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-accent/5">
+      <div className="flex flex-col gap-6 p-8 max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <ListTodo className="h-5 w-5 text-primary" />
             </div>
-            <div className="space-y-1">
-              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
-                Todo Kanban Board
-              </h1>
-              <p className="text-base text-muted-foreground font-medium">
-                Organize your tasks with elegant drag & drop
-              </p>
-            </div>
+            <h1 className="text-2xl font-bold">Todo List</h1>
           </div>
 
-          {/* Progress Stats and Export */}
-          <div
-            className="flex items-center gap-4 animate-slide-up"
-            style={{ animationDelay: "0.2s" }}
-          >
-            {totalTodos > 0 && (
-              <div className="flex items-center gap-6 p-4 rounded-2xl bg-card/60 backdrop-blur-md border border-border/40 shadow-lg ring-1 ring-border/20">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-muted/50">
-                    <ListTodo className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-foreground">{totalTodos}</div>
-                    <div className="text-xs text-muted-foreground font-medium">Tasks</div>
-                  </div>
-                </div>
-                <div className="h-8 w-px bg-border/60" />
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-primary">{completedTodos}</div>
-                    <div className="text-xs text-muted-foreground font-medium">Done</div>
-                  </div>
-                </div>
-                <div className="h-8 w-px bg-border/60" />
-                <div className="flex items-center gap-3">
-                  <div className="w-20 h-3 rounded-full bg-muted/60 overflow-hidden ring-1 ring-border/30">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary/60 transition-all duration-700 ease-out shadow-sm"
-                      style={{ width: `${progressPercentage}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-semibold text-foreground min-w-[2.5rem] text-center">
-                    {progressPercentage}%
-                  </span>
-                </div>
+          {/* Stats */}
+          {totalTodos > 0 && (
+            <div className="flex items-center gap-4 p-3 rounded-lg bg-card/60 backdrop-blur-sm border border-border/40">
+              <div className="flex items-center gap-2">
+                <ListTodo className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {totalTodos} tasks
+                </span>
               </div>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => exportMutation.mutate({})}
-              disabled={exportMutation.isPending}
-            >
-              {exportingJobId ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {exportingProgress || 0}%
-                  </span>
+              <div className="h-4 w-px bg-border/60" />
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">
+                  {completedTodos} done
+                </span>
+              </div>
+              <div className="h-4 w-px bg-border/60" />
+              <div className="flex items-center gap-2">
+                <div className="w-16 h-2 rounded-full bg-muted/60 overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
                 </div>
-              ) : (
-                <Download className="h-4 w-4 mr-2" />
-              )}
-              Export
-            </Button>
-          </div>
+                <span className="text-sm font-medium">
+                  {progressPercentage}%
+                </span>
+              </div>
+              <div className="h-4 w-px bg-border/60" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => exportMutation.mutate({})}
+                disabled={exportMutation.isPending || isExporting}
+              >
+                {isExporting ? (
+                  <div className="flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span className="text-xs">{exportingProgress || 0}%</span>
+                  </div>
+                ) : (
+                  <Download className="h-3 w-3" />
+                )}
+              </Button>
+            </div>
+          )}
         </div>
 
-        {/* Kanban Board */}
-        <DndContext
-          sensors={sensors}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div
-            className="flex gap-6 pb-8 overflow-x-auto animate-slide-up"
-            style={{ animationDelay: "0.3s" }}
+        {/* Input Section */}
+        <div className="flex gap-2">
+          <Input
+            placeholder="What needs to be done?"
+            value={newTodoContent}
+            onChange={(e) => setNewTodoContent(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && newTodoContent.trim()) {
+                createTodoMutation.mutate({ content: newTodoContent.trim() });
+              }
+            }}
+            className="h-10"
+          />
+          <Button
+            onClick={() => {
+              if (newTodoContent.trim()) {
+                createTodoMutation.mutate({ content: newTodoContent.trim() });
+              }
+            }}
+            disabled={isCreating || !newTodoContent.trim()}
+            className="h-10 px-3"
           >
-            {categories.map((category, index) => (
-              <CategoryColumn
-                key={category.id}
-                category={category}
-                todos={groupedTodos[category.id] || []}
-                colorScheme={getCategoryColor(index)}
-                index={index}
-                onRefetch={() => {
-                  refetchTodos();
-                  refetchCategories();
-                }}
-              />
-            ))}
-            <AddCategoryColumn
-              newCategoryName={newCategoryName}
-              setNewCategoryName={setNewCategoryName}
-              onAdd={handleAddCategory}
-              isPending={createCategoryMutation.isPending}
-            />
-          </div>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
 
-          <DragOverlay>
-            {activeTodo ? (
-              <div className="w-64 opacity-90 rotate-3 scale-105">
-                <TodoCardPreview todo={activeTodo} />
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-
-        {/* Empty State */}
-        {categories.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="p-4 rounded-full bg-muted/50 mb-4">
-              <Sparkles className="h-10 w-10 text-muted-foreground" />
+        {/* Todo List */}
+        <div className="space-y-2">
+          {todos.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-sm">No tasks yet. Add one to get started!</p>
             </div>
-            <h3 className="text-lg font-semibold mb-2">Get Started with Your Board</h3>
-            <p className="text-muted-foreground max-w-md mb-6">
-              Create your first category to start organizing your tasks. Categories help
-              you group related todos together.
-            </p>
-          </div>
-        )}
+          ) : (
+            todos.map((todo) => (
+              <TodoItemRow key={todo.id} todo={todo} onRefetch={refetchTodos} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function TodoCardPreview({ todo }: { todo: TodoItem }) {
-  return (
-    <Card className="bg-card/95 backdrop-blur-sm border-primary/50 shadow-xl shadow-primary/10">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2">
-          <Checkbox checked={!!todo.completedAt} disabled className="h-4 w-4" />
-          <p
-            className={`text-sm leading-tight ${todo.completedAt ? "line-through text-muted-foreground" : ""}`}
-          >
-            {todo.content}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function TodoCard({ todo, onRefetch }: { todo: TodoItem; onRefetch: () => void }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: todo.id,
-  });
-
+function TodoItemRow({
+  todo,
+  onRefetch,
+}: {
+  todo: TodoItem;
+  onRefetch: () => void;
+}) {
+  // 1. State hooks
   const [isEditingContent, setIsEditingContent] = useState(false);
   const [editingContent, setEditingContent] = useState(todo.content);
 
+  // 2. Query and mutation hooks
   const updateMutation = useMutation(
     orpc.todoItem.updateTodo.mutationOptions({
       onSuccess: () => {
@@ -417,13 +229,13 @@ function TodoCard({ todo, onRefetch }: { todo: TodoItem; onRefetch: () => void }
     }),
   );
 
-  const handleToggleComplete = () => {
-    updateMutation.mutate({
-      id: todo.id,
-      completedAt: todo.completedAt ? null : new Date(),
-    });
-  };
+  // 3. Derived values
+  const isCompleted = !!todo.completedAt;
+  const isUpdating = updateMutation.isPending;
+  const isDeleting = deleteMutation.isPending;
+  const textareaRows = Math.max(1, editingContent.split("\n").length);
 
+  // 4. Complex event handlers
   const handleSaveContent = () => {
     if (editingContent.trim() && editingContent !== todo.content) {
       updateMutation.mutate({ id: todo.id, content: editingContent.trim() });
@@ -432,432 +244,67 @@ function TodoCard({ todo, onRefetch }: { todo: TodoItem; onRefetch: () => void }
     }
   };
 
-  const handleDelete = () => {
-    deleteMutation.mutate({ id: todo.id });
-  };
-
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : undefined;
-
-  return (
-    <Card
-      ref={setNodeRef}
-      style={style}
-      className={`group relative transition-all duration-300 border border-border/40 hover:border-primary/30 hover:shadow-lg ring-1 ring-border/5 ${
-        isDragging ? "opacity-50 scale-95 rotate-2" : "hover:scale-[1.02]"
-      } ${todo.completedAt ? "bg-muted/20 opacity-75" : "bg-card/90 backdrop-blur-sm hover:bg-card"}`}
-    >
-      <CardContent className="p-3">
-        <div className="flex items-start gap-3">
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <div className="pt-0.5">
-                  <Checkbox
-                    checked={!!todo.completedAt}
-                    onCheckedChange={handleToggleComplete}
-                    disabled={updateMutation.isPending}
-                    className={`h-5 w-5 rounded-full transition-all ${
-                      todo.completedAt
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-muted-foreground/40 hover:border-primary"
-                    }`}
-                  />
-                </div>
-              }
-            />
-            <TooltipContent>
-              {todo.completedAt ? "Mark as incomplete" : "Mark as complete"}
-            </TooltipContent>
-          </Tooltip>
-
-          <div className="flex-1 min-w-0">
-            {isEditingContent ? (
-              <textarea
-                value={editingContent}
-                onChange={(e) => setEditingContent(e.target.value)}
-                onBlur={handleSaveContent}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSaveContent();
-                  }
-                  if (e.key === "Escape") {
-                    setIsEditingContent(false);
-                    setEditingContent(todo.content);
-                  }
-                }}
-                className="w-full text-sm leading-relaxed resize-none border-none p-0 focus:ring-0 bg-transparent outline-none"
-                rows={Math.max(1, editingContent.split("\n").length)}
-              />
-            ) : (
-              <p
-                className={`text-sm leading-relaxed cursor-pointer transition-colors ${
-                  todo.completedAt
-                    ? "line-through text-muted-foreground"
-                    : "hover:text-foreground/80"
-                }`}
-                onClick={() => {
-                  setIsEditingContent(true);
-                  setEditingContent(todo.content);
-                }}
-              >
-                {todo.content}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0 cursor-grab active:cursor-grabbing hover:bg-muted"
-                  {...listeners}
-                  {...attributes}
-                >
-                  <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-                </Button>
-              }
-            />
-            <TooltipContent>Drag to move</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleDelete}
-                  disabled={deleteMutation.isPending}
-                  className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              }
-            />
-            <TooltipContent>Delete task</TooltipContent>
-          </Tooltip>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-interface CategoryColumnProps {
-  category: { id: string; name: string };
-  todos: TodoItem[];
-  colorScheme: { bg: string; border: string; accent: string };
-  index: number;
-  onRefetch: () => void;
-}
-
-function CategoryColumn({
-  category,
-  todos,
-  colorScheme,
-  index,
-  onRefetch,
-}: CategoryColumnProps) {
-  const [isAdding, setIsAdding] = useState(false);
-  const [newTodoContent, setNewTodoContent] = useState("");
-
-  const { setNodeRef, isOver } = useDroppable({
-    id: category.id,
-  });
-
-  const createMutation = useMutation(
-    orpc.todoItem.createTodo.mutationOptions({
-      onSuccess: () => {
-        onRefetch();
-        setNewTodoContent("");
-        setIsAdding(false);
-      },
-    }),
-  );
-
-  const deleteCategoryMutation = useMutation(
-    orpc.todoCategory.deleteCategory.mutationOptions({
-      onSuccess: () => onRefetch(),
-    }),
-  );
-
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editingName, setEditingName] = useState(category.name);
-
-  const updateCategoryMutation = useMutation(
-    orpc.todoCategory.updateCategory.mutationOptions({
-      onSuccess: () => {
-        onRefetch();
-        setIsEditingName(false);
-      },
-    }),
-  );
-
-  const handleAddTodo = () => {
-    if (newTodoContent.trim()) {
-      createMutation.mutate({
-        content: newTodoContent.trim(),
-        categoryId: category.id,
-      });
-    }
-  };
-
-  const handleSaveName = () => {
-    if (editingName.trim() && editingName !== category.name) {
-      updateCategoryMutation.mutate({
-        id: category.id,
-        name: editingName.trim(),
-      });
-    } else {
-      setIsEditingName(false);
-    }
-  };
-
-  const handleDeleteCategory = () => {
-    if (todos.length === 0) {
-      deleteCategoryMutation.mutate({ id: category.id });
-    }
-  };
-
-  const completedCount = todos.filter((t) => t.completedAt).length;
-
+  // 5. Render
   return (
     <div
-      className="shrink-0 w-80 animate-fade-in"
-      style={{ animationDelay: `${0.1 * index}s` }}
+      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+        isCompleted
+          ? "bg-muted/30 border-border/40"
+          : "bg-card/50 border-border/40 hover:border-border/60"
+      }`}
     >
-      <div
-        ref={setNodeRef}
-        className={`rounded-2xl border backdrop-blur-md transition-all duration-300 overflow-hidden shadow-lg ring-1 ring-border/10 ${colorScheme.border} ${
-          isOver
-            ? "scale-105 shadow-2xl shadow-primary/30 ring-primary/20 animate-pulse-subtle"
-            : "hover:shadow-xl hover:scale-[1.02]"
-        }`}
-      >
-        {/* Category Header */}
-        <div
-          className={`p-5 rounded-t-2xl bg-gradient-to-br ${colorScheme.bg} relative overflow-hidden`}
+      <Checkbox
+        checked={isCompleted}
+        onCheckedChange={() => {
+          updateMutation.mutate({
+            id: todo.id,
+            completedAt: isCompleted ? null : new Date(),
+          });
+        }}
+        disabled={isUpdating}
+        className="h-5 w-5 rounded"
+      />
+
+      {isEditingContent ? (
+        <textarea
+          value={editingContent}
+          onChange={(e) => setEditingContent(e.target.value)}
+          onBlur={handleSaveContent}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSaveContent();
+            }
+            if (e.key === "Escape") {
+              setIsEditingContent(false);
+              setEditingContent(todo.content);
+            }
+          }}
+          className="flex-1 text-sm resize-none border-none p-0 focus:ring-0 bg-transparent outline-none"
+          rows={textareaRows}
+        />
+      ) : (
+        <p
+          className={`flex-1 text-sm cursor-pointer transition-colors ${
+            isCompleted
+              ? "line-through text-muted-foreground"
+              : "hover:text-foreground/80"
+          }`}
+          onClick={() => setIsEditingContent(true)}
         >
-          {/* Subtle pattern overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <div className={`w-2 h-2 rounded-full ${colorScheme.accent}`} />
-              {isEditingName ? (
-                <Input
-                  value={editingName}
-                  onChange={(e) => setEditingName(e.target.value)}
-                  onBlur={handleSaveName}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSaveName();
-                    if (e.key === "Escape") {
-                      setIsEditingName(false);
-                      setEditingName(category.name);
-                    }
-                  }}
-                  className="h-6 text-sm font-semibold border-none p-0 focus-visible:ring-0 bg-transparent"
-                />
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-auto p-0 font-semibold text-sm truncate hover:opacity-80 transition-opacity justify-start"
-                  onClick={() => {
-                    setIsEditingName(true);
-                    setEditingName(category.name);
-                  }}
-                >
-                  {category.name}
-                </Button>
-              )}
-            </div>
+          {todo.content}
+        </p>
+      )}
 
-            <div className="flex items-center gap-1.5">
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 font-normal">
-                {completedCount}/{todos.length}
-              </Badge>
-              {todos.length === 0 && (
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleDeleteCategory}
-                        disabled={deleteCategoryMutation.isPending}
-                        className="h-6 w-6 p-0 opacity-60 hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    }
-                  />
-                  <TooltipContent>Delete category</TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Todo List */}
-        <div className="p-3 space-y-2 min-h-[100px] bg-background/50">
-          {todos.map((todo) => (
-            <TodoCard key={todo.id} todo={todo} onRefetch={onRefetch} />
-          ))}
-
-          {isOver && (
-            <div className="rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 h-14 flex items-center justify-center">
-              <span className="text-sm text-primary/70 font-medium">Drop here</span>
-            </div>
-          )}
-
-          {todos.length === 0 && !isOver && (
-            <div className="text-center py-6 text-muted-foreground">
-              <ListTodo className="h-8 w-8 mx-auto mb-2 opacity-40" />
-              <p className="text-xs">No tasks yet</p>
-            </div>
-          )}
-        </div>
-
-        {/* Add Todo Section */}
-        <div className="p-3 pt-0 bg-background/50 rounded-b-xl">
-          {isAdding ? (
-            <div className="space-y-2 animate-fade-in">
-              <Input
-                placeholder="What needs to be done?"
-                value={newTodoContent}
-                onChange={(e) => setNewTodoContent(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAddTodo();
-                  if (e.key === "Escape") {
-                    setIsAdding(false);
-                    setNewTodoContent("");
-                  }
-                }}
-                className="h-9 text-sm"
-              />
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={handleAddTodo}
-                  disabled={createMutation.isPending || !newTodoContent.trim()}
-                  className="flex-1 h-8"
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1" />
-                  Add
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    setIsAdding(false);
-                    setNewTodoContent("");
-                  }}
-                  className="h-8 px-2"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsAdding(true)}
-              className="w-full h-9 text-muted-foreground hover:text-foreground border border-dashed border-transparent hover:border-border"
-            >
-              <Plus className="h-4 w-4 mr-1.5" />
-              Add Task
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AddCategoryColumn({
-  newCategoryName,
-  setNewCategoryName,
-  onAdd,
-  isPending,
-}: {
-  newCategoryName: string;
-  setNewCategoryName: (name: string) => void;
-  onAdd: () => void;
-  isPending: boolean;
-}) {
-  const [isAdding, setIsAdding] = useState(false);
-
-  const handleAdd = () => {
-    if (newCategoryName.trim()) {
-      onAdd();
-      setIsAdding(false);
-    }
-  };
-
-  return (
-    <div className="shrink-0 w-72">
-      <div className="rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/20 backdrop-blur-sm p-4 min-h-[200px] flex items-center justify-center transition-all hover:border-muted-foreground/40 hover:bg-muted/30">
-        {isAdding ? (
-          <div className="w-full space-y-3 animate-fade-in">
-            <Input
-              placeholder="Enter category name..."
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAdd();
-                if (e.key === "Escape") {
-                  setIsAdding(false);
-                  setNewCategoryName("");
-                }
-              }}
-              className="h-10"
-            />
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={handleAdd}
-                disabled={isPending || !newCategoryName.trim()}
-                className="flex-1 h-9"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Create
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setIsAdding(false);
-                  setNewCategoryName("");
-                }}
-                className="h-9 px-3"
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            onClick={() => setIsAdding(true)}
-            className="flex flex-col items-center gap-2 h-auto py-6 px-8 text-muted-foreground hover:text-foreground"
-          >
-            <div className="p-3 rounded-full bg-muted/50 group-hover:bg-muted transition-colors">
-              <Plus className="h-6 w-6" />
-            </div>
-            <span className="font-medium">Add Column</span>
-          </Button>
-        )}
-      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => deleteMutation.mutate({ id: todo.id })}
+        disabled={isDeleting}
+        className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
     </div>
   );
 }

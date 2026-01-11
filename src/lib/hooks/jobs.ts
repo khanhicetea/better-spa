@@ -73,7 +73,10 @@ export function useUserJobs(options: UseUserJobsOptions = {}) {
  * }
  * ```
  */
-export function useJob<T extends JobType = JobType>(jobId: string, enabled = true) {
+export function useJob<T extends JobType = JobType>(
+  jobId: string,
+  enabled = true,
+) {
   const query = useQuery({
     ...orpc.job.getJob.queryOptions({
       input: { id: jobId },
@@ -84,7 +87,9 @@ export function useJob<T extends JobType = JobType>(jobId: string, enabled = tru
       if (!job) return 1000;
 
       // Stop polling when job is complete/failed/cancelled
-      const isTerminal = ["completed", "failed", "cancelled"].includes(job.status);
+      const isTerminal = ["completed", "failed", "cancelled"].includes(
+        job.status,
+      );
       return isTerminal ? false : 1000;
     },
     refetchIntervalInBackground: false,

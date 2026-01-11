@@ -34,24 +34,11 @@ export async function up(db: Kysely<any>): Promise<void> {
     .columns(["provider_id", "account_id"])
     .execute();
 
-  // Todo category indexes
-  await db.schema
-    .createIndex("idx_todo_category_user_id")
-    .on("todo_category")
-    .column("user_id")
-    .execute();
-
   // Todo item indexes
   await db.schema
     .createIndex("idx_todo_item_user_id")
     .on("todo_item")
     .column("user_id")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_todo_item_category_id")
-    .on("todo_item")
-    .column("category_id")
     .execute();
 
   await db.schema
@@ -63,9 +50,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
 export async function down(db: Kysely<any>): Promise<void> {
   await db.schema.dropIndex("idx_todo_item_completed_at").execute();
-  await db.schema.dropIndex("idx_todo_item_category_id").execute();
   await db.schema.dropIndex("idx_todo_item_user_id").execute();
-  await db.schema.dropIndex("idx_todo_category_user_id").execute();
   await db.schema.dropIndex("idx_account_provider_account").execute();
   await db.schema.dropIndex("idx_account_user_id").execute();
   await db.schema.dropIndex("idx_session_expires_at").execute();
