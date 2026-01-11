@@ -74,6 +74,7 @@ function Component() { ... }
 1. **List relevant docs first**:
    ```
    Available docs:
+   - docs/react-conventions.md (React JS component conventions, naming conventions)
    - docs/ui-guidelines.md (UI/forms/dialogs)
    - docs/rpc-architecture.md (RPC handlers)
    - docs/database-repository.md (DB operations)

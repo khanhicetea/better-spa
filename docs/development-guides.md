@@ -249,6 +249,8 @@ function ItemFormDialog({ item, onSuccess, children }: FormDialogProps) {
 }
 ```
 
+**Note**: For page-level dialogs, use controlled state (`open`/`onOpenChange`) and use key prop `key={item.id}` for resetting form state when `item` changes. This centralizes state, reduces duplication, preserves form state on reopen, and improves maintainability.
+
 ### Delete Confirmation Dialog
 
 ```tsx
