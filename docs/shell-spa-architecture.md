@@ -4,71 +4,61 @@
 
 ---
 
-## Key Concepts
+## Shell SPA Pattern
 
-### Shell SPA Pattern
+**SSR (Server-Side Rendered)**: Authentication, app settings, user preferences, minimal shell UI
+**SPA (Single Page Application)**: Routing, data fetching, state management, UI rendering
 
-- **SSR (Server-Side Rendered)**: Authentication, app settings, user preferences, minimal shell UI
-- **SPA (Single Page Application)**: Routing, data fetching, state management, UI rendering
+### How It Works
 
-### Core Technologies
+1. User request hits root route
+2. Shell data is SSR'd (app settings, public info)
+3. User data is prefetched non-blocking
+4. Shell renders, client hydration occurs
+5. SPA takes over for navigation
 
-- **TanStack Start**: Full-stack React framework
-- **TanStack Router**: Type-safe routing
-- **TanStack Query**: Server state management
-- **oRPC**: Type-safe RPC for API (oRPC, not tRPC so don't make mistakes here)
-- **Better Auth**: Modern authentication
-- **Kysely**: Type-safe SQL query builder
-- **shadcn/ui**: Accessible component library
+### Key Files
 
-## Shell Implementation
+- `src/routes/__root.tsx` - Shell pattern implementation
+- `src/rpc/handlers/app.ts` - Shell data structure
+- `src/lib/queries.ts` - Query options for shell data
 
-The shell pattern is implemented in `src/routes/__root.tsx` with the following key aspects:
-
-- Shell data is fetched via RPC and cached with React Query
-- User data is prefetched but not awaited, allowing the client to handle it
-- The shell data structure includes app settings and user information
-
-### Relevant Files
-
-- `src/routes/__root.tsx`: Core shell pattern implementation
-- `src/rpc/handlers/app.ts`: Shell data structure definition
-- `src/lib/queries.ts`: Query options for shell data
+---
 
 ## Authentication Flow
 
-1. User request hits the root route
-2. Shell data is SSR'd
-3. User data is prefetched non-blocking
-4. Shell is rendered
-5. Client hydration occurs
-6. SPA takes over
+Protected routes are handled by layout routes:
 
-## Protected Routes
+### User Routes
 
-Protected routes (user role) are handled in `src/routes/(user)/route.tsx` with:
+`src/routes/(user)/route.tsx`:
+- Validates user via React Query
+- Redirects to `/login` if not authenticated
+- Passes type-safe user data to children
 
-- User validation via React Query
-- Redirect to login if user is not authenticated
-- Type-safe user data passed to child routes
+### Admin Routes
 
-Protected admin routes (admin role) are handled in `src/routes/admin/route.tsx` with:
+`src/routes/admin/route.tsx`:
+- Validates admin role via React Query
+- Redirects if not admin
 
-- Admin validation via React Query
+---
 
 ## Environment Configuration
 
-Type-safe environment variables are configured in `src/env/`:
+Type-safe env vars in `src/env/`:
 
-- `client.ts`: Client-side environment variables with `VITE_` prefix
-- `server.ts`: Server-side environment variables with Zod validation
-- Both use `@t3-oss/env-core` for type safety and runtime validation
-- Client variables are prefixed with `VITE_` for security
+- `client.ts` - Client variables (`VITE_` prefix)
+- `server.ts` - Server variables with Zod validation
+
+Both use `@t3-oss/env-core` for type safety and runtime validation.
+
+---
 
 ## Performance Optimizations
 
-- **React Query Caching**: 2-minute stale time reduces server calls
-- **Auth Cookie Cache**: 5-minute server-side cache reduces DB queries
+- **React Query Caching**: 2-minute stale time
+- **Auth Cookie Cache**: 5-minute server-side cache
 - **Intent-based Preloading**: Faster navigation
-- **React Compiler**: Automatic memoization, so no need manually useCallback, useMemo, memo things.
+- **React Compiler**: Automatic memoization
 - **SSR-Query Integration**: Optimal data fetching
