@@ -6,22 +6,24 @@
 
 ---
 
+Type-safe RPC layer using **oRPC** (not tRPC).
+
 ## Structure
 
 ```
 src/rpc/
-├── base.ts           # Base procedures with context
-├── router.ts         # Main router
-├── middlewares.ts    # Auth and rate limiting
+├── base.ts           # Base procedures with context and error definitions
+├── router.ts         # Main router exporting all handlers
+├── middlewares.ts    # Auth and rate limiting middleware
 ├── types.d.ts        # Auto-generated types
 └── handlers/         # Domain-organized procedures
-    ├── app.ts        # Shell data
-    ├── auth.ts       # Authentication
+    ├── app.ts        # Shell data, app-level procedures
+    ├── auth.ts       # Authentication procedures
+    ├── form.ts       # Form handling with Zod validation
     ├── user.ts       # User management
-    └── [domain].ts   # Your handlers
+    ├── job.ts        # Job queue management
+    └── [domain].ts   # Your domain handlers
 ```
-
----
 
 ## Procedure Types
 
@@ -33,8 +35,6 @@ import { baseProcedure, publicProcedure, authedProcedure, adminProcedure } from 
 // authedProcedure - Requires valid session
 // adminProcedure - Requires admin role
 ```
-
----
 
 ## Creating Procedures
 
@@ -73,14 +73,13 @@ export const deleteProduct = adminProcedure
 import { listProducts, deleteProduct } from "./handlers/product";
 
 export const rpc = base.router({
+  // ... existing handlers
   product: base.router({
     list: listProducts,
     delete: deleteProduct,
   }),
 });
 ```
-
----
 
 ## Client Usage
 
@@ -92,6 +91,7 @@ export const Route = createFileRoute("/products")({
     context.queryClient.prefetchQuery(
       orpc.product.list.queryOptions({ input: { page: 1 } })
     );
+    return { app: context.shell.app };
   },
 });
 ```
@@ -103,68 +103,104 @@ import { useSuspenseQuery, useMutation } from "@tanstack/react-query";
 import { orpc } from "@/lib/orpc";
 
 function ProductList() {
+  // Queries
   const { data, refetch } = useSuspenseQuery(
     orpc.product.list.queryOptions({ input: { page: 1 } })
   );
 
+  // Mutations
   const deleteMutation = useMutation(
     orpc.product.delete.mutationOptions({
       onSuccess: () => {
         toast.success("Product deleted");
-        refetch();
+        refetch(); // Refresh list
       },
     })
   );
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate({ id });
+  };
 }
 ```
-
----
 
 ## Context Available in Handlers
 
 ```typescript
 interface ProcedureContext {
   repos: Repositories;      // Database repositories
-  user?: User;              // Authenticated user (authed/admin procedures)
+  user?: User;              // Authenticated user (authedProcedure/adminProcedure)
   session?: Session;        // Session data
   db: DB;                   // Direct Kysely access (prefer repos)
   headers: Headers;         // HTTP request headers
   auth: ServerAuth;         // Authentication service
-  waitUntil: (promise: Promise<unknown>) => void;  // Background tasks
+  waitUntil: (promise: Promise<unknown>) => void;  // Background task execution
 }
 ```
 
----
+## Background Tasks with waitUntil
 
-## Background Tasks
-
-### waitUntil (Lightweight)
-
-For quick, non-critical tasks that don't need persistence:
+For lightweight background tasks that don't require persistence or complex error handling, use `waitUntil` to run work after the response is sent:
 
 ```typescript
 export const createOrder = authedProcedure
   .input(orderSchema)
   .handler(async ({ input, context }) => {
-    const order = await context.repos.order.create(input);
+    const { repos, waitUntil, user } = context;
 
-    // Run after response (non-blocking)
-    context.waitUntil(sendOrderConfirmationEmail(order));
-    context.waitUntil(trackAnalytics({ event: "order_created" }));
+    // Return response immediately
+    const order = await repos.order.create({
+      userId: user.id,
+      items: input.items,
+      status: "pending",
+    });
 
-    return order;
+    // Run these after response is sent (non-blocking)
+    waitUntil(sendOrderConfirmationEmail(user.email, order));
+    waitUntil(updateInventory(input.items));
+    waitUntil(
+      fetch("https://analytics.example.com/track", {
+        method: "POST",
+        body: JSON.stringify({ event: "order_created", orderId: order.id })
+      })
+    );
+
+    return { orderId: order.id };
   });
 ```
 
-**Use for**: Analytics, webhooks, cache invalidation, minor cleanup
+### waitUntil vs Job Queue
 
-### Job Queue (Long-running)
+| Feature | waitUntil | Job Queue |
+|---------|-----------|-----------|
+| **Execution** | After response | Queued & persistent |
+| **Persistence** | No - lost if server crashes | Yes - database backed |
+| **Retries** | No | Yes - automatic retries |
+| **Scheduling** | No | Yes - schedule future execution |
+| **Priority** | No | Yes - priority-based |
+| **Progress Tracking** | No | Yes - real-time progress (0-100%) |
+| **Use Cases** | Analytics, webhooks, minor tasks | Exports, emails, reports |
+| **Guarantee** | Best-effort only | Reliable execution |
 
-For tasks that need persistence, retries, or scheduling, see [docs/job-queue-worker.md](job-queue-worker.md).
+**Use waitUntil for:**
+- Analytics tracking
+- Webhook notifications
+- Cache invalidation
+- Minor cleanup tasks
+- Optional features
 
-**Use for**: Exports, emails, reports, scheduled tasks
+**Use Job Queue for:**
+- Long-running tasks (see [docs/job-queue-worker.md](job-queue-worker.md))
+- Tasks that must complete reliably
+- Scheduled/delayed execution
+- Tasks with progress tracking
+- User-facing operations
 
----
+### Runtime Support
+
+- **Production (Cloudflare Workers, etc.)**: Uses native `waitUntil()` API
+- **Development (Node/Vite)**: Promises are collected and awaited after response
+- Multiple `waitUntil` calls stack into a promise pool
 
 ## Error Handling
 
@@ -184,11 +220,12 @@ export const updateProduct = authedProcedure
       throw new ORPCError("FORBIDDEN", "Not authorized");
     }
 
-    return context.repos.product.updateById({ id: input.id, data: input.data });
+    return context.repos.product.updateById({
+      id: input.id,
+      data: input.data
+    });
   });
 ```
-
----
 
 ## oRPC Client Setup
 
@@ -196,6 +233,7 @@ The client is configured in `src/lib/orpc.ts`:
 
 - **Server-side**: Direct router client with request context
 - **Client-side**: HTTP client with batching at `/api/rpc`
+- Uses `createIsomorphicFn()` for SSR/CSR compatibility
 
 ```typescript
 import { rpcClient, orpc } from "@/lib/orpc";
