@@ -28,12 +28,20 @@ export interface ProductTable {
   name: string;
   images: S3Files;  // NOT: images: S3File[]
 }
+
+// Single file schema
+import { S3File, S3Files } from "@/lib/types";
+export interface BlogTable {
+  id: string;
+  title: string;
+  cover: S3File;
+}
 ```
 
 ## Database Operations
 
 ```typescript
-// Insert/Update
+// Insert/Update for multiple files
 await repos.product.insertReturn({
   name: "Product",
   images: { files: uploadedImages }  // Wrap in { files: [...] }
@@ -44,9 +52,9 @@ const firstImage = product.images.files[0];  // NOT: product.images[0]
 const allImages = product.images.files;
 ```
 
-## Client-Side Upload
+## Server-Side Configuration
 
-Server route is pre-configured at `src/routes/api/upload.$.ts`.
+Server route is pre-configured at `src/routes/api/upload.$.ts`. Only separate upload routes if it is necessary and mentioned.
 
 ```typescript
 import { useUploadFiles } from "@better-upload/client";
@@ -88,9 +96,64 @@ function ImageUploader({ onUpload }: { onUpload: (files: S3File[]) => void }) {
 }
 ```
 
-### For single file upload
+### Single File Upload
 
-Use the hook `useUploadFile` from `@better-upload/client`, the props and returned value hooks change `files` to `file`.
+Use `useUploadFile` (singular) for uploading a single file. The callback receives `{ file }` instead of `{ files }`:
+
+```typescript
+import { useUploadFile } from "@better-upload/client";
+import { S3File } from "@/lib/types";
+
+function CoverImageUploader({ onUpload }: { onUpload: (file: S3File) => void }) {
+  const [coverImage, setCoverImage] = useState<S3File | undefined>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadHook = useUploadFile({
+    onUploadComplete: ({ file }) => {
+      const s3File: S3File = {
+        key: file.objectInfo.key,
+        metadata: {
+          url: file.objectInfo.metadata.url,
+        },
+      };
+      setCoverImage(s3File);
+      toast.success("Cover image uploaded successfully");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
+    onError: (error) => {
+      toast.error("Failed to upload image", {
+        description: error.message,
+      });
+    },
+  });
+
+  const handleSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    uploadHook.upload(file);
+  };
+
+  return (
+    <div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleSelect}
+      />
+      {uploadHook.isPending && <span>Uploading...</span>}
+    </div>
+  );
+}
+```
+
+**Key differences from `useUploadFiles`:**
+- `useUploadFile` - for single file uploads
+- `useUploadFiles` - for multiple file uploads
+- Callback: `onUploadComplete: ({ file }) => ...` vs `onUploadComplete: ({ files }) => ...`
+- Hook returns: `upload(file)` function and `isPending` state
 
 ## Form Integration
 
