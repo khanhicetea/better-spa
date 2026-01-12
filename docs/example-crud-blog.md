@@ -184,16 +184,8 @@ export { BlogPostRepository } from "./blogPost.repo";
 import { pickBy } from "lodash-es";
 import { z } from "zod";
 import { generateUUID } from "@/lib/helpers/data";
-import type { PublicS3File } from "@/lib/schemas/s3";
+import { type PublicS3File, PublicS3FileSchema } from "@/lib/schemas/s3";
 import { authedProcedure } from "../base";
-
-// Reusable schema for S3 file uploads
-const s3FileSchema = z.object({
-  key: z.string(),
-  metadata: z.object({
-    public_url: z.string(),
-  }),
-});
 
 // LIST - Paginated, user-scoped
 export const listBlogPosts = authedProcedure
@@ -231,7 +223,7 @@ export const createBlogPost = authedProcedure
     z.object({
       title: z.string().min(1),
       description: z.string().optional(),
-      cover: s3FileSchema.nullable().optional(),
+      cover: PublicS3FileSchema.nullable().optional(),
       publishedAt: z.date().nullable().optional(),
     }),
   )
@@ -257,7 +249,7 @@ export const updateBlogPost = authedProcedure
       id: z.string(),
       title: z.string().min(1).optional(),
       description: z.string().nullable().optional(),
-      cover: s3FileSchema.nullable().optional(),
+      cover: PublicS3FileSchema.nullable().optional(),
       publishedAt: z.date().nullable().optional(),
     }),
   )
