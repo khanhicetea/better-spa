@@ -82,6 +82,7 @@ This project uses **Base UI** (`@base-ui/react`), NOT Radix UI. The API is diffe
 - Use theme color variables: `primary`, `secondary`, `muted`, `accent`, `destructive`
 - **No specific colors** (e.g., `bg-blue-500`) without asking first
 - UI should be responsive, compact, and clean
+- Use right color for right intent action button, such as `destructive` for delete actions.
 
 ### Theme Colors
 
