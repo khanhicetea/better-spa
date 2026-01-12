@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { HandFist, ListTodoIcon, type LucideIcon } from "lucide-react";
+import { HandFist, ListTodoIcon, Package, type LucideIcon } from "lucide-react";
 import {
   SidebarGroup,
   SidebarMenu,
@@ -22,6 +22,11 @@ export function NavMain() {
       title: "Todo Kanboard",
       url: "/app/todo",
       icon: ListTodoIcon,
+    },
+    {
+      title: "Products",
+      url: "/app/product",
+      icon: Package,
     },
   ];
 
