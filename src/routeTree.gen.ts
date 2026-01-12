@@ -26,7 +26,6 @@ import { Route as ApiUploadSplatRouteImport } from './routes/api/upload.$'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as userAppTodoRouteImport } from './routes/(user)/app/todo'
-import { Route as userAppProductRouteImport } from './routes/(user)/app/product'
 import { Route as userAppHelloFormRouteImport } from './routes/(user)/app/hello-form'
 
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -112,11 +111,6 @@ const userAppTodoRoute = userAppTodoRouteImport.update({
   path: '/todo',
   getParentRoute: () => userAppRouteRoute,
 } as any)
-const userAppProductRoute = userAppProductRouteImport.update({
-  id: '/product',
-  path: '/product',
-  getParentRoute: () => userAppRouteRoute,
-} as any)
 const userAppHelloFormRoute = userAppHelloFormRouteImport.update({
   id: '/hello-form',
   path: '/hello-form',
@@ -134,7 +128,6 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/admin/': typeof AdminIndexRoute
   '/app/hello-form': typeof userAppHelloFormRoute
-  '/app/product': typeof userAppProductRoute
   '/app/todo': typeof userAppTodoRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
@@ -150,7 +143,6 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/admin': typeof AdminIndexRoute
   '/app/hello-form': typeof userAppHelloFormRoute
-  '/app/product': typeof userAppProductRoute
   '/app/todo': typeof userAppTodoRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
@@ -172,7 +164,6 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/admin/': typeof AdminIndexRoute
   '/(user)/app/hello-form': typeof userAppHelloFormRoute
-  '/(user)/app/product': typeof userAppProductRoute
   '/(user)/app/todo': typeof userAppTodoRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
@@ -193,7 +184,6 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/'
     | '/app/hello-form'
-    | '/app/product'
     | '/app/todo'
     | '/api/auth/$'
     | '/api/rpc/$'
@@ -209,7 +199,6 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin'
     | '/app/hello-form'
-    | '/app/product'
     | '/app/todo'
     | '/api/auth/$'
     | '/api/rpc/$'
@@ -230,7 +219,6 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/'
     | '/(user)/app/hello-form'
-    | '/(user)/app/product'
     | '/(user)/app/todo'
     | '/api/auth/$'
     | '/api/rpc/$'
@@ -370,13 +358,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof userAppTodoRouteImport
       parentRoute: typeof userAppRouteRoute
     }
-    '/(user)/app/product': {
-      id: '/(user)/app/product'
-      path: '/product'
-      fullPath: '/app/product'
-      preLoaderRoute: typeof userAppProductRouteImport
-      parentRoute: typeof userAppRouteRoute
-    }
     '/(user)/app/hello-form': {
       id: '/(user)/app/hello-form'
       path: '/hello-form'
@@ -403,14 +384,12 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 
 interface userAppRouteRouteChildren {
   userAppHelloFormRoute: typeof userAppHelloFormRoute
-  userAppProductRoute: typeof userAppProductRoute
   userAppTodoRoute: typeof userAppTodoRoute
   userAppIndexRoute: typeof userAppIndexRoute
 }
 
 const userAppRouteRouteChildren: userAppRouteRouteChildren = {
   userAppHelloFormRoute: userAppHelloFormRoute,
-  userAppProductRoute: userAppProductRoute,
   userAppTodoRoute: userAppTodoRoute,
   userAppIndexRoute: userAppIndexRoute,
 }
