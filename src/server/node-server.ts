@@ -2,9 +2,9 @@ import type { RequestOptions } from "@tanstack/react-start/server";
 import type { ServerEntry } from "@tanstack/react-start/server-entry";
 import { env } from "@/env/server";
 import { getAuthConfig } from "@/lib/auth/init";
-import { getDatabase } from "@/lib/db/init";
-import { createRepos } from "@/lib/db/repositories";
-import { Worker } from "@/worker";
+import { getDatabase } from "@/server/db/init";
+import { createRepos } from "@/server/db/repositories";
+import { Worker } from "@/server/worker";
 import { workerCtx } from "./context";
 
 export function createNodeHandler(serverEntry: ServerEntry) {

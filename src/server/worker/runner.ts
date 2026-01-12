@@ -1,6 +1,6 @@
 import { env } from "@/env/server";
-import { getDatabase } from "@/lib/db/init";
-import { createRepos } from "@/lib/db/repositories";
+import { getDatabase } from "@/server/db/init";
+import { createRepos } from "@/server/db/repositories";
 import { Worker } from "./worker";
 
 async function main() {

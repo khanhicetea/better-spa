@@ -122,8 +122,8 @@ To use it, create a file (e.g., `src/server/cloudflare-worker.ts`) with the foll
 ```typescript
 import type { ServerEntry } from "@tanstack/react-start/server-entry";
 import { getAuthConfig } from "@/lib/auth/init";
-import { getDatabase } from "@/lib/db/init";
-import { createRepos } from "@/lib/db/repositories";
+import { getDatabase } from "@/server/db/init";
+import { createRepos } from "@/server/db/repositories";
 import { workerCtx } from "./context";
 
 export function createCloudflareHandler(serverEntry: ServerEntry) {

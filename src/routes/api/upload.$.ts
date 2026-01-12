@@ -1,16 +1,11 @@
 import { handleRequest, type Router, route } from "@better-upload/server";
-import { custom } from "@better-upload/server/clients";
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from "@/env/server";
 import { generateUUID, getFileExtFromMimeType } from "@/lib/helpers/data";
+import { s3Client } from "@/server/service/s3";
 
 const uploadRouter: Router = {
-  client: custom({
-    host: env.S3_ENDPOINT || "",
-    region: env.S3_REGION || "auto",
-    accessKeyId: env.S3_ACCESS_KEY_ID || "",
-    secretAccessKey: env.S3_SECRET_ACCESS_KEY || "",
-  }),
+  client: s3Client,
   bucketName: env.S3_BUCKET_NAME || "default-bucket",
   routes: {
     images: route({

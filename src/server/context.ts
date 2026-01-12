@@ -1,8 +1,8 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { ServerAuth, ServerAuthSession } from "@/lib/auth/init";
-import type { DB } from "@/lib/db/init";
-import type { Repositories } from "@/lib/db/repositories";
-import type { Worker } from "@/worker";
+import type { DB } from "@/server/db/init";
+import type { Repositories } from "@/server/db/repositories";
+import type { Worker } from "@/server/worker";
 
 export type RequestContext = {
   headers: Headers;

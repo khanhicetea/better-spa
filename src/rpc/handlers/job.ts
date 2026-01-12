@@ -1,6 +1,6 @@
 import { pickBy } from "lodash-es";
 import { z } from "zod";
-import type { JobStatus } from "@/lib/db/schema/job";
+import type { JobStatus } from "@/server/db/schema/job";
 import { generateUUID } from "@/lib/helpers/data";
 import { adminProcedure, authedProcedure } from "../base";
 

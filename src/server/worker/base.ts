@@ -1,7 +1,7 @@
 import { os } from "@orpc/server";
-import type { DB } from "@/lib/db/init";
-import type { Repositories } from "@/lib/db/repositories";
-import type { Job, JobStatus } from "@/lib/db/schema/job";
+import type { DB } from "@/server/db/init";
+import type { Repositories } from "@/server/db/repositories";
+import type { Job, JobStatus } from "@/server/db/schema/job";
 
 /**
  * Worker-specific base procedure

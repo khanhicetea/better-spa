@@ -1,9 +1,9 @@
 import { defineConfig } from "kysely-ctl";
-import { getDatabase } from "./src/lib/db/init";
+import { getDatabase } from "./src/server/db/init";
 
 export default defineConfig({
   migrations: {
-    migrationFolder: "./src/lib/db/migrations",
+    migrationFolder: "./src/server/db/migrations",
     getMigrationPrefix: () => {
       const date = new Date();
       const year = date.getFullYear();

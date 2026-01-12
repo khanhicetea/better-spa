@@ -99,9 +99,10 @@ export const exportPosts = authedProcedure.handler(async ({ context }) => {
 Jobs are **oRPC procedures** with input validation and typed outputs:
 
 ```typescript
-// src/worker/handlers/export-todos.ts
+// src/server/worker/handlers/export-todos.ts
 import { workerProcedure } from "../base";
 import { z } from "zod";
+import type { Repositories } from "@/server/db/repositories";
 
 const exportTodosProcedure = workerProcedure
   .input(z.object({ userId: z.string() }))  // Input schema
@@ -140,7 +141,7 @@ Every job handler receives a rich context:
 Jobs are registered in a centralized router:
 
 ```typescript
-// src/worker/rpc.ts
+// src/server/worker/rpc.ts
 import exportTodosJob from "./handlers/export-todos";
 
 export const workerRpc = {
@@ -159,7 +160,7 @@ export type JobType = keyof typeof workerRpc;  // "export_todos"
 All types flow from handler definitions via oRPC's type inference:
 
 ```typescript
-// src/worker/types.ts
+// src/server/worker/types.ts
 import type { InferRouterInputs, InferRouterOutputs } from "@orpc/server";
 import type { workerRpc } from "./rpc";
 
@@ -218,7 +219,7 @@ Reduces boilerplate with full type inference:
 
 ```typescript
 // Create factory once
-import { createJobFactory, JobPriority } from "@/worker";
+import { createJobFactory, JobPriority } from "@/server/worker";
 
 const createExportJob = createJobFactory("export_todos", "Export Todos");
 
@@ -238,7 +239,7 @@ export const exportTodos = authedProcedure.handler(async ({ context }) => {
 For jobs that always require a future execution time:
 
 ```typescript
-import { createScheduledJobFactory } from "@/worker";
+import { createScheduledJobFactory } from "@/server/worker";
 
 const scheduleExport = createScheduledJobFactory("export_todos");
 
@@ -256,7 +257,7 @@ const job = await scheduleExport(
 For jobs that always require a priority level:
 
 ```typescript
-import { createPriorityJobFactory, JobPriority } from "@/worker";
+import { createPriorityJobFactory, JobPriority } from "@/server/worker";
 
 const createUrgentExport = createPriorityJobFactory("export_todos");
 
@@ -378,7 +379,7 @@ import {
   isCancelledJob,
   isTerminalJob,
   isActiveJob,
-} from "@/worker";
+} from "@/server/worker";
 
 const job = await repos.job.findById(jobId);
 
@@ -437,7 +438,7 @@ This applies:
 
 ```typescript
 // scripts/worker.ts
-import { Worker } from "@/worker";
+import { Worker } from "@/server/worker";
 import { env } from "@/env/server";
 
 const worker = new Worker(env.DATABASE_URL, {
@@ -655,7 +656,7 @@ function ExportButton() {
 #### 1. Create Handler
 
 ```typescript
-// src/worker/handlers/send-email.ts
+// src/server/worker/handlers/send-email.ts
 import { workerProcedure } from "../base";
 import { z } from "zod";
 
@@ -688,7 +689,7 @@ export default sendEmailProcedure;
 #### 2. Register in Router
 
 ```typescript
-// src/worker/rpc.ts
+// src/server/worker/rpc.ts
 import exportTodosJob from "./handlers/export-todos";
 import sendEmailJob from "./handlers/send-email";  // Add import
 
@@ -713,7 +714,7 @@ const DEFAULT_JOB_LABELS: Record<JobType, string> = {
 ```typescript
 // src/rpc/handlers/email.ts
 import { authedProcedure } from "../base";
-import { createJobFactory, JobPriority } from "@/worker";
+import { createJobFactory, JobPriority } from "@/server/worker";
 
 const createEmailJob = createJobFactory("send_email", "Send Email");
 
@@ -1008,13 +1009,13 @@ All changes are **backward compatible**:
 
 ```typescript
 // Job creation
-import { createJobFactory, JobPriority } from "@/worker";
+import { createJobFactory, JobPriority } from "@/server/worker";
 
 // Type guards
-import { isCompletedJob, isTerminalJob, isActiveJob } from "@/worker";
+import { isCompletedJob, isTerminalJob, isActiveJob } from "@/server/worker";
 
 // Types
-import type { JobType, JobPayload, JobResult } from "@/worker";
+import type { JobType, JobPayload, JobResult } from "@/server/worker";
 
 // Repository
 import { JobPriority } from "@/lib/db/schema";
@@ -1056,7 +1057,7 @@ await repos.job.updateById(id, { status: "cancelled" });
 ## File Locations
 
 ```
-src/worker/
+src/server/worker/
 ├── index.ts              # Worker class, main export
 ├── base.ts               # workerProcedure definition
 ├── rpc.ts                # Job router registration

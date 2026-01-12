@@ -5,8 +5,8 @@
  * with full type inference from oRPC handlers.
  */
 
-import type { Repositories } from "@/lib/db/repositories";
-import type { JobPriority } from "@/lib/db/schema/job";
+import type { Repositories } from "@/server/db/repositories";
+import type { JobPriority } from "@/server/db/schema/job";
 import type { JobPayload, JobType } from "./types";
 
 /**

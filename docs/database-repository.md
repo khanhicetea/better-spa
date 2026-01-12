@@ -2,13 +2,13 @@
 
 **For Agents**: Read this doc when implementing database queries or creating new repositories.
 
-**CRITICAL**: No Kysely codegen. Types are manually defined in `src/lib/db/schema/`.
+**CRITICAL**: No Kysely codegen. Types are manually defined in `src/server/db/schema/`.
 
 ---
 
 ## Database Schema
 
-Kysely uses TypeScript interfaces for type-safe database queries. Schema definitions are organized in `src/lib/db/schema/`:
+Kysely uses TypeScript interfaces for type-safe database queries. Schema definitions are organized in `src/server/db/schema/`:
 
 - `schema/auth.ts`: Contains authentication table interfaces (user, session, account, verification)
 - `schema/todo.ts`: Contains feature-related table interfaces (todoCategory, todoItem)
@@ -21,12 +21,12 @@ Kysely uses TypeScript interfaces for type-safe database queries. Schema definit
 
 ## Repository Pattern
 
-The project uses a repository pattern for database operations to provide a clean, type-safe abstraction over Kysely queries. Repositories are located in `src/lib/db/repositories/`:
+The project uses a repository pattern for database operations to provide a clean, type-safe abstraction over Kysely queries. Repositories are located in `src/server/db/repositories/`:
 
 ### Structure
 
 ```
-src/lib/db/repositories/
+src/server/db/repositories/
 ├── base.ts              # BaseRepository interface and Repository class
 ├── index.ts             # Exports all repos and createRepos factory
 ├── user.repo.ts         # UserRepository
@@ -91,7 +91,7 @@ const result = await repos.user.findPaginated(page, pageSize, (qb) =>
 
 ### Creating New Repositories
 
-1. Create new file in `src/lib/db/repositories/[name].repo.ts`
+1. Create new file in `src/server/db/repositories/[name].repo.ts`
 2. Extend Repository base class with table name
 3. Add domain-specific methods (only if complex/reusable)
 4. Register in `createRepos()` factory in `index.ts`

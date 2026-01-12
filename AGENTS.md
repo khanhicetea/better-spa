@@ -18,7 +18,7 @@ These rules differ from typical projects. **MUST follow or risk breaking the bui
 | Tailwind v3 | **Tailwind v4** | No specific colors (e.g., `bg-blue-500`) unless user requests |
 | Testing required | **NO TESTING** | Only add tests if explicitly requested |
 | DB seeding | **NO SEEDING** | Never create seed files |
-| Kysely codegen | **NO CODEGEN** | Types are manually defined in `src/lib/db/schema/` |
+| Kysely codegen | **NO CODEGEN** | Types are manually defined in `src/server/db/schema/` |
 
 ### Base UI Render Prop Pattern (CRITICAL)
 
@@ -184,9 +184,10 @@ src/
 ├── rpc/              # Type-safe RPC
 │   ├── handlers/     # Domain procedures
 │   └── router.ts     # Main router
-├── lib/db/           # Database layer
-│   ├── repositories/ # Data access
-│   └── schema/       # Type definitions (manual, no codegen)
+├── server/
+│   └── db/           # Database layer
+│       ├── repositories/ # Data access
+│       └── schema/       # Type definitions (manual, no codegen)
 └── worker/           # Background jobs
 ```
 

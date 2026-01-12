@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import type { Job, JobStatus } from "@/lib/db/schema/job";
+import type { Job, JobStatus } from "@/server/db/schema/job";
 import { orpc } from "@/lib/orpc";
-import type { JobPayload, JobResult, JobType } from "@/worker/types";
+import type { JobPayload, JobResult, JobType } from "@/server/worker/types";
 
 /**
  * Typed job with specific payload and result types

@@ -20,7 +20,7 @@ The Blog Posts feature demonstrates:
 
 ### 1.1 Migration
 
-**File:** `src/lib/db/migrations/006_blog.ts`
+**File:** `src/server/db/migrations/006_blog.ts`
 
 ```typescript
 import type { Kysely } from "kysely";
@@ -76,7 +76,7 @@ export async function down(db: Kysely<any>): Promise<void> {
 
 ### 1.2 Schema Types
 
-**File:** `src/lib/db/schema/blog.ts`
+**File:** `src/server/db/schema/blog.ts`
 
 ```typescript
 import type {
@@ -113,7 +113,7 @@ export type BlogPostUpdate = Updateable<BlogPostTable>;
 
 ### 1.3 Register Schema
 
-**File:** `src/lib/db/schema/index.ts`
+**File:** `src/server/db/schema/index.ts`
 
 ```typescript
 import type { BlogPostTable } from "./blog";
@@ -126,7 +126,7 @@ export interface Database {
 
 ### 1.4 Repository
 
-**File:** `src/lib/db/repositories/blogPost.repo.ts`
+**File:** `src/server/db/repositories/blogPost.repo.ts`
 
 ```typescript
 import type { DB } from "../init";

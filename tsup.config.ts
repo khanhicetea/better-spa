@@ -14,7 +14,7 @@ const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
 const externalDeps = [...Object.keys(packageJson.dependencies || {})];
 
 export default defineConfig({
-  entry: ["src/worker/runner.ts"],
+  entry: ["src/server/worker/runner.ts"],
   outDir: ".output/worker",
   format: ["esm"],
   target: "node22",

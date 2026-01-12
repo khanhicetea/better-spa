@@ -7,7 +7,7 @@
  */
 
 import type { InferRouterInputs, InferRouterOutputs } from "@orpc/server";
-import type { Job, JobStatus } from "@/lib/db/schema/job";
+import type { Job, JobStatus } from "@/server/db/schema/job";
 import type { workerRpc } from "./rpc";
 
 /**

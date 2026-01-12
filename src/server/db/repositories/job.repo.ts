@@ -1,5 +1,5 @@
 import { generateUUID } from "@/lib/helpers/data";
-import type { JobPayload, JobResult, JobType } from "@/worker/types";
+import type { JobPayload, JobResult, JobType } from "@/server/worker/types";
 import type { DB } from "../init";
 import type { Job, JobStatus } from "../schema/job";
 import { JobPriority } from "../schema/job";

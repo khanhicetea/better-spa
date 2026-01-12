@@ -1,9 +1,9 @@
 import { os } from "@orpc/server";
 import * as z from "zod";
 import type { ServerAuth, ServerAuthSession } from "@/lib/auth/init";
-import type { DB } from "@/lib/db/init";
-import type { Repositories } from "@/lib/db/repositories";
-import type { Worker } from "@/worker";
+import type { DB } from "@/server/db/init";
+import type { Repositories } from "@/server/db/repositories";
+import type { Worker } from "@/server/worker";
 import {
   adminMiddleware,
   authMiddleware,
