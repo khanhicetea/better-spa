@@ -1,6 +1,8 @@
 # UI/UX Guidelines
 
-**For Agents**: Read this doc when implementing any UI work (forms, dialogs, tables, layouts).
+**For Agents**:
+- Read this doc when implementing any UI work (forms, dialogs, tables, layouts).
+- Read the [React Conventions](react-conventions.md) doc for React conventions if you haven't already.
 
 ---
 
