@@ -261,10 +261,10 @@ For forms with image/file uploads, manage uploaded files as separate state:
 
 ```tsx
 import { useUploadFiles } from "@better-upload/client";
-import type { S3File } from "@/lib/types";
+import type { PublicS3File } from "@/lib/schemas/s3";
 
-function FormWithImages({ initialImages = [] }: { initialImages?: S3File[] }) {
-  const [images, setImages] = useState<S3File[]>(initialImages);
+function FormWithImages({ initialImages = [] }: { initialImages?: PublicS3File[] }) {
+  const [images, setImages] = useState<PublicS3File[]>(initialImages);
   const [previews, setPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -272,9 +272,9 @@ function FormWithImages({ initialImages = [] }: { initialImages?: S3File[] }) {
     route: "images",
     api: "/api/upload",
     onUploadComplete: ({ files }) => {
-      const uploaded: S3File[] = files.map((f) => ({
+      const uploaded: PublicS3File[] = files.map((f) => ({
         key: f.objectInfo.key,
-        metadata: { url: f.objectInfo.metadata.url },
+        metadata: { public_url: f.objectInfo.metadata.url },
       }));
       setImages((prev) => [...prev, ...uploaded]);
       setPreviews([]);
@@ -317,7 +317,7 @@ function FormWithImages({ initialImages = [] }: { initialImages?: S3File[] }) {
       {/* Uploaded images */}
       {images.map((image, index) => (
         <div key={image.key} className="group relative aspect-square">
-          <img src={image.metadata.url} className="size-full rounded-md object-cover" />
+          <img src={image.metadata.public_url} className="size-full rounded-md object-cover" />
           <button
             type="button"
             onClick={() => removeImage(index)}

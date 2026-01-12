@@ -19,15 +19,3 @@ export function createRepos(db: DB) {
 
   return repos;
 }
-
-export { JobRepository } from "./job.repo";
-export { TodoItemRepository } from "./todoItem.repo";
-export { UserRepository } from "./user.repo";
-export {
-  NotFoundError,
-  type BaseRepository,
-  type SelectQueryCondition,
-  type DeleteQueryCondition,
-  type UpdateQueryCondition,
-} from "./base";
-export { Repository } from "./base";

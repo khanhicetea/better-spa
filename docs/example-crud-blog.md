@@ -37,7 +37,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         .onUpdate("cascade"),
     )
     .addColumn("title", "text", (col) => col.notNull())
-    .addColumn("cover", "jsonb")                        // S3File JSON
+    .addColumn("cover", "jsonb")                        // PublicS3File JSON
     .addColumn("description", "text")
     .addColumn("published_at", "timestamptz")
     .addColumn("created_at", "timestamptz", (col) =>
@@ -71,7 +71,7 @@ export async function down(db: Kysely<any>): Promise<void> {
 - Use `text` for IDs (UUIDs stored as text)
 - Foreign keys with `cascade` for cleanup
 - `timestamptz` for dates (timezone-aware)
-- `jsonb` for complex nested data (like S3File)
+- `jsonb` for complex nested data (like PublicS3File)
 - Add indexes for columns used in WHERE/ORDER BY
 
 ### 1.2 Schema Types
@@ -86,13 +86,13 @@ import type {
   Selectable,
   Updateable,
 } from "kysely";
-import type { S3File } from "@/lib/types";
+import type { PublicS3File } from "@/lib/schemas/s3";
 
 export interface BlogPostTable {
   id: Generated<string>;           // Auto-generated UUID
   userId: string;
   title: string;
-  cover: S3File | null;           // JSONB column mapped to TypeScript type
+  cover: PublicS3File | null;           // JSONB column mapped to TypeScript type
   description: string | null;
   publishedAt: Date | null;
   createdAt: ColumnType<Date, Date | undefined, never>;  // Read: Date, Insert: optional, Update: never
@@ -184,14 +184,14 @@ export { BlogPostRepository } from "./blogPost.repo";
 import { pickBy } from "lodash-es";
 import { z } from "zod";
 import { generateUUID } from "@/lib/helpers/data";
-import type { S3File } from "@/lib/types";
+import type { PublicS3File } from "@/lib/schemas/s3";
 import { authedProcedure } from "../base";
 
 // Reusable schema for S3 file uploads
 const s3FileSchema = z.object({
   key: z.string(),
   metadata: z.object({
-    url: z.string(),
+    public_url: z.string(),
   }),
 });
 
@@ -242,7 +242,7 @@ export const createBlogPost = authedProcedure
       userId: context.user.id,
       title: input.title,
       description: input.description ?? null,
-      cover: (input.cover as S3File) ?? null,
+      cover: (input.cover as PublicS3File) ?? null,
       publishedAt: input.publishedAt ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -577,9 +577,9 @@ const { upload, isPending: isUploading } = useUploadFile({
   route: "images",              // Upload route name
   api: "/api/upload",           // Upload endpoint
   onUploadComplete: ({ file }) => {
-    const s3File: S3File = {
+    const s3File: PublicS3File = {
       key: file.objectInfo.key,
-      metadata: { url: file.objectInfo.metadata.url },
+      metadata: { public_url: file.objectInfo.metadata.url },
     };
     form.setValue("cover", s3File);
   },

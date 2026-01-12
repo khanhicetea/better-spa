@@ -10,31 +10,31 @@ Always wrap file arrays in an object with `files` key for future extensibility:
 
 ```typescript
 // Types, metadata key should be snake_case
-export interface S3File {
+export interface PublicS3File {
   key: string;
   metadata: {
-    url: string;
+    public_url: string;
   };
 }
 
-export interface S3Files {
-  files: S3File[];
+export interface PublicS3Files {
+  files: PublicS3File[];
 }
 
 // Schema
-import { S3File, S3Files } from "@/lib/types";
+import type { PublicS3File, PublicS3Files } from "@/lib/schemas/s3";
 export interface ProductTable {
   id: string;
   name: string;
-  images: S3Files;  // NOT: images: S3File[]
+  images: PublicS3Files;  // NOT: images: PublicS3File[]
 }
 
 // Single file schema
-import { S3File, S3Files } from "@/lib/types";
+import type { PublicS3File, PublicS3Files } from "@/lib/schemas/s3";
 export interface BlogTable {
   id: string;
   title: string;
-  cover: S3File;
+  cover: PublicS3File;
 }
 ```
 
@@ -58,19 +58,19 @@ Server route is pre-configured at `src/routes/api/upload.$.ts`. Only separate up
 
 ```typescript
 import { useUploadFiles } from "@better-upload/client";
-import { S3File } from "@/lib/types";
+import type { PublicS3File } from "@/lib/schemas/s3";
 
-function ImageUploader({ onUpload }: { onUpload: (files: S3File[]) => void }) {
+function ImageUploader({ onUpload }: { onUpload: (files: PublicS3File[]) => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { uploadFiles, isUploading, progress } = useUploadFiles({
     api: "/api/upload",
     route: "images",
     onUploadComplete: ({ files }) => {
-      const mappedFiles: S3File[] = files.map((file) => ({
+      const mappedFiles: PublicS3File[] = files.map((file) => ({
         key: file.objectInfo.key,
         metadata: {
-          url: file.objectInfo.metadata.url,
+          public_url: file.objectInfo.metadata.url,
         },
       }));
       setUploadedImages((prev) => [...prev, ...mappedFiles]);
@@ -102,18 +102,18 @@ Use `useUploadFile` (singular) for uploading a single file. The callback receive
 
 ```typescript
 import { useUploadFile } from "@better-upload/client";
-import { S3File } from "@/lib/types";
+import type { PublicS3File } from "@/lib/schemas/s3";
 
-function CoverImageUploader({ onUpload }: { onUpload: (file: S3File) => void }) {
-  const [coverImage, setCoverImage] = useState<S3File | undefined>();
+function CoverImageUploader({ onUpload }: { onUpload: (file: PublicS3File) => void }) {
+  const [coverImage, setCoverImage] = useState<PublicS3File | undefined>();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadHook = useUploadFile({
     onUploadComplete: ({ file }) => {
-      const s3File: S3File = {
+      const s3File: PublicS3File = {
         key: file.objectInfo.key,
         metadata: {
-          url: file.objectInfo.metadata.url,
+          public_url: file.objectInfo.metadata.url,
         },
       };
       setCoverImage(s3File);
@@ -159,7 +159,7 @@ function CoverImageUploader({ onUpload }: { onUpload: (file: S3File) => void }) 
 
 ```typescript
 function ProductForm() {
-  const [images, setImages] = useState<S3File[]>([]);
+  const [images, setImages] = useState<PublicS3File[]>([]);
 
   const createMutation = useMutation(
     orpc.product.create.mutationOptions({
