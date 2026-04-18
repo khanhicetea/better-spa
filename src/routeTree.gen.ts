@@ -26,6 +26,7 @@ import { Route as ApiUploadSplatRouteImport } from './routes/api/upload.$'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as userAppTodoRouteImport } from './routes/(user)/app/todo'
+import { Route as ApiInternalCronPollJobsRouteImport } from './routes/api/internal/cron/poll-jobs'
 
 const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
@@ -110,6 +111,11 @@ const userAppTodoRoute = userAppTodoRouteImport.update({
   path: '/todo',
   getParentRoute: () => userAppRouteRoute,
 } as any)
+const ApiInternalCronPollJobsRoute = ApiInternalCronPollJobsRouteImport.update({
+  id: '/api/internal/cron/poll-jobs',
+  path: '/api/internal/cron/poll-jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/api/upload/$': typeof ApiUploadSplatRoute
   '/app/': typeof userAppIndexRoute
   '/settings/': typeof userSettingsIndexRoute
+  '/api/internal/cron/poll-jobs': typeof ApiInternalCronPollJobsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/api/upload/$': typeof ApiUploadSplatRoute
   '/app': typeof userAppIndexRoute
   '/settings': typeof userSettingsIndexRoute
+  '/api/internal/cron/poll-jobs': typeof ApiInternalCronPollJobsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/api/upload/$': typeof ApiUploadSplatRoute
   '/(user)/app/': typeof userAppIndexRoute
   '/(user)/settings/': typeof userSettingsIndexRoute
+  '/api/internal/cron/poll-jobs': typeof ApiInternalCronPollJobsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/api/upload/$'
     | '/app/'
     | '/settings/'
+    | '/api/internal/cron/poll-jobs'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/api/upload/$'
     | '/app'
     | '/settings'
+    | '/api/internal/cron/poll-jobs'
   id:
     | '__root__'
     | '/'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
     | '/api/upload/$'
     | '/(user)/app/'
     | '/(user)/settings/'
+    | '/api/internal/cron/poll-jobs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -223,6 +235,7 @@ export interface RootRouteChildren {
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
   ApiUploadSplatRoute: typeof ApiUploadSplatRoute
+  ApiInternalCronPollJobsRoute: typeof ApiInternalCronPollJobsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -346,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof userAppTodoRouteImport
       parentRoute: typeof userAppRouteRoute
     }
+    '/api/internal/cron/poll-jobs': {
+      id: '/api/internal/cron/poll-jobs'
+      path: '/api/internal/cron/poll-jobs'
+      fullPath: '/api/internal/cron/poll-jobs'
+      preLoaderRoute: typeof ApiInternalCronPollJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -426,6 +446,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
   ApiUploadSplatRoute: ApiUploadSplatRoute,
+  ApiInternalCronPollJobsRoute: ApiInternalCronPollJobsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
