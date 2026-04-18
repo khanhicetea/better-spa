@@ -8,67 +8,105 @@
 
 ### Shell SPA Pattern
 
-- **SSR (Server-Side Rendered)**: Authentication, app settings, user preferences, minimal shell UI
-- **SPA (Single Page Application)**: Routing, data fetching, state management, UI rendering
+- **SSR (Server-Side Rendered)**: auth/session lookup, app settings, minimal shell layout
+- **SPA (Single Page Application)**: route transitions, data loading, mutations, and feature UI
 
 ### Core Technologies
 
-- **TanStack Start**: Full-stack React framework
-- **TanStack Router**: Type-safe routing
-- **TanStack Query**: Server state management
-- **oRPC**: Type-safe RPC for API (oRPC, not tRPC so don't make mistakes here)
-- **Better Auth**: Modern authentication
-- **Kysely**: Type-safe SQL query builder
-- **shadcn/ui**: Accessible component library
+- **TanStack Start**
+- **TanStack Router**
+- **TanStack Query**
+- **oRPC** (not tRPC)
+- **Better Auth**
+- **Kysely + PostgreSQL**
+- **Job worker** (`pnpm worker`) for queued background tasks
+
+---
+
+## Default Route Surface
+
+Production baseline keeps this route set:
+
+- `/`
+- `/login`
+- `/signup`
+- `/app` (redirects to `/app/todo`)
+- `/app/todo`
+- `/settings`
+- `/admin`
+- `/admin/users`
+- `/admin/jobs`
+- `/api/*`
+
+`/app/hello-form` is intentionally removed.
+Upload infra (`/api/upload/$`) remains available, but no default upload demo page is included.
+
+---
 
 ## Shell Implementation
 
-The shell pattern is implemented in `src/routes/__root.tsx` with the following key aspects:
+Shell logic is in `src/routes/__root.tsx`:
 
-- Shell data is fetched via RPC and cached with React Query
-- User data is prefetched but not awaited, allowing the client to handle it
-- The shell data structure includes app settings and user information
+- server ensures shell data with `shellQueryOptions()`
+- user auth query is prefetched non-blocking
+- client hydration continues with cached query state
 
-### Relevant Files
+Relevant files:
 
-- `src/routes/__root.tsx`: Core shell pattern implementation
-- `src/rpc/handlers/app.ts`: Shell data structure definition
-- `src/lib/queries.ts`: Query options for shell data
+- `src/routes/__root.tsx`
+- `src/rpc/handlers/app.ts`
+- `src/lib/queries.ts`
 
-## Authentication Flow
+---
 
-1. User request hits the root route
-2. Shell data is SSR'd
-3. User data is prefetched non-blocking
-4. Shell is rendered
-5. Client hydration occurs
-6. SPA takes over
+## Auth Boundaries
 
-## Protected Routes
+- User-protected routes: `src/routes/(user)/route.tsx`
+- Admin-protected routes: `src/routes/admin/route.tsx`
+- Unauthenticated users are redirected to `/login`
+- Non-admin users are redirected from `/admin/*` to `/app`
 
-Protected routes (user role) are handled in `src/routes/(user)/route.tsx` with:
+Auth pages use shared route-adjacent modules:
 
-- User validation via React Query
-- Redirect to login if user is not authenticated
-- Type-safe user data passed to child routes
+- `src/routes/(auth)/-auth/auth-shell.tsx`
+- `src/routes/(auth)/-auth/social-buttons.tsx`
 
-Protected admin routes (admin role) are handled in `src/routes/admin/route.tsx` with:
+---
 
-- Admin validation via React Query
+## Feature Layout Pattern
 
-## Environment Configuration
+Large routes are split into route-adjacent support modules (prefixed `-`):
 
-Type-safe environment variables are configured in `src/env/`:
+- `src/routes/(user)/app/-todo/*`
+- `src/routes/admin/-users/*`
+- `src/routes/admin/-jobs/*`
+- `src/routes/(auth)/-auth/*`
 
-- `client.ts`: Client-side environment variables with `VITE_` prefix
-- `server.ts`: Server-side environment variables with Zod validation
-- Both use `@t3-oss/env-core` for type safety and runtime validation
-- Client variables are prefixed with `VITE_` for security
+Route files stay focused on:
 
-## Performance Optimizations
+- search params validation
+- loaders/prefetching
+- top-level query/mutation orchestration
+- page composition
 
-- **React Query Caching**: 2-minute stale time reduces server calls
-- **Auth Cookie Cache**: 5-minute server-side cache reduces DB queries
-- **Intent-based Preloading**: Faster navigation
-- **React Compiler**: Automatic memoization, so no need manually useCallback, useMemo, memo things.
-- **SSR-Query Integration**: Optimal data fetching
+---
+
+## RPC Surface
+
+Current production-baseline RPC names:
+
+- `orpc.todo.list/create/update/delete/export`
+- `orpc.user.list/get`
+- `orpc.job.listAdmin/list/get/cancel` (`create` remains available)
+
+Todo is the single reference feature that exercises auth, RPC, repositories, and job queue end-to-end.
+
+---
+
+## Job Queue Execution Rule
+
+Long-running work must be **queue-only**:
+
+- RPC handlers enqueue jobs and return job records
+- web request context does **not** execute worker jobs directly
+- only worker runtime (`src/server/worker/runner.ts`, `src/server/worker/worker.ts`) processes queued jobs

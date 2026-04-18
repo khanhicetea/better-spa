@@ -5,6 +5,7 @@ import type {
   QueryResult,
   RootOperationNode,
 } from "kysely";
+import { logger } from "@/server/logger";
 
 /**
  * A Kysely plugin that logs the execution time of queries.
@@ -33,8 +34,15 @@ export class QueryLoggingPlugin implements KyselyPlugin {
     const info = this.queryInfo.get(args.queryId);
 
     if (info) {
+      if (process.env.KYSELY_QUERY_DEBUG !== "true") {
+        return args.result;
+      }
+
       const duration = Date.now() - info.startTime;
-      console.log(`[Kysely] ${info.kind} query took ${duration}ms`);
+      logger.debug("Kysely query completed", {
+        operation: info.kind,
+        durationMs: duration,
+      });
     }
 
     return args.result;

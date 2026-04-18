@@ -12,7 +12,7 @@ const jobStatusSchema = z.enum([
   "cancelled",
 ]);
 
-export const createJob = authedProcedure
+export const create = authedProcedure
   .input(
     z.object({
       type: z.string().min(1),
@@ -43,7 +43,7 @@ export const createJob = authedProcedure
     return job ?? null;
   });
 
-export const getJob = authedProcedure
+export const get = authedProcedure
   .input(z.object({ id: z.string() }))
   .handler(async ({ input, context, errors }) => {
     const { repos } = context;
@@ -56,7 +56,7 @@ export const getJob = authedProcedure
     return job;
   });
 
-export const listAllJobs = adminProcedure
+export const listAdmin = adminProcedure
   .input(
     z.object({
       status: jobStatusSchema.optional(),
@@ -77,7 +77,7 @@ export const listAllJobs = adminProcedure
     return jobs;
   });
 
-export const listJobs = authedProcedure
+export const list = authedProcedure
   .input(
     z.object({
       jobId: z.string().optional(),
@@ -100,13 +100,15 @@ export const listJobs = authedProcedure
     return jobs;
   });
 
-export const cancelJob = authedProcedure
+export const cancel = authedProcedure
   .input(z.object({ id: z.string() }))
   .handler(async ({ input, context, errors }) => {
     const { repos } = context;
 
     const job = await repos.job.findById(input.id);
-    if (!job || job.userId !== context.user.id) {
+    const isOwner = job?.userId === context.user.id;
+    const isAdmin = context.user.role === "admin";
+    if (!job || (!isOwner && !isAdmin)) {
       throw errors.NOT_FOUND();
     }
 

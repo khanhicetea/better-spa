@@ -19,8 +19,19 @@ export class NotFoundError extends Error {
   }
 }
 
+type TableRow<TTable extends keyof Database> = Selectable<Database[TTable]>;
+type TableInsert<TTable extends keyof Database> = Insertable<Database[TTable]>;
+type TableUpdate<TTable extends keyof Database> = Updateable<Database[TTable]>;
+
+export type IdOf<TTable extends keyof Database> =
+  TableRow<TTable> extends {
+    id: infer TId;
+  }
+    ? TId
+    : never;
+
 export type SelectQueryCondition<TTable extends keyof Database> =
-  | Partial<Selectable<Database[TTable]>>
+  | Partial<TableRow<TTable>>
   | ((
       qb: SelectQueryBuilder<Database, TTable, object>,
     ) => SelectQueryBuilder<Database, TTable, object>);
@@ -30,13 +41,13 @@ export type QueryModifier<TTable extends keyof Database> = (
 ) => SelectQueryBuilder<Database, TTable, object>;
 
 export type DeleteQueryCondition<TTable extends keyof Database> =
-  | Partial<Selectable<Database[TTable]>>
+  | Partial<TableRow<TTable>>
   | ((
       qb: DeleteQueryBuilder<Database, TTable, DeleteResult>,
     ) => DeleteQueryBuilder<Database, TTable, DeleteResult>);
 
 export type UpdateQueryCondition<TTable extends keyof Database> =
-  | Partial<Selectable<Database[TTable]>>
+  | Partial<TableRow<TTable>>
   | ((
       qb: UpdateQueryBuilder<Database, TTable, TTable, object>,
     ) => UpdateQueryBuilder<Database, TTable, TTable, object>);
@@ -45,61 +56,57 @@ export interface BaseRepository<TTable extends keyof Database> {
   find(options?: {
     where?: SelectQueryCondition<TTable>;
     modify?: QueryModifier<TTable>;
-  }): Promise<Selectable<Database[TTable]>[]>;
-  findSelect<K extends keyof Selectable<Database[TTable]>>(options: {
+  }): Promise<TableRow<TTable>[]>;
+  findSelect<K extends keyof TableRow<TTable>>(options: {
     select: K[];
     where?: SelectQueryCondition<TTable>;
     modify?: QueryModifier<TTable>;
-  }): Promise<Pick<Selectable<Database[TTable]>, K>[]>;
-  findById(id: unknown): Promise<Selectable<Database[TTable]> | undefined>;
-  findByIdOrFail(id: unknown): Promise<Selectable<Database[TTable]>>;
+  }): Promise<Pick<TableRow<TTable>, K>[]>;
+  findById(id: IdOf<TTable>): Promise<TableRow<TTable> | undefined>;
+  findByIdOrFail(id: IdOf<TTable>): Promise<TableRow<TTable>>;
   findOne(options: {
     where: SelectQueryCondition<TTable>;
     modify?: QueryModifier<TTable>;
-  }): Promise<Selectable<Database[TTable]> | undefined>;
+  }): Promise<TableRow<TTable> | undefined>;
   findOneOrFail(options: {
     where: SelectQueryCondition<TTable>;
     modify?: QueryModifier<TTable>;
-  }): Promise<Selectable<Database[TTable]>>;
-  findAll(
-    queryBuilder?: QueryModifier<TTable>,
-  ): Promise<Selectable<Database[TTable]>[]>;
+  }): Promise<TableRow<TTable>>;
+  findAll(queryBuilder?: QueryModifier<TTable>): Promise<TableRow<TTable>[]>;
   findPaginated(options: {
     page: number;
     pageSize: number;
     where?: SelectQueryCondition<TTable>;
     modify?: QueryModifier<TTable>;
   }): Promise<{
-    items: Selectable<Database[TTable]>[];
+    items: TableRow<TTable>[];
     totalCount: number;
     pageCount: number;
     page: number;
     pageSize: number;
   }>;
   count(conditions?: SelectQueryCondition<TTable>): Promise<number>;
-  exists(id: unknown): Promise<boolean>;
+  exists(id: IdOf<TTable>): Promise<boolean>;
   existsBy(conditions: SelectQueryCondition<TTable>): Promise<boolean>;
-  deleteById(id: unknown): Promise<DeleteResult[]>;
+  deleteById(id: IdOf<TTable>): Promise<DeleteResult[]>;
   deleteMany(conditions: DeleteQueryCondition<TTable>): Promise<DeleteResult[]>;
   updateById(options: {
-    id: unknown;
-    data: Updateable<Database[TTable]>;
-  }): Promise<Selectable<Database[TTable]> | undefined>;
+    id: IdOf<TTable>;
+    data: TableUpdate<TTable>;
+  }): Promise<TableRow<TTable> | undefined>;
   updateMany(options: {
     where: UpdateQueryCondition<TTable>;
-    data: Updateable<Database[TTable]>;
-  }): Promise<Selectable<Database[TTable]>[]>;
+    data: TableUpdate<TTable>;
+  }): Promise<TableRow<TTable>[]>;
   insertReturn(
-    data: Insertable<Database[TTable]>,
-  ): Promise<Selectable<Database[TTable]> | undefined>;
-  insertMany(
-    data: Insertable<Database[TTable]>[],
-  ): Promise<Selectable<Database[TTable]>[]>;
+    data: TableInsert<TTable>,
+  ): Promise<TableRow<TTable> | undefined>;
+  insertMany(data: TableInsert<TTable>[]): Promise<TableRow<TTable>[]>;
   upsert(options: {
-    data: Insertable<Database[TTable]>;
-    conflictColumns: (keyof Selectable<Database[TTable]>)[];
-    updateData?: Partial<Insertable<Database[TTable]>>;
-  }): Promise<Selectable<Database[TTable]> | undefined>;
+    data: TableInsert<TTable>;
+    conflictColumns: (keyof TableRow<TTable>)[];
+    updateData?: Partial<TableInsert<TTable>>;
+  }): Promise<TableRow<TTable> | undefined>;
 }
 
 export class Repository<TTable extends keyof Database>
@@ -112,17 +119,10 @@ export class Repository<TTable extends keyof Database>
     protected tableName: TTable,
   ) {}
 
-  /**
-   * Set the repos reference for cross-repository access.
-   * Called by createRepos after all repositories are instantiated.
-   */
   setRepos(repos: Repositories): void {
     this._repos = repos;
   }
 
-  /**
-   * Access other repositories. Throws if repos not yet initialized.
-   */
   protected get repos(): Repositories {
     if (!this._repos) {
       throw new Error(
@@ -132,72 +132,137 @@ export class Repository<TTable extends keyof Database>
     return this._repos;
   }
 
-  protected applyConditions<Q>(
-    query: Q,
-    conditions?:
-      | SelectQueryCondition<TTable>
-      | DeleteQueryCondition<TTable>
-      | UpdateQueryCondition<TTable>,
-  ): Q {
+  protected applySelectConditions<
+    Q extends SelectQueryBuilder<Database, any, any>,
+  >(query: Q, conditions?: SelectQueryCondition<TTable>): Q {
     if (!conditions) return query;
 
     if (typeof conditions === "function") {
-      return conditions(query as any) as Q;
+      return conditions(
+        query as unknown as SelectQueryBuilder<Database, TTable, object>,
+      ) as unknown as Q;
     }
 
     let result = query;
-    if (Object.keys(conditions).length > 0) {
-      for (const [key, value] of Object.entries(conditions)) {
-        result = (result as any).where(key, "=", value);
-      }
+    for (const [key, value] of Object.entries(conditions)) {
+      if (value === undefined) continue;
+      result = (
+        result as unknown as SelectQueryBuilder<Database, TTable, object>
+      ).where(key as never, "=", value as never) as unknown as Q;
     }
 
-    return result as Q;
+    return result;
+  }
+
+  protected applyDeleteConditions<
+    Q extends DeleteQueryBuilder<Database, any, any>,
+  >(query: Q, conditions?: DeleteQueryCondition<TTable>): Q {
+    if (!conditions) return query;
+
+    if (typeof conditions === "function") {
+      return conditions(
+        query as unknown as DeleteQueryBuilder<Database, TTable, DeleteResult>,
+      ) as unknown as Q;
+    }
+
+    let result = query;
+    for (const [key, value] of Object.entries(conditions)) {
+      if (value === undefined) continue;
+      result = (
+        result as unknown as DeleteQueryBuilder<Database, TTable, DeleteResult>
+      ).where(key as never, "=", value as never) as unknown as Q;
+    }
+
+    return result;
+  }
+
+  protected applyUpdateConditions<
+    Q extends UpdateQueryBuilder<Database, any, any, any>,
+  >(query: Q, conditions?: UpdateQueryCondition<TTable>): Q {
+    if (!conditions) return query;
+
+    if (typeof conditions === "function") {
+      return conditions(
+        query as unknown as UpdateQueryBuilder<
+          Database,
+          TTable,
+          TTable,
+          object
+        >,
+      ) as unknown as Q;
+    }
+
+    let result = query;
+    for (const [key, value] of Object.entries(conditions)) {
+      if (value === undefined) continue;
+      result = (
+        result as unknown as UpdateQueryBuilder<
+          Database,
+          TTable,
+          TTable,
+          object
+        >
+      ).where(key as never, "=", value as never) as unknown as Q;
+    }
+
+    return result;
   }
 
   async find(options?: {
     where?: SelectQueryCondition<TTable>;
     modify?: QueryModifier<TTable>;
-  }): Promise<Selectable<Database[TTable]>[]> {
+  }): Promise<TableRow<TTable>[]> {
     let query = this.db.selectFrom(this.tableName);
-    query = this.applyConditions(query, options?.where);
+    query = this.applySelectConditions(query, options?.where);
     if (options?.modify) {
-      query = options.modify(query as any) as any;
+      query = options.modify(
+        query as unknown as SelectQueryBuilder<Database, TTable, object>,
+      ) as unknown as typeof query;
     }
 
     return query
       .selectAll()
       .execute()
-      .then((rows) => rows as Selectable<Database[TTable]>[]);
+      .then((rows) => rows as TableRow<TTable>[]);
   }
 
-  async findSelect<K extends keyof Selectable<Database[TTable]>>(options: {
+  async findSelect<K extends keyof TableRow<TTable>>(options: {
     select: K[];
     where?: SelectQueryCondition<TTable>;
     modify?: QueryModifier<TTable>;
-  }): Promise<Pick<Selectable<Database[TTable]>, K>[]> {
+  }): Promise<Pick<TableRow<TTable>, K>[]> {
     let query = this.db.selectFrom(this.tableName);
-    query = this.applyConditions(query, options.where);
+    query = this.applySelectConditions(query, options.where);
     if (options.modify) {
-      query = options.modify(query as any) as any;
+      query = options.modify(
+        query as unknown as SelectQueryBuilder<Database, TTable, object>,
+      ) as unknown as typeof query;
     }
 
-    const rows = await (query as any).select(options.select).execute();
-    return rows as Pick<Selectable<Database[TTable]>, K>[];
+    const rows = await (
+      query as unknown as SelectQueryBuilder<Database, TTable, object>
+    )
+      .select(options.select as never)
+      .execute();
+    return rows as Pick<TableRow<TTable>, K>[];
   }
 
-  async findById(
-    id: unknown,
-  ): Promise<Selectable<Database[TTable]> | undefined> {
-    const row = await (this.db.selectFrom(this.tableName) as any)
-      .where("id", "=", id)
+  async findById(id: IdOf<TTable>): Promise<TableRow<TTable> | undefined> {
+    const row = await (
+      this.db.selectFrom(this.tableName) as unknown as SelectQueryBuilder<
+        Database,
+        TTable,
+        object
+      >
+    )
+      .where("id" as never, "=", id as never)
       .selectAll()
       .executeTakeFirst();
 
-    return row as Selectable<Database[TTable]> | undefined;
+    return row as TableRow<TTable> | undefined;
   }
 
-  async findByIdOrFail(id: unknown): Promise<Selectable<Database[TTable]>> {
+  async findByIdOrFail(id: IdOf<TTable>): Promise<TableRow<TTable>> {
     const record = await this.findById(id);
     if (!record) {
       throw new NotFoundError(
@@ -210,21 +275,23 @@ export class Repository<TTable extends keyof Database>
   async findOne(options: {
     where: SelectQueryCondition<TTable>;
     modify?: QueryModifier<TTable>;
-  }): Promise<Selectable<Database[TTable]> | undefined> {
+  }): Promise<TableRow<TTable> | undefined> {
     let query = this.db.selectFrom(this.tableName);
-    query = this.applyConditions(query, options.where);
+    query = this.applySelectConditions(query, options.where);
     if (options.modify) {
-      query = options.modify(query as any) as any;
+      query = options.modify(
+        query as unknown as SelectQueryBuilder<Database, TTable, object>,
+      ) as unknown as typeof query;
     }
 
     const row = await query.selectAll().executeTakeFirst();
-    return row as Selectable<Database[TTable]> | undefined;
+    return row as TableRow<TTable> | undefined;
   }
 
   async findOneOrFail(options: {
     where: SelectQueryCondition<TTable>;
     modify?: QueryModifier<TTable>;
-  }): Promise<Selectable<Database[TTable]>> {
+  }): Promise<TableRow<TTable>> {
     const record = await this.findOne(options);
     if (!record) {
       throw new NotFoundError(`${String(this.tableName)} record not found`);
@@ -234,14 +301,16 @@ export class Repository<TTable extends keyof Database>
 
   async findAll(
     queryBuilder?: QueryModifier<TTable>,
-  ): Promise<Selectable<Database[TTable]>[]> {
+  ): Promise<TableRow<TTable>[]> {
     let query = this.db.selectFrom(this.tableName);
     if (queryBuilder) {
-      query = queryBuilder(query as any) as any;
+      query = queryBuilder(
+        query as unknown as SelectQueryBuilder<Database, TTable, object>,
+      ) as unknown as typeof query;
     }
 
     const rows = await query.selectAll().execute();
-    return rows as Selectable<Database[TTable]>[];
+    return rows as TableRow<TTable>[];
   }
 
   async findPaginated(options: {
@@ -250,7 +319,7 @@ export class Repository<TTable extends keyof Database>
     where?: SelectQueryCondition<TTable>;
     modify?: QueryModifier<TTable>;
   }): Promise<{
-    items: Selectable<Database[TTable]>[];
+    items: TableRow<TTable>[];
     totalCount: number;
     pageCount: number;
     page: number;
@@ -259,9 +328,11 @@ export class Repository<TTable extends keyof Database>
     const offset = (options.page - 1) * options.pageSize;
 
     let query = this.db.selectFrom(this.tableName);
-    query = this.applyConditions(query, options.where);
+    query = this.applySelectConditions(query, options.where);
     if (options.modify) {
-      query = options.modify(query as any) as any;
+      query = options.modify(
+        query as unknown as SelectQueryBuilder<Database, TTable, object>,
+      ) as unknown as typeof query;
     }
 
     const [items, totalCount] = await Promise.all([
@@ -270,8 +341,8 @@ export class Repository<TTable extends keyof Database>
         .limit(options.pageSize)
         .offset(offset)
         .execute()
-        .then((rows) => rows as Selectable<Database[TTable]>[]),
-      this.count(options.where), // Only pass where conditions, NOT modify
+        .then((rows) => rows as TableRow<TTable>[]),
+      this.count(options.where),
     ]);
 
     const pageCount = Math.ceil(totalCount / options.pageSize);
@@ -287,9 +358,11 @@ export class Repository<TTable extends keyof Database>
 
   async count(conditions?: SelectQueryCondition<TTable>): Promise<number> {
     let query = this.db.selectFrom(this.tableName);
-    query = this.applyConditions(query, conditions);
+    query = this.applySelectConditions(query, conditions);
 
-    const result = await (query as any)
+    const result = await (
+      query as unknown as SelectQueryBuilder<Database, TTable, object>
+    )
       .select((eb: ExpressionBuilder<Database, TTable>) => [
         eb.fn.count("id").as("count"),
       ])
@@ -298,12 +371,18 @@ export class Repository<TTable extends keyof Database>
     return Number(result?.count) ?? 0;
   }
 
-  async exists(id: unknown): Promise<boolean> {
-    const row = await (this.db.selectFrom(this.tableName) as any)
+  async exists(id: IdOf<TTable>): Promise<boolean> {
+    const row = await (
+      this.db.selectFrom(this.tableName) as unknown as SelectQueryBuilder<
+        Database,
+        TTable,
+        object
+      >
+    )
       .select((eb: ExpressionBuilder<Database, TTable>) =>
         eb.lit(1).as("exists"),
       )
-      .where("id", "=", id)
+      .where("id" as never, "=", id as never)
       .limit(1)
       .executeTakeFirst();
 
@@ -312,9 +391,11 @@ export class Repository<TTable extends keyof Database>
 
   async existsBy(conditions: SelectQueryCondition<TTable>): Promise<boolean> {
     let query = this.db.selectFrom(this.tableName);
-    query = this.applyConditions(query, conditions);
+    query = this.applySelectConditions(query, conditions);
 
-    const row = await (query as any)
+    const row = await (
+      query as unknown as SelectQueryBuilder<Database, TTable, object>
+    )
       .select((eb: ExpressionBuilder<Database, TTable>) =>
         eb.lit(1).as("exists"),
       )
@@ -324,89 +405,105 @@ export class Repository<TTable extends keyof Database>
     return !!row;
   }
 
-  async deleteById(id: unknown): Promise<DeleteResult[]> {
-    const result = await (this.db.deleteFrom(this.tableName) as any)
-      .where("id", "=", id)
+  async deleteById(id: IdOf<TTable>): Promise<DeleteResult[]> {
+    return (
+      this.db.deleteFrom(this.tableName) as unknown as DeleteQueryBuilder<
+        Database,
+        TTable,
+        DeleteResult
+      >
+    )
+      .where("id" as never, "=", id as never)
       .execute();
-
-    return result;
   }
 
   async deleteMany(
     conditions: DeleteQueryCondition<TTable>,
   ): Promise<DeleteResult[]> {
     let query = this.db.deleteFrom(this.tableName);
-    query = this.applyConditions(query, conditions);
+    query = this.applyDeleteConditions(query, conditions);
 
     return query.execute();
   }
 
   async updateById(options: {
-    id: unknown;
-    data: Updateable<Database[TTable]>;
-  }): Promise<Selectable<Database[TTable]> | undefined> {
-    const row = await (this.db.updateTable(this.tableName) as any)
-      .set(options.data)
-      .where("id", "=", options.id)
+    id: IdOf<TTable>;
+    data: TableUpdate<TTable>;
+  }): Promise<TableRow<TTable> | undefined> {
+    const row = await (
+      this.db.updateTable(this.tableName) as unknown as UpdateQueryBuilder<
+        Database,
+        TTable,
+        TTable,
+        object
+      >
+    )
+      .set(options.data as never)
+      .where("id" as never, "=", options.id as never)
       .returningAll()
       .executeTakeFirst();
 
-    return row as Selectable<Database[TTable]> | undefined;
+    return row as TableRow<TTable> | undefined;
   }
 
   async updateMany(options: {
     where: UpdateQueryCondition<TTable>;
-    data: Updateable<Database[TTable]>;
-  }): Promise<Selectable<Database[TTable]>[]> {
-    let query = (this.db.updateTable(this.tableName) as any).set(options.data);
-    query = this.applyConditions(query, options.where);
+    data: TableUpdate<TTable>;
+  }): Promise<TableRow<TTable>[]> {
+    let query = (
+      this.db.updateTable(this.tableName) as unknown as UpdateQueryBuilder<
+        Database,
+        TTable,
+        TTable,
+        object
+      >
+    ).set(options.data as never);
+    query = this.applyUpdateConditions(query, options.where);
 
     const rows = await query.returningAll().execute();
-    return rows as Selectable<Database[TTable]>[];
+    return rows as TableRow<TTable>[];
   }
 
   async insertReturn(
-    data: Insertable<Database[TTable]>,
-  ): Promise<Selectable<Database[TTable]> | undefined> {
+    data: TableInsert<TTable>,
+  ): Promise<TableRow<TTable> | undefined> {
     const row = await this.db
       .insertInto(this.tableName)
-      .values(data as any)
+      .values(data)
       .returningAll()
       .executeTakeFirst();
 
-    return row as Selectable<Database[TTable]> | undefined;
+    return row as TableRow<TTable> | undefined;
   }
 
-  async insertMany(
-    data: Insertable<Database[TTable]>[],
-  ): Promise<Selectable<Database[TTable]>[]> {
+  async insertMany(data: TableInsert<TTable>[]): Promise<TableRow<TTable>[]> {
     const rows = await this.db
       .insertInto(this.tableName)
-      .values(data as any)
+      .values(data)
       .returningAll()
       .execute();
 
-    return rows as Selectable<Database[TTable]>[];
+    return rows as TableRow<TTable>[];
   }
 
   async upsert(options: {
-    data: Insertable<Database[TTable]>;
-    conflictColumns: (keyof Selectable<Database[TTable]>)[];
-    updateData?: Partial<Insertable<Database[TTable]>>;
-  }): Promise<Selectable<Database[TTable]> | undefined> {
+    data: TableInsert<TTable>;
+    conflictColumns: (keyof TableRow<TTable>)[];
+    updateData?: Partial<TableInsert<TTable>>;
+  }): Promise<TableRow<TTable> | undefined> {
     const dataToUpdate = options.updateData ?? options.data;
 
     const row = await this.db
       .insertInto(this.tableName)
-      .values(options.data as any)
+      .values(options.data)
       .onConflict((oc) =>
         oc
-          .columns(options.conflictColumns as any)
-          .doUpdateSet(dataToUpdate as any),
+          .columns(options.conflictColumns as never)
+          .doUpdateSet(dataToUpdate as never),
       )
       .returningAll()
       .executeTakeFirst();
 
-    return row as Selectable<Database[TTable]> | undefined;
+    return row as TableRow<TTable> | undefined;
   }
 }

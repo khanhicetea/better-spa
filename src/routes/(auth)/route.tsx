@@ -6,7 +6,7 @@ export const Route = createFileRoute("/(auth)")({
   component: RouteComponent,
   errorComponent: DefaultCatchBoundary,
   beforeLoad: async ({ context }) => {
-    const REDIRECT_URL = "/";
+    const REDIRECT_URL = "/app/todo";
 
     const user = await context.queryClient.ensureQueryData({
       ...authQueryOptions(),
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/(auth)")({
     });
     if (user) {
       throw redirect({
-        to: "/",
+        to: "/app/todo",
       });
     }
 

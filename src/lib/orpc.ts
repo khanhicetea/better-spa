@@ -11,7 +11,6 @@ import {
   getCurrentDB,
   getCurrentRepos,
   getCurrentSession,
-  getCurrentWorker,
   getRequestHeaders,
   getWaitUntil,
 } from "@/server/context";
@@ -29,7 +28,6 @@ const getORPCClient = createIsomorphicFn()
           session: getCurrentSession(),
           auth: getCurrentAuth(),
           repos: getCurrentRepos(),
-          worker: getCurrentWorker(),
           waitUntil: getWaitUntil(),
         };
       },

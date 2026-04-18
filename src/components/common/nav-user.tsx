@@ -81,12 +81,13 @@ export function NavUser() {
                 Account Settings
               </DropdownMenuItem>
               <DropdownMenuItem
+                disabled
                 onClick={() => {
-                  toast.info("Feature is going to be implemented !");
+                  toast.info("Billing is not available in this baseline.");
                 }}
               >
                 <CreditCard />
-                Billing
+                Billing (Unavailable)
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

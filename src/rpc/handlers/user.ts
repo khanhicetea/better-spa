@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { adminProcedure } from "../base";
 
-export const listUsers = adminProcedure
+export const list = adminProcedure
   .input(
     z.object({
       page: z.number().int().positive().catch(1),
@@ -27,7 +27,7 @@ export const listUsers = adminProcedure
     };
   });
 
-export const getUserById = adminProcedure
+export const get = adminProcedure
   .input(z.object({ id: z.string() }))
   .handler(async ({ input, context }) => {
     const { repos } = context;

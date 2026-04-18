@@ -3,12 +3,15 @@ import { z } from "zod";
 import { generateUUID } from "@/lib/helpers/data";
 import { authedProcedure } from "../base";
 
-export const listTodos = authedProcedure.handler(async ({ context }) => {
+export const list = authedProcedure.handler(async ({ context }) => {
   const { repos } = context;
-  return repos.todoItem.findTodoItemsByUserId(context.user.id);
+  return repos.todoItem.find({
+    where: { userId: context.user.id },
+    modify: (qb) => qb.orderBy("createdAt", "desc"),
+  });
 });
 
-export const createTodo = authedProcedure
+export const create = authedProcedure
   .input(
     z.object({
       content: z.string().min(1),
@@ -26,7 +29,7 @@ export const createTodo = authedProcedure
     return newTodo ?? null;
   });
 
-export const updateTodo = authedProcedure
+export const update = authedProcedure
   .input(
     z.object({
       id: z.string(),
@@ -38,7 +41,6 @@ export const updateTodo = authedProcedure
     const { repos } = context;
     const { id, ...updates } = input;
 
-    // Authorization: Verify the todo belongs to the user
     const existingTodo = await repos.todoItem.findById(id);
     if (!existingTodo || existingTodo.userId !== context.user.id) {
       throw errors.NOT_FOUND();
@@ -54,12 +56,11 @@ export const updateTodo = authedProcedure
     return updatedTodo ?? null;
   });
 
-export const deleteTodo = authedProcedure
+export const remove = authedProcedure
   .input(z.object({ id: z.string() }))
   .handler(async ({ input, context, errors }) => {
     const { repos } = context;
 
-    // Authorization: Verify the todo belongs to the user
     const existingTodo = await repos.todoItem.findById(input.id);
     if (!existingTodo || existingTodo.userId !== context.user.id) {
       throw errors.NOT_FOUND();
@@ -69,18 +70,14 @@ export const deleteTodo = authedProcedure
     return { success: true };
   });
 
-export const exportTodos = authedProcedure.handler(async ({ context }) => {
-  const { repos, worker, waitUntil } = context;
+export const exportData = authedProcedure.handler(async ({ context }) => {
+  const { repos } = context;
 
   const job = await repos.job.createJob({
     userId: context.user.id,
     type: "export_todos",
     payload: { userId: context.user.id },
   });
-
-  if (job) {
-    waitUntil(worker.processJob(job));
-  }
 
   return job ?? null;
 });

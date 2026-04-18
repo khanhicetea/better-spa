@@ -2,6 +2,7 @@ import { createRouterClient } from "@orpc/server";
 import type { DB } from "@/server/db/init";
 import type { Repositories } from "@/server/db/repositories";
 import type { Job, JobStatus } from "@/server/db/schema/job";
+import { logger } from "@/server/logger";
 import { type JobType, workerRpc } from "./rpc";
 import { DEFAULT_WORKER_CONFIG, type WorkerConfig } from "./types";
 
@@ -22,13 +23,20 @@ export class Worker {
    * Process a single job using oRPC handler
    */
   async processJob(job: Job): Promise<void> {
-    console.log(`Processing job ${job.id} (${job.type}): ${job.label}`);
+    logger.info("Processing worker job", {
+      id: job.id,
+      type: job.type,
+      label: job.label,
+    });
 
     // Get handler module from worker RPC
     const handlerModule = workerRpc[job.type as JobType];
     if (!handlerModule) {
       await this.repos.job.failJob(job.id, `Unknown job type: ${job.type}`);
-      console.error(`Unknown job type: ${job.type}`);
+      logger.error("Unknown worker job type", {
+        type: job.type,
+        jobId: job.id,
+      });
       return;
     }
 
@@ -62,15 +70,22 @@ export class Worker {
         // Call the exported handler function directly
         const result = await (handlerFn as any)(job.payload);
         await this.repos.job.completeJob(job.id, result);
-        console.log(`Job ${job.id} completed successfully`);
+        logger.info("Worker job completed", { id: job.id, type: job.type });
       } else {
-        console.log(`Job type ${job.type} not found`);
+        logger.warn("Worker job handler function missing", {
+          type: job.type,
+          jobId: job.id,
+        });
       }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       await this.repos.job.failJob(job.id, errorMessage);
-      console.error(`Job ${job.id} failed:`, errorMessage);
+      logger.error("Worker job failed", {
+        id: job.id,
+        type: job.type,
+        error: errorMessage,
+      });
     }
   }
 
@@ -83,7 +98,7 @@ export class Worker {
     );
 
     if (result.length > 0) {
-      console.log(`Marked ${result.length} stale job(s) as failed`);
+      logger.warn("Marked stale jobs as failed", { count: result.length });
     }
   }
 
@@ -94,7 +109,7 @@ export class Worker {
     const result = await this.repos.job.requeueFailedJobs();
 
     if (result.length > 0) {
-      console.log(`Requeued ${result.length} failed job(s) for retry`);
+      logger.info("Requeued failed jobs for retry", { count: result.length });
     }
   }
 
@@ -117,7 +132,7 @@ export class Worker {
         await this.processJob(job);
       }
     } catch (error) {
-      console.error("Worker error:", error);
+      logger.error("Worker polling error", { error });
     }
 
     if (!this.isShuttingDown) {
@@ -129,7 +144,7 @@ export class Worker {
    * Start the worker
    */
   start(): void {
-    console.log("Starting job worker...");
+    logger.info("Starting job worker");
     this.poll();
   }
 
@@ -137,7 +152,7 @@ export class Worker {
    * Gracefully shutdown the worker
    */
   async shutdown(): Promise<void> {
-    console.log("Shutting down worker...");
+    logger.info("Shutting down worker");
     this.isShuttingDown = true;
   }
 }

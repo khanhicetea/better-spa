@@ -1,6 +1,7 @@
 import { env } from "@/env/server";
 import { getDatabase } from "@/server/db/init";
 import { createRepos } from "@/server/db/repositories";
+import { logger } from "@/server/logger";
 import { Worker } from "./worker";
 
 async function main() {
@@ -26,4 +27,6 @@ async function main() {
   process.on("SIGTERM", shutdown);
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  logger.error("Worker runner failed", { error });
+});

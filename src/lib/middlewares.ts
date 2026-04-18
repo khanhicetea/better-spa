@@ -6,7 +6,6 @@ import {
   getCurrentDB,
   getCurrentRepos,
   getCurrentSession,
-  getCurrentWorker,
   getWaitUntil,
 } from "@/server/context";
 
@@ -22,15 +21,8 @@ export const reposMiddleware = createMiddleware()
     return next({ context: { repos } });
   });
 
-export const workerMiddleware = createMiddleware()
-  .middleware([reposMiddleware])
-  .server(async ({ next }) => {
-    const worker = getCurrentWorker();
-    return next({ context: { worker } });
-  });
-
 export const betterAuthMiddleware = createMiddleware()
-  .middleware([workerMiddleware])
+  .middleware([reposMiddleware])
   .server(async ({ next }) => {
     const auth = getCurrentAuth();
     return next({ context: { auth } });

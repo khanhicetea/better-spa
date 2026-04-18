@@ -4,15 +4,14 @@ import { env } from "@/env/server";
 import { getAuthConfig } from "@/lib/auth/init";
 import { getDatabase } from "@/server/db/init";
 import { createRepos } from "@/server/db/repositories";
-import { Worker } from "@/server/worker";
+import { logger } from "@/server/logger";
 import { workerCtx } from "./context";
 
 export function createNodeHandler(serverEntry: ServerEntry) {
-  // Singleton DB, Auth, Repos, Worker
+  // Singleton DB, Auth, Repos
   const db = getDatabase(env.DATABASE_URL);
   const auth = getAuthConfig(db);
   const repos = createRepos(db);
-  const worker = new Worker(db, repos);
 
   return {
     async fetch(request: Request, opts?: RequestOptions<undefined>) {
@@ -31,7 +30,7 @@ export function createNodeHandler(serverEntry: ServerEntry) {
         : (promise: Promise<unknown>) => {
             promisePool.push(
               promise.catch((error) => {
-                console.error("waitUntil promise failed:", error);
+                logger.error("waitUntil promise failed", { error });
               }),
             );
           };
@@ -42,7 +41,6 @@ export function createNodeHandler(serverEntry: ServerEntry) {
         auth,
         session,
         repos,
-        worker,
         waitUntil,
       };
 
@@ -57,14 +55,16 @@ export function createNodeHandler(serverEntry: ServerEntry) {
             Promise.allSettled(promisePool).then((results) => {
               const failed = results.filter((r) => r.status === "rejected");
               if (failed.length > 0) {
-                console.error(`${failed.length} waitUntil promise(s) failed`);
+                logger.error("waitUntil promises failed", {
+                  failedCount: failed.length,
+                });
               }
             });
           }
 
           return response;
         } catch (error) {
-          console.error(error);
+          logger.error("Node server request failed", { error });
           return new Response("Node Server Error", { status: 500 });
         }
       });

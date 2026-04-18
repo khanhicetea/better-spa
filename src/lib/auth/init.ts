@@ -3,8 +3,9 @@ import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { CamelCasePlugin } from "kysely";
+import { env } from "@/env/server";
 import type { DB } from "@/server/db/init";
-import { ac, admin as adminRole, user as userRole } from "./permissions";
+import { getAdminPluginConfig } from "./permissions";
 
 export const getAuthConfig = createServerOnlyFn((db: DB) =>
   betterAuth({
@@ -16,16 +17,7 @@ export const getAuthConfig = createServerOnlyFn((db: DB) =>
       type: "postgres",
       casing: "camel",
     },
-    plugins: [
-      tanstackStartCookies(),
-      admin({
-        ac: ac as any,
-        roles: {
-          admin: adminRole as any,
-          user: userRole as any,
-        },
-      }),
-    ],
+    plugins: [tanstackStartCookies(), admin(getAdminPluginConfig())],
 
     session: {
       cookieCache: {
@@ -34,7 +26,24 @@ export const getAuthConfig = createServerOnlyFn((db: DB) =>
       },
     },
 
-    socialProviders: {},
+    socialProviders: {
+      ...(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
+        ? {
+            github: {
+              clientId: env.GITHUB_CLIENT_ID,
+              clientSecret: env.GITHUB_CLIENT_SECRET,
+            },
+          }
+        : {}),
+      ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+        ? {
+            google: {
+              clientId: env.GOOGLE_CLIENT_ID,
+              clientSecret: env.GOOGLE_CLIENT_SECRET,
+            },
+          }
+        : {}),
+    },
 
     emailAndPassword: {
       enabled: true,

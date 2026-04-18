@@ -1,22 +1,16 @@
-import { createAccessControl } from "better-auth/plugins/access";
+import type { AccessControl, Role } from "better-auth/plugins/access";
+import { authAccessControl, authRoles } from "./roles";
 
-const ac = createAccessControl({});
+export const ac: AccessControl = authAccessControl;
+export const admin: Role = authRoles.admin as Role;
+export const user: Role = authRoles.user as Role;
 
-export const admin = ac.newRole({
-  user: [
-    "create",
-    "list",
-    "get",
-    "setRole",
-    "ban",
-    "impersonate",
-    "delete",
-    "setPassword",
-    "update",
-  ],
-  session: ["create", "list", "revoke"],
-} as any);
-
-export const user = ac.newRole({} as any);
-
-export { ac };
+export function getAdminPluginConfig() {
+  return {
+    ac,
+    roles: {
+      admin,
+      user,
+    },
+  };
+}

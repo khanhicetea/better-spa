@@ -1,12 +1,5 @@
 import { ScriptOnce } from "@tanstack/react-router";
-import {
-  createContext,
-  use,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, use, useEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
 const MEDIA = "(prefers-color-scheme: dark)";
@@ -45,8 +38,9 @@ export function ThemeProvider({
         : null) || defaultTheme,
   );
 
-  const handleMediaQuery = useCallback(
-    (e: MediaQueryListEvent | MediaQueryList) => {
+  // Listen for system preference changes
+  useEffect(() => {
+    const handleMediaQuery = (e: MediaQueryListEvent | MediaQueryList) => {
       if (theme !== "system") return;
       const root = window.document.documentElement;
       const targetTheme = e.matches ? "dark" : "light";
@@ -54,19 +48,15 @@ export function ThemeProvider({
         root.classList.remove("light", "dark");
         root.classList.add(targetTheme);
       }
-    },
-    [theme],
-  );
+    };
 
-  // Listen for system preference changes
-  useEffect(() => {
     const media = window.matchMedia(MEDIA);
 
     media.addEventListener("change", handleMediaQuery);
     handleMediaQuery(media);
 
     return () => media.removeEventListener("change", handleMediaQuery);
-  }, [handleMediaQuery]);
+  }, [theme]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -91,16 +81,14 @@ export function ThemeProvider({
     }
   }, [theme, storageKey]);
 
-  const value = useMemo(
-    () => ({
-      theme,
-      setTheme,
-    }),
-    [theme],
-  );
-
   return (
-    <ThemeProviderContext {...props} value={value}>
+    <ThemeProviderContext
+      {...props}
+      value={{
+        theme,
+        setTheme,
+      }}
+    >
       <ScriptOnce>
         {/* Apply theme early to avoid FOUC */}
         {`document.documentElement.classList.toggle(

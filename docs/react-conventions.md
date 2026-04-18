@@ -147,6 +147,17 @@ function UserCard({
 | Utility files | kebab-case | `format-date.ts`, `validation.ts` |
 | Route files | kebab-case | `src/routes/admin/user-settings.tsx` |
 
+### Route-Adjacent Modules
+
+For large route pages, split support code into a sibling folder prefixed with `-`:
+
+- `src/routes/(user)/app/-todo/*`
+- `src/routes/admin/-users/*`
+- `src/routes/admin/-jobs/*`
+- `src/routes/(auth)/-auth/*`
+
+Keep route files focused on loader/search/query wiring and page composition.
+
 ---
 
 ## Component Patterns

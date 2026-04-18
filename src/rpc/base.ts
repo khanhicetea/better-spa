@@ -3,7 +3,6 @@ import * as z from "zod";
 import type { ServerAuth, ServerAuthSession } from "@/lib/auth/init";
 import type { DB } from "@/server/db/init";
 import type { Repositories } from "@/server/db/repositories";
-import type { Worker } from "@/server/worker";
 import {
   adminMiddleware,
   authMiddleware,
@@ -17,7 +16,6 @@ export const baseProcedure = os
     db: DB;
     auth: ServerAuth;
     repos: Repositories;
-    worker: Worker;
     waitUntil: (promise: Promise<unknown>) => void;
   }>()
   .errors({

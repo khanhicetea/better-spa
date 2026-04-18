@@ -5,6 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
 import { tryAuthMiddleware } from "@/lib/middlewares";
 import { rpcRouter } from "@/rpc/router";
+import { logger } from "@/server/logger";
 
 const plugins = [
   process.env.RPC_COMPRESSION !== undefined
@@ -17,7 +18,7 @@ const handler = new RPCHandler(rpcRouter, {
   plugins: plugins.filter((x) => x !== undefined),
   interceptors: [
     onError((error) => {
-      console.error(error);
+      logger.error("Unhandled RPC server error", { error });
     }),
   ],
   clientInterceptors: [
@@ -66,7 +67,6 @@ export const Route = createFileRoute("/api/rpc/$")({
             db: context.db,
             auth: context.auth,
             repos: context.repos,
-            worker: context.worker,
             waitUntil: context.waitUntil,
           },
         });

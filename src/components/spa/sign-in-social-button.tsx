@@ -1,20 +1,21 @@
 import { Button } from "@/components/ui/button";
 import authClient from "@/lib/auth/auth-client";
+import {
+  SOCIAL_PROVIDER_LABELS,
+  type SocialProvider,
+} from "@/lib/auth/providers";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface SocialLoginButtonProps {
-  provider: string;
+  provider: SocialProvider;
   icon: React.ReactNode;
   disabled?: boolean;
   callbackURL: string;
 }
 
 export function SignInSocialButton(props: SocialLoginButtonProps) {
-  const providerLabel =
-    props.provider === "github"
-      ? "GitHub"
-      : props.provider.charAt(0).toUpperCase() + props.provider.slice(1);
+  const providerLabel = SOCIAL_PROVIDER_LABELS[props.provider];
 
   const mutation = useMutation({
     mutationFn: async () =>

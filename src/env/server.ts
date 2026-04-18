@@ -6,11 +6,10 @@ export const env = createEnv({
     DATABASE_URL: z.url(),
     VITE_BASE_URL: z.url().default("http://localhost:3000"),
     BETTER_AUTH_SECRET: z.string().min(1),
-    // OAuth2 providers, optional, update as needed
-    // GITHUB_CLIENT_ID: z.string().optional(),
-    // GITHUB_CLIENT_SECRET: z.string().optional(),
-    // GOOGLE_CLIENT_ID: z.string().optional(),
-    // GOOGLE_CLIENT_SECRET: z.string().optional(),
+    GITHUB_CLIENT_ID: z.string().optional(),
+    GITHUB_CLIENT_SECRET: z.string().optional(),
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
     // S3 configuration for better-upload
     S3_ENDPOINT: z.string().optional(),
     S3_ACCESS_KEY_ID: z.string().optional(),

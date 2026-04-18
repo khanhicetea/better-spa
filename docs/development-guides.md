@@ -32,6 +32,14 @@ All server data operations should go through RPC layer for centralized managemen
 - **NO OPTIMISTIC UPDATES**: Don't use optimistic updates as a anti-pattern, as it can lead to inconsistencies and bugs. Instead, use pessimistic updates or implement a more robust optimistic update strategy (support concurrent updates)
 - This ensures type safety, consistent error handling, and maintainable code structure
 
+### Background Task Rule
+
+For long-running operations (exports, reports, emails):
+
+- enqueue a job from RPC and return immediately
+- do not execute worker logic in request context
+- process jobs only in `pnpm worker`
+
 ---
 
 ## RPC Procedures
@@ -41,8 +49,9 @@ All server data operations should go through RPC layer for centralized managemen
 RPC procedures are organized in `src/rpc/handlers/`:
 
 - `app.ts`: Shell data and application-level procedures
-- `form.ts`: Form handling procedures with Zod validation
-- `user.ts`: User-related procedures
+- `todo.ts`: Todo reference feature (`list/create/update/delete/export`)
+- `user.ts`: Admin user procedures (`list/get`)
+- `job.ts`: Job procedures (`listAdmin/list/get/cancel/create`)
 - Each handler uses `baseProcedure` for consistent context handling
 - Procedures return type-safe responses for client consumption
 
@@ -61,7 +70,7 @@ The RPC system includes authentication middleware for protected procedures:
 ### Usage in RPC Handlers (Example with Repository)
 
 ```typescript
-export const listUsers = adminProcedure
+export const list = adminProcedure
   .input(z.object({ page: z.number().int().positive() }))
   .handler(async ({ input, context }) => {
     const { repos } = context;
@@ -98,7 +107,7 @@ export const listUsers = adminProcedure
 1. Create procedure in `src/rpc/`
 2. Add to router in `src/rpc/router.ts`
 3. Use in route loader, beforeLoad via `context.rpcClient`
-4. Use in component via `useQuery(orpc.[route].[action].queryOptions(...))` and `useMutation(orpc.[route].[action].mutationOptions(...))`
+4. Use in component via `useQuery(orpc.[domain].[action].queryOptions(...))` and `useMutation(orpc.[domain].[action].mutationOptions(...))`
 
 ### Add New UI Components
 
@@ -106,14 +115,20 @@ export const listUsers = adminProcedure
 pnpm ui add component-name
 ```
 
-### Form Handling Example
+### Reference Feature Example
 
-The demo form at `src/routes/(test)/hello-form.tsx` shows how to:
+Use the Todo feature as the baseline example:
 
-- Create a form using `react-hook-form` and shadcn/ui components
-- Use `useMutation` with oRPC for form submission
-- Handle form errors with the `handleFormError` utility
-- Display success messages with Sonner toast notifications
+- route: `src/routes/(user)/app/todo.tsx`
+- support modules: `src/routes/(user)/app/-todo/*`
+- RPC: `orpc.todo.list/create/update/delete/export`
+- Jobs polling: `src/lib/hooks/jobs.ts` + `src/lib/jobs/status.ts`
+
+Auth pages also follow the route-adjacent module pattern:
+
+- `src/routes/(auth)/login.tsx`
+- `src/routes/(auth)/signup.tsx`
+- `src/routes/(auth)/-auth/*`
 
 ### Data Fetching Pattern (in page route)
 
@@ -133,7 +148,7 @@ export const Route = createFileRoute("/admin/users")({
   loaderDeps: ({ search }) => ({ page: search.page }),
   loader: async ({ deps, context }) => {
     context.queryClient.prefetchQuery(
-      orpc.user.listUsers.queryOptions({
+      orpc.user.list.queryOptions({
         input: { page: deps.page },
       }), // same query options, same key
     );
@@ -149,7 +164,7 @@ function UsersPage() {
     data: { users, pageCount, pageSize, totalCount },
     refetch: refetchUsers, // using refetch data on invalidation instead of invalidation by key in same component
   } = useSuspenseQuery(
-    orpc.user.listUsers.queryOptions({
+    orpc.user.list.queryOptions({
       input: { page },
     }), // same query options, same key
   );
@@ -554,3 +569,19 @@ const mutation = useMutation(orpc.x.create.mutationOptions({
 import { pickBy } from "lodash-es";
 const updates = pickBy(input, (v) => v !== undefined);
 ```
+
+---
+
+## Build Verification
+
+After implementation:
+
+1. Run `pnpm check-types`
+2. Run `pnpm build`
+3. Run `pnpm check`
+
+### Bundle Strategy
+
+- Prefer route trimming and route-level decomposition first.
+- Only add `manualChunks` when the chunk warning remains after trimming and the split is verified to be stable.
+- Keep split decisions documented in the change summary when bundle warnings still appear.
