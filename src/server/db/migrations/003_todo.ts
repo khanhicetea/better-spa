@@ -20,6 +20,18 @@ export async function up(db: Kysely<any>): Promise<void> {
       col.notNull().defaultTo("now()"),
     )
     .execute();
+
+  await db.schema
+    .createIndex("idx_todo_item_user_id")
+    .on("todo_item")
+    .column("user_id")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_todo_item_completed_at")
+    .on("todo_item")
+    .column("completed_at")
+    .execute();
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
