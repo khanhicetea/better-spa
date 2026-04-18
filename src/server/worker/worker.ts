@@ -18,6 +18,7 @@ export class Worker {
   private activeJobs = new Set<Promise<void>>();
   private pollTimeout: NodeJS.Timeout | null = null;
   private recoveryInterval: NodeJS.Timeout | null = null;
+  private lastActivityAt = Date.now();
 
   constructor(db: DB, repos: Repositories, config: Partial<WorkerConfig> = {}) {
     this.db = db;
@@ -25,10 +26,26 @@ export class Worker {
     this.config = { ...DEFAULT_WORKER_CONFIG, ...config };
   }
 
+  private touchActivity(): void {
+    this.lastActivityAt = Date.now();
+  }
+
+  getStats() {
+    return {
+      workerId: this.config.workerId,
+      concurrency: this.config.concurrency,
+      activeJobs: this.activeJobs.size,
+      isShuttingDown: this.isShuttingDown,
+      lastActivityAt: this.lastActivityAt,
+    };
+  }
+
   /**
    * Process a single job using oRPC handler
    */
   private async processJob(job: Job): Promise<void> {
+    this.touchActivity();
+
     logger.info("Processing worker job", {
       id: job.id,
       type: job.type,
@@ -99,6 +116,7 @@ export class Worker {
           this.config.workerId,
           result,
         );
+        this.touchActivity();
         logger.info("Worker job completed", { id: job.id, type: job.type });
       } else {
         throw new NonRetryableJobError("Worker job handler function missing");
@@ -114,6 +132,7 @@ export class Worker {
         errorMessage,
         isRetryable,
       );
+      this.touchActivity();
 
       logger.error("Worker job failed", {
         id: job.id,
@@ -133,6 +152,7 @@ export class Worker {
     try {
       const recovered = await this.repos.job.recoverExpiredLeases(new Date());
       if (recovered.length > 0) {
+        this.touchActivity();
         logger.warn("Recovered jobs with expired leases", {
           count: recovered.length,
           jobIds: recovered.map((j) => j.id),
@@ -166,6 +186,7 @@ export class Worker {
       );
 
       if (job) {
+        this.touchActivity();
         const jobPromise = this.processJob(job);
         this.activeJobs.add(jobPromise);
         jobPromise.finally(() => {

@@ -24,7 +24,9 @@
     "worker": "tsx --env-file=.env scripts/worker.ts",
     "worker:dev": "tsx --env-file=.env scripts/worker.ts",
     "worker:build": "tsup",
-    "worker:start": "node .output/worker/runner.js"
+    "worker:start": "node .output/worker/runner.js",
+    "task:jobs": "nitro task run poll-jobs --dir .",
+    "task:jobs:payload": "nitro task run poll-jobs --dir . --payload"
   },
   "dependencies": {
     "@better-upload/client": "^3.0.17",

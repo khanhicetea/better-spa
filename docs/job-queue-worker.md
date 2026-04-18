@@ -53,6 +53,8 @@ Web enqueue and consumption:
 Operations:
 
 - `scripts/worker.ts` - command entry for `pnpm worker`
+- `src/nitro/tasks/poll-jobs.ts` - Nitro task entry for bounded queue polling
+- `src/server/worker/polling-task.ts` - shared bounded polling runtime used by Nitro task
 
 ---
 
@@ -127,6 +129,30 @@ Start worker runtime:
 ```bash
 pnpm worker
 ```
+
+Optional Nitro task runtime:
+
+```bash
+# requires the Nitro dev server to be running
+pnpm task:jobs
+```
+
+The Nitro task runs the same queue worker with a bounded lifecycle. This is best for scheduled or manually triggered polling from Nitro, while `pnpm worker` remains the dedicated always-on worker process.
+
+Strategy:
+
+- keep each task run short-lived instead of permanently blocking one task invocation
+- stop after a max runtime even if more jobs may arrive later
+- stop early after a short idle window when the queue is drained
+- rely on the next scheduler tick to start a fresh worker cycle
+
+Defaults:
+
+- defaults to `maxRuntimeMs = 45000`
+- defaults to `idleShutdownMs = 5000`
+- defaults to `pollIntervalMs = 1000`
+- exits early when there are no active jobs and the worker has been idle long enough
+- exits after max runtime so the scheduler can safely invoke a fresh task again
 
 ---
 
@@ -236,7 +262,7 @@ Manual acceptance checks:
 
 1. Start app only, enqueue export from `/app/todo`.
 2. Verify created job stays `pending` while no worker is running.
-3. Start worker with `pnpm worker`.
+3. Start worker with `pnpm worker` or run the bounded Nitro task with `pnpm task:jobs`.
 4. Verify same job transitions to `processing` then `completed`.
 5. Confirm `/admin/jobs` reflects status and progress transitions.
 
