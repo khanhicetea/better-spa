@@ -13,7 +13,7 @@ A minimal starter template that implements the **Shell SPA** pattern - the perfe
 - **Authentication**: User session validation
 - **App Settings**: Configuration, feature flags, environment info
 - **User Preferences**: Theme, language, layout preferences
-- **Minimal Shell UI**: Basic HTML structure and critical CSS
+- **Minimal Shell UI**: Basic HTML structure and critical data and CSS
 
 ### What runs as SPA (Single Page Application)
 
