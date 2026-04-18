@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "description": "A minimal shell SPA boilerplate with SSR shell for auth and client-side SPA for everything else",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",

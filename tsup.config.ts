@@ -17,7 +17,7 @@ export default defineConfig({
   entry: ["src/server/worker/runner.ts"],
   outDir: ".output/worker",
   format: ["esm"],
-  target: "node22",
+  target: "node24", // Match project runtime
   clean: true,
   minify: true,
   splitting: false,
