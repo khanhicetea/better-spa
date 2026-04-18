@@ -4,10 +4,6 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/(user)/app")({
   component: AppLayout,
-  loader: async ({ context }) => {
-    const { app } = context.shell;
-    return { app };
-  },
 });
 
 function AppLayout() {

@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { BadgeCheck, ChevronsUpDown, CreditCard, LogOut } from "lucide-react";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ export function NavUser() {
   const { isMobile } = useSidebar();
   const user = useSessionUser();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   if (!user) return null;
 
@@ -93,9 +95,18 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {
-                authClient.signOut().then(() => {
-                  navigate({ to: "/login" });
-                });
+                authClient
+                  .signOut({
+                    fetchOptions: {
+                      onResponse: () => {
+                        queryClient.clear();
+                        window.location.assign("/");
+                      },
+                    },
+                  })
+                  .catch(() => {
+                    toast.error("Failed to log out. Please try again.");
+                  });
               }}
             >
               <LogOut />

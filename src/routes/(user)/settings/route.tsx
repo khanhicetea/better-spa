@@ -4,8 +4,10 @@ import {
   Outlet,
   useNavigate,
 } from "@tanstack/react-router";
-import { AuthUIProvider } from "@daveyplate/better-auth-ui";
+import { useQueryClient } from "@tanstack/react-query";
+import { AuthUIProviderTanstack } from "@daveyplate/better-auth-ui/tanstack";
 import authClient from "@/lib/auth/auth-client";
+import { invalidateAuthAndShellQueries } from "@/lib/queries";
 import { Button } from "@/components/ui/button";
 import { MoveLeftIcon } from "lucide-react";
 
@@ -30,12 +32,37 @@ function NavLink({
 
 function RouteComponent() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const refreshAuthAndShell = async () => {
+    await invalidateAuthAndShellQueries(queryClient);
+  };
 
   return (
-    <AuthUIProvider
+    <AuthUIProviderTanstack
       authClient={authClient}
       navigate={(href) => {
         navigate({ to: href });
+      }}
+      onSessionChange={async () => {
+        await refreshAuthAndShell();
+      }}
+      mutators={{
+        updateUser: async (
+          params: Parameters<typeof authClient.updateUser>[0],
+        ) => {
+          const result = await authClient.updateUser({
+            ...params,
+            fetchOptions: {
+              throw: false,
+            },
+          });
+
+          if (result.error) {
+            throw result.error;
+          }
+
+          await refreshAuthAndShell();
+        },
       }}
       Link={NavLink}
     >
@@ -53,6 +80,6 @@ function RouteComponent() {
         </div>
         <Outlet />
       </div>
-    </AuthUIProvider>
+    </AuthUIProviderTanstack>
   );
 }

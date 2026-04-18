@@ -13,6 +13,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import type React from "react";
 import { ThemeProvider } from "@/components/spa/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { useShellData } from "@/lib/hooks/app";
 import type { RPCClient } from "@/lib/orpc";
 import {
   type AuthQueryResult,
@@ -29,19 +30,13 @@ export const Route = createRootRouteWithContext<{
   beforeLoad: async ({ context }) => {
     // Shell Pattern: SSR shell data via RPC with React Query caching
     // This runs on the server and provides minimal data needed for the app shell
-    const shell = await context.queryClient.ensureQueryData(
-      shellQueryOptions(),
-    );
+    await context.queryClient.ensureQueryData(shellQueryOptions());
 
     // Prefetch user data but don't await it - let client handle it
     // This respects authQueryOptions options (staleTime, error handling, etc.)
     context.queryClient.prefetchQuery(authQueryOptions()).catch(() => {
       // User data not available (not logged in) - that's fine
     });
-
-    return {
-      shell,
-    };
   },
   head: () => ({
     meta: [
@@ -92,7 +87,7 @@ function RootComponent() {
 }
 
 function RootShell({ children }: { readonly children: React.ReactNode }) {
-  const { shell } = Route.useRouteContext();
+  const shell = useShellData();
 
   return (
     <html

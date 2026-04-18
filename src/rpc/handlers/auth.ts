@@ -1,5 +1,11 @@
 import { baseProcedure } from "../base";
 
 export const getCurrentUser = baseProcedure.handler(async ({ context }) => {
-  return context.session?.user || null;
+  const sessionUser = context.session?.user;
+  if (!sessionUser) {
+    return null;
+  }
+
+  const user = await context.repos.user.findById(sessionUser.id);
+  return user ?? null;
 });

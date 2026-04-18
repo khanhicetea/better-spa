@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import { rpcClient } from "@/lib/orpc";
 import type { Outputs } from "@/rpc/types";
 
@@ -39,6 +39,19 @@ export const shellQueryOptions = () =>
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
+
+export async function invalidateAuthAndShellQueries(queryClient: QueryClient) {
+  await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.auth,
+      refetchType: "all",
+    }),
+    queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.shell,
+      refetchType: "all",
+    }),
+  ]);
+}
 
 export type AuthQueryResult = Outputs["auth"]["getCurrentUser"];
 export type ShellQueryResult = Outputs["app"]["shellData"];

@@ -1,23 +1,26 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import authClient from "@/lib/auth/auth-client";
 
 export function SignOutButton() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+
   return (
     <Button
       onClick={async () => {
-        await authClient.signOut({
-          fetchOptions: {
-            onResponse: async () => {
-              // manually set to null to avoid unnecessary refetching
-              queryClient.clear();
-              navigate({ to: "/login" });
+        try {
+          await authClient.signOut({
+            fetchOptions: {
+              onResponse: () => {
+                queryClient.clear();
+                window.location.assign("/");
+              },
             },
-          },
-        });
+          });
+        } catch {
+          toast.error("Failed to sign out. Please try again.");
+        }
       }}
       type="button"
       className="w-fit"
