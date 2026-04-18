@@ -1,14 +1,12 @@
-# AGENTS.md or CLAUDE.MD
+# AGENTS.md (or CLAUDE.md)
 
-Guidance for Coding Agents when working with this project.
+This file provides guidance to coding agent when working with code in this repository.
 
 ---
 
-## CRITICAL AGENT RULES (READ FIRST)
+## CRITICAL RULES (READ FIRST)
 
 These rules differ from typical projects. **MUST follow or risk breaking the build.**
-
-### Technology Differences
 
 | Standard | This Project | Critical Note |
 |----------|--------------|---------------|
@@ -16,6 +14,7 @@ These rules differ from typical projects. **MUST follow or risk breaking the bui
 | Radix UI | **Base UI** (`@base-ui/react`) | Use `render` prop, NOT `asChild` |
 | Manual memoization | **React Compiler** | NEVER use `useCallback`, `useMemo`, `memo` |
 | Tailwind v3 | **Tailwind v4** | No specific colors (e.g., `bg-blue-500`) unless user requests |
+| ESLint/Prettier | **Biome** | `pnpm check` runs format + lint + type-check |
 | Testing required | **NO TESTING** | Only add tests if explicitly requested |
 | DB seeding | **NO SEEDING** | Never create seed files |
 | Kysely codegen | **NO CODEGEN** | Types are manually defined in `src/server/db/schema/` |
@@ -65,97 +64,91 @@ function Component() { ... }
 <div className="bg-destructive text-destructive-foreground">
 ```
 
+### Code Style
+
+- **Double quotes** (enforced by Biome)
+- **Auto-organize imports** (Biome `assist.organizeImports: "on"`)
+- Run `pnpm check` after finishing tasks (format + lint + type-check)
+- Path alias: `@/` maps to `src/`
+
 ---
 
-## Agent Workflow Rules
+## Architecture: Shell SPA Pattern
+
+**SSR the shell** (auth, settings, minimal UI) + **SPA everything else** (routing, data, state).
+
+### How It Works
+
+1. **Root route** (`src/routes/__root.tsx`) SSR-fetches shell data (auth, app config) via RPC with React Query caching
+2. **Client hydrates** and takes over all subsequent routing, data fetching, and state
+3. **RPC calls** go through `src/lib/orpc.ts` which uses `createIsomorphicFn` — server-side calls go directly to handlers (no HTTP), client-side calls hit `/api/rpc` endpoint
+4. **Server context** (`src/server/context.ts`) uses `AsyncLocalStorage` to provide request-scoped DB, auth, repos, and `waitUntil` to all handlers
+
+### oRPC Client Setup
+
+- `rpcClient` — raw RPC client (server = direct call, client = HTTP to `/api/rpc` with batch plugin)
+- `orpc` — `createTanstackQueryUtils(rpcClient)` — use this in components for TanStack Query integration
+- Access handlers via dot notation: `orpc.todo.list`, `orpc.user.get`
+- **ONLY pass serialized data** from frontend into oRPC inputs (no functions, no class instances)
+
+### RPC Procedure Types (`src/rpc/base.ts`)
+
+- `baseProcedure` / `publicProcedure` — no auth required, rate-limited
+- `authedProcedure` — requires authenticated user (adds `context.user`)
+- `adminProcedure` — requires admin role
+
+### RPC Handler Naming & Registration (`src/rpc/router.ts`)
+
+One handler file per domain (`handlers/todo.ts`, `handlers/user.ts`). Export short action verbs: `list`, `get`, `create`, `update`, `remove`. Router keys shape the `orpc.*` frontend API — rename them for clarity:
+
+```typescript
+todo: {
+  list: todo.list,
+  delete: todo.remove,      // "remove" → "delete" for cleaner API
+  export: todo.exportData,  // "exportData" → "export"
+},
+```
+
+---
+
+## Commands
+
+```bash
+pnpm dev                        # Dev server (port 3000)
+pnpm check                      # Format + lint + type-check (RUN AFTER FINISHING)
+pnpm build                      # Production build
+pnpm kysely migrate latest      # Run DB migrations
+pnpm ui add <name>              # Add shadcn/ui component
+pnpm worker                     # Start job worker
+pnpm auth:secret                # Generate auth secret
+pnpm auth:generate              # Generate auth schema
+```
+
+---
+
+## Workflow
 
 ### Before Starting Any Task
 
-1. **List relevant docs first**:
-   ```
-   Available docs:
-   - docs/react-conventions.md (React JS component conventions, naming conventions)
-   - docs/ui-guidelines.md (UI/forms/dialogs)
-   - docs/rpc-architecture.md (RPC handlers)
-   - docs/database-repository.md (DB operations)
-   - docs/development-guides.md (feature implementation)
-   - docs/job-queue-worker.md (background tasks)
-   - docs/file-storage.md (S3/uploads)
-   - docs/tanstack-start.md (routing)
-   - docs/shell-spa-architecture.md (architecture)
-   ```
-2. **Read the relevant docs** before implementing
-3. **For sub-agents**: Pass the doc paths to read in the prompt
+1. Read relevant docs first — see [Documentation](#documentation) table below
+2. For sub-agents: pass the doc paths to read in the prompt
 
 ### When to Use Plan Mode
 
-**USE plan mode for:**
-- Implementing a whole new feature (new pages, new entities)
-- Major refactoring or architectural changes
-- Complex bugs requiring investigation
+**USE plan mode for:** new features (pages, entities), major refactoring, complex bugs
+**SKIP plan mode for:** simple bug fixes, minor UI tweaks, adding fields to existing forms
 
-**SKIP plan mode for:**
-- Simple bug fixes
-- Minor UI tweaks
-- Adding fields to existing forms
-- Small enhancements to existing features
+### Implementation Order
 
-**In plan mode:**
-- Write the plan to the plan file BEFORE exiting
-- Include DB schema changes, file changes, implementation order
+DB schema > RPC handlers > Page route > UI > `pnpm check`
 
-### Explore Subagent Rules
+### When Exploring Codebase
 
-When exploring codebase:
 1. List directory structure first
 2. Pick at least 1 existing file as reference example
 3. Understand current patterns before suggesting changes
 
 ---
-
-## Shell SPA Pattern
-
-**SSR the shell** (auth, settings, minimal UI) + **SPA everything else** (routing, data, state).
-
-- Implemented in `src/routes/__root.tsx`
-- Uses **oRPC** (NOT tRPC)
-- React Query caching during SSR, then client takes over
-- RPC handler is running in the server-side, then return serialized data into frontend
-- `orpc` is a helper library for frontend to interact with RPC handlers. It uses dot notation to access nested properties (router > group-handler > handler). So the handler should be named in a way that makes sense for the frontend to access it easily. Eg: orpc.user.getProfile or orpc.product.listProducts
-- **ONLY** passing serialized data from frontend into input of orpc
-
-## Quick Commands
-
-```bash
-pnpm dev              # Dev server (port 3000)
-pnpm check            # Format + lint + type-check (RUN AFTER FINISHING)
-pnpm kysely migrate latest   # Run migrations
-pnpm ui add <name>    # Add shadcn/ui component
-pnpm worker           # Start job worker
-```
-
-Full reference: [docs/commands.md](docs/commands.md)
-
-## Essential Rules
-
-### Security
-- **NEVER** expose/log/commit secrets and keys
-- Use TypeScript for type safety
-
-### Code Quality
-- Run `pnpm check` after finishing tasks
-- **NO TESTING IF NOT MENTIONED**
-
-### Data & Database
-- All server data operations through RPC layer
-- Use Repository pattern for DB operations
-- **NO OPTIMISTIC UPDATES** - use pessimistic or concurrent-safe strategies
-- After new migration, update [docs/db-schema.md](docs/db-schema.md)
-
-### Background Tasks
-- **ALWAYS** use job queue for long-running tasks (exports, emails, reports)
-- **NEVER** run long tasks directly in RPC handlers
-- See [docs/job-queue-worker.md](docs/job-queue-worker.md)
 
 ## Tech Stack
 
@@ -169,56 +162,55 @@ Full reference: [docs/commands.md](docs/commands.md)
 | DB | Kysely + PostgreSQL |
 | Jobs | PostgreSQL-backed queue |
 | UI | React 19 + shadcn/ui (Base UI) + Tailwind v4 |
+| Lint/Format | Biome (double quotes, auto-organize imports) |
 
-React Compiler enabled - no manual useCallback/useMemo/memo needed.
+React Compiler enabled — no manual useCallback/useMemo/memo needed.
 
 ## Project Structure
 
 ```
 src/
 ├── routes/           # File-based routing
-│   ├── __root.tsx    # Shell pattern
-│   ├── (auth)/       # Auth pages (pathless group)
+│   ├── __root.tsx    # Shell pattern (SSR shell + SPA handoff)
+│   ├── (auth)/       # Auth pages (pathless group, public)
 │   ├── (user)/       # Protected user routes
 │   └── admin/        # Admin routes (/admin prefix)
-├── rpc/              # Type-safe RPC
-│   ├── handlers/     # Domain procedures
-│   └── router.ts     # Main router
+├── rpc/              # Type-safe RPC layer
+│   ├── base.ts       # Procedure definitions (base, authed, admin)
+│   ├── middlewares.ts # Auth, admin, rate-limit middleware
+│   ├── handlers/     # Domain procedure files
+│   └── router.ts     # Main router (shapes orpc.* access)
+├── lib/              # Frontend utilities
+│   ├── orpc.ts       # Isomorphic RPC client + TanStack Query utils
+│   ├── queries.ts    # Centralized query options
+│   ├── auth/         # Auth client/server setup
+│   └── helpers/      # Utility functions
 ├── server/
-│   └── db/           # Database layer
-│       ├── repositories/ # Data access
-│       └── schema/       # Type definitions (manual, no codegen)
-└── worker/           # Background jobs
+│   ├── context.ts    # AsyncLocalStorage-based request context
+│   ├── db/
+│   │   ├── schema/   # Manual type definitions (no codegen)
+│   │   └── repositories/ # Repository pattern data access
+│   └── worker/       # Background jobs
+├── env/              # Type-safe env (client.ts, server.ts)
+└── components/
+    ├── ui/           # shadcn/ui components (Base UI based)
+    ├── app/          # App-specific (sidebar, nav)
+    ├── admin/        # Admin interface
+    ├── common/       # Shared components
+    └── data-table/   # Reusable table components
 ```
 
-## Implementation Checklist
+## Essential Rules
 
-1. **Read relevant docs first** - Check documentation table below
-2. **Plan first, ask first** - Draft DB schema changes, get confirmation
-3. **Order**: DB schema > RPC handlers > Page route > UI > `pnpm check`
-4. Co-locate single-use components in page route file
-5. Each list item: separate component for independent mutation/status
-6. Add nav links: `src/components/app/app-sidebar.tsx` or `admin-sidebar.tsx`
+- **NO OPTIMISTIC UPDATES** — use pessimistic or concurrent-safe strategies
+- **NO TESTING** unless explicitly requested
+- After new migration, update [docs/db-schema.md](docs/db-schema.md)
+- All server data operations through RPC layer, use Repository pattern for DB
+- Co-locate single-use components in page route file
+- Each list item: separate component for independent mutation/status
+- Add nav links: `src/components/app/app-sidebar.tsx` or `admin-sidebar.tsx`
 
-## Detailed Documentation
-
-| Topic | Doc | When to Read |
-|-------|-----|--------------|
-| Architecture | [docs/shell-spa-architecture.md](docs/shell-spa-architecture.md) | Understanding project structure |
-| Routing | [docs/tanstack-start.md](docs/tanstack-start.md) | Adding pages, route guards |
-| RPC Layer | [docs/rpc-architecture.md](docs/rpc-architecture.md) | Creating API endpoints |
-| Database | [docs/database-repository.md](docs/database-repository.md) | DB queries, repositories |
-| DB Schema | [docs/db-schema.md](docs/db-schema.md) | Understanding current schema |
-| Job Queue | [docs/job-queue-worker.md](docs/job-queue-worker.md) | Background tasks |
-| Feature Development | [docs/development-guides.md](docs/development-guides.md) | Full CRUD implementation |
-| React Conventions | [docs/react-conventions.md](docs/react-conventions.md) | React conventions for writing good React code |
-| Example CRUD Blog | [docs/example-crud-blog.md](docs/example-crud-blog.md) | CRUD implementation example, must reading when implementing full CRUD features |
-| UI/UX | [docs/ui-guidelines.md](docs/ui-guidelines.md) | Forms, dialogs, tables |
-| Utilities | [docs/utilities.md](docs/utilities.md) | Date, lodash utils |
-| File Storage | [docs/file-storage.md](docs/file-storage.md) | S3, file uploads |
-| Commands | [docs/commands.md](docs/commands.md) | Available CLI commands |
-| DevOps | [docs/devops.md](docs/devops.md) | Deployment |
-| Cloudflare | [docs/cloudflare.md](docs/cloudflare.md) | Cloudflare Workers |
+---
 
 ## Quick Reference
 
@@ -232,8 +224,8 @@ export const listProducts = authedProcedure
     return context.repos.product.findPaginated({ page: input.page, pageSize: 20 });
   });
 
-// 2. Register (src/rpc/router.ts)
-product: base.router({ list: listProducts })
+// 2. Register in router (src/rpc/router.ts)
+product: { list: product.listProducts }
 
 // 3. Use in component
 const { data } = useSuspenseQuery(orpc.product.list.queryOptions({ input: { page: 1 } }));
@@ -242,13 +234,13 @@ const { data } = useSuspenseQuery(orpc.product.list.queryOptions({ input: { page
 ### Repository Usage
 
 ```typescript
-// Simple queries - use base methods directly
+// Simple queries
 const items = await repos.product.find({ categoryId: "123" });
 const item = await repos.product.findByIdOrFail(id);
 
-// Complex queries - use query builder
+// Complex queries with builder
 const results = await repos.product.find({
-  where: (qb) => qb.where("price", ">", 100).where("stock", ">", 0),
+  where: (qb) => qb.where("price", ">", 100),
   modify: (qb) => qb.orderBy("createdAt", "desc").limit(20)
 });
 ```
@@ -256,42 +248,43 @@ const results = await repos.product.find({
 ### Data Fetching Pattern
 
 ```typescript
-// Route loader - prefetch
+// Route loader — prefetch for SSR
 loader: async ({ context }) => {
   context.queryClient.prefetchQuery(orpc.product.list.queryOptions({ input: { page: 1 } }));
 }
 
-// Component - consume
+// Component — consume with cache
 const { data, refetch } = useSuspenseQuery(orpc.product.list.queryOptions({ input: { page } }));
 ```
 
 ### Background Tasks
 
 ```typescript
-// Use waitUntil for lightweight tasks (analytics, webhooks, cache updates)
-export const createProduct = authedProcedure
-  .input(productSchema)
-  .handler(async ({ input, context }) => {
-    const product = await context.repos.product.create(input);
+// Lightweight tasks (analytics, webhooks) — use context.waitUntil
+context.waitUntil(trackAnalytics({ event: "product_created" }));
 
-    // Non-blocking background tasks
-    context.waitUntil(trackAnalytics({ event: "product_created" }));
-    context.waitUntil(invalidateCache("products"));
-    context.waitUntil(sendWebhook({ type: "product.created", product }));
-
-    return product;
-  });
-
-// Use Job Queue for long-running, persistent tasks (see docs/job-queue-worker.md)
-// Examples: exports, emails, reports - tasks that need retries & scheduling
+// Long-running tasks (exports, emails, reports) — use Job Queue
+// See docs/job-queue-worker.md
 ```
 
-### Environment Variables
+---
 
-```env
-VITE_BASE_URL=http://localhost:3000
-DATABASE_URL="postgresql://user:password@localhost:5432/postgres"
-BETTER_AUTH_SECRET=<pnpm auth:secret>
-```
+## Documentation
 
-Type-safe env in `src/env/client.ts` and `src/env/server.ts`.
+| Topic | Doc | When to Read |
+|-------|-----|--------------|
+| Architecture | [docs/shell-spa-architecture.md](docs/shell-spa-architecture.md) | Understanding project structure |
+| Routing | [docs/tanstack-start.md](docs/tanstack-start.md) | Adding pages, route guards |
+| RPC Layer | [docs/rpc-architecture.md](docs/rpc-architecture.md) | Creating API endpoints |
+| Database | [docs/database-repository.md](docs/database-repository.md) | DB queries, repositories |
+| DB Schema | [docs/db-schema.md](docs/db-schema.md) | Current schema reference |
+| Job Queue | [docs/job-queue-worker.md](docs/job-queue-worker.md) | Background tasks |
+| Feature Development | [docs/development-guides.md](docs/development-guides.md) | Full CRUD implementation |
+| React Conventions | [docs/react-conventions.md](docs/react-conventions.md) | React code conventions |
+| Example CRUD Blog | [docs/example-crud-blog.md](docs/example-crud-blog.md) | CRUD implementation example |
+| UI/UX | [docs/ui-guidelines.md](docs/ui-guidelines.md) | Forms, dialogs, tables |
+| Utilities | [docs/utilities.md](docs/utilities.md) | Date, lodash utils |
+| File Storage | [docs/file-storage.md](docs/file-storage.md) | S3, file uploads |
+| Commands | [docs/commands.md](docs/commands.md) | Available CLI commands |
+| DevOps | [docs/devops.md](docs/devops.md) | Deployment |
+| Cloudflare | [docs/cloudflare.md](docs/cloudflare.md) | Cloudflare Workers |
