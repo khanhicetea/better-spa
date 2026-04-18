@@ -34,6 +34,8 @@ export interface JobTable {
   maxRetries: ColumnType<number, number | undefined, number>;
   priority: ColumnType<number, number | undefined, number>;
   runAt: ColumnType<Date, Date | undefined, Date>;
+  leaseOwner: string | null;
+  leaseExpiresAt: Date | null;
   startedAt: Date | null;
   completedAt: Date | null;
   createdAt: ColumnType<Date, Date | undefined, never>;

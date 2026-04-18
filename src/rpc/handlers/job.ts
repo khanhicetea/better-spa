@@ -1,7 +1,7 @@
-import { pickBy } from "lodash-es";
 import { z } from "zod";
-import type { JobStatus } from "@/server/db/schema/job";
-import { generateUUID } from "@/lib/helpers/data";
+import { workerRpc } from "@/server/worker/rpc";
+import type { JobPayload } from "@/server/worker/types";
+import { JobPriority } from "@/server/db/schema/job";
 import { adminProcedure, authedProcedure } from "../base";
 
 const jobStatusSchema = z.enum([
@@ -12,44 +12,46 @@ const jobStatusSchema = z.enum([
   "cancelled",
 ]);
 
-export const create = authedProcedure
+const jobTypeSchema = z.string().refine((val) => val in workerRpc, {
+  message: `Invalid job type. Available: ${Object.keys(workerRpc).join(", ")}`,
+});
+
+export const create = adminProcedure
   .input(
     z.object({
-      type: z.string().min(1),
-      label: z.string().min(1),
+      type: jobTypeSchema,
+      label: z.string().optional(),
       payload: z.unknown().optional(),
       maxRetries: z.number().int().min(0).max(10).default(3),
+      priority: z.nativeEnum(JobPriority).optional(),
+      runAt: z.date().optional(),
     }),
   )
   .handler(async ({ input, context }) => {
     const { repos } = context;
-    const job = await repos.job.insertReturn({
-      id: generateUUID(),
+    const job = await repos.job.createJob({
       userId: context.user.id,
-      type: input.type,
+      type: input.type as keyof typeof workerRpc,
       label: input.label,
-      status: "pending" as JobStatus,
-      progress: 0,
-      payload: input.payload ?? null,
-      result: null,
-      error: null,
-      retryCount: 0,
+      payload: input.payload as JobPayload<keyof typeof workerRpc>,
       maxRetries: input.maxRetries,
-      startedAt: null,
-      completedAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      priority: input.priority,
+      runAt: input.runAt,
     });
-    return job ?? null;
+    return job;
   });
 
 export const get = authedProcedure
   .input(z.object({ id: z.string() }))
   .handler(async ({ input, context, errors }) => {
     const { repos } = context;
-    const job = await repos.job.findById(input.id);
+    const job = await repos.job.findVisibleJobById({
+      id: input.id,
+      requesterUserId: context.user.id,
+      isAdmin: context.user.role === "admin",
+    });
 
-    if (!job || job.userId !== context.user.id) {
+    if (!job) {
       throw errors.NOT_FOUND();
     }
 
@@ -59,22 +61,15 @@ export const get = authedProcedure
 export const listAdmin = adminProcedure
   .input(
     z.object({
+      userId: z.string().optional(),
+      type: z.string().optional(),
       status: jobStatusSchema.optional(),
       limit: z.number().int().min(1).max(100).default(20),
     }),
   )
   .handler(async ({ input, context }) => {
     const { repos } = context;
-    const { limit, ...filter } = input;
-
-    const jobs = await repos.job.find({
-      where: {
-        ...pickBy(filter, (v) => v !== undefined),
-      },
-      modify: (qb) => qb.orderBy("createdAt", "desc").limit(limit),
-    });
-
-    return jobs;
+    return repos.job.findAdminJobs(input);
   });
 
 export const list = authedProcedure
@@ -87,43 +82,29 @@ export const list = authedProcedure
   )
   .handler(async ({ input, context }) => {
     const { repos } = context;
-    const { limit, ...filter } = input;
-
-    const jobs = await repos.job.find({
-      where: {
-        userId: context.user.id,
-        ...pickBy(filter, (v) => v !== undefined),
-      },
-      modify: (qb) => qb.orderBy("createdAt", "desc").limit(limit),
+    return repos.job.findUserJobs({
+      userId: context.user.id,
+      id: input.jobId,
+      status: input.status,
+      limit: input.limit,
     });
-
-    return jobs;
   });
 
 export const cancel = authedProcedure
   .input(z.object({ id: z.string() }))
   .handler(async ({ input, context, errors }) => {
     const { repos } = context;
-
-    const job = await repos.job.findById(input.id);
-    const isOwner = job?.userId === context.user.id;
-    const isAdmin = context.user.role === "admin";
-    if (!job || (!isOwner && !isAdmin)) {
-      throw errors.NOT_FOUND();
-    }
-
-    // Can only cancel pending jobs
-    if (job.status !== "pending") {
-      throw errors.NOT_FOUND();
-    }
-
-    const updated = await repos.job.updateById({
+    const updated = await repos.job.cancelPendingJob({
       id: input.id,
-      data: {
-        status: "cancelled" as JobStatus,
-        updatedAt: new Date(),
-      },
+      requesterUserId: context.user.id,
+      isAdmin: context.user.role === "admin",
     });
 
-    return updated ?? null;
+    if (!updated) {
+      throw errors.NOT_FOUND({
+        message: "Job not found or cannot be cancelled (must be pending)",
+      });
+    }
+
+    return updated;
   });

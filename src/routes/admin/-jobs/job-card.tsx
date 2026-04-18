@@ -30,6 +30,9 @@ export function JobCard({ job, onUpdated }: JobCardProps) {
   const statusMeta = getJobStatusMeta(job.status);
   const StatusIcon = statusMeta.icon;
 
+  const isScheduled =
+    job.status === "pending" && new Date(job.runAt) > new Date();
+
   return (
     <Card className="transition-all hover:shadow-md">
       <div className="flex items-center gap-3 p-2 py-1">
@@ -44,8 +47,25 @@ export function JobCard({ job, onUpdated }: JobCardProps) {
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="flex flex-col gap-1 truncate text-sm font-medium">
-              <span>{job.label}</span>
-              <Badge variant="outline">User ID: {job.userId}</Badge>
+              <div className="flex items-center gap-2">
+                <span>{job.label}</span>
+                {job.retryCount > 0 && (
+                  <Badge variant="secondary" className="text-[10px] h-4">
+                    Retry {job.retryCount}/{job.maxRetries}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">User ID: {job.userId}</Badge>
+                {isScheduled && (
+                  <Badge
+                    variant="outline"
+                    className="text-amber-600 border-amber-200 bg-amber-50"
+                  >
+                    Scheduled: {formatRelativeTime(job.runAt)}
+                  </Badge>
+                )}
+              </div>
             </CardTitle>
             <span className="shrink-0 text-xs text-muted-foreground">
               {formatRelativeTime(job.createdAt)}

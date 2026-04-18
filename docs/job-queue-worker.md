@@ -242,9 +242,32 @@ Manual acceptance checks:
 
 ---
 
-## Common Pitfalls
+## Hardened Queue Model
 
-- Executing worker logic inside RPC/request context.
-- Adding optimistic UI updates for job state.
-- Polling too aggressively with custom intervals that bypass shared helpers.
-- Introducing incompatible RPC naming (keep concise domain/action names).
+The PostgreSQL-backed queue is hardened for multi-worker safety and reliability.
+
+### Multi-Worker Safety (Leases)
+
+- When a worker claims a job, it sets a **lease** (`lease_owner` and `lease_expires_at`).
+- By default, the lease lasts **90 seconds**.
+- While processing, the worker **heartbeats** every **30 seconds** to renew the lease.
+- If a worker crashes, its lease will eventually expire. Other workers periodically run recovery to reschedule jobs with expired leases.
+
+### Retry and Backoff
+
+- Failed jobs are automatically rescheduled for retry if `retry_count < max_retries`.
+- Retries use **exponential backoff**: `min(30s * 2^retry_count, 15m)`.
+- If a handler throws a `NonRetryableJobError`, the job fails immediately without retrying.
+
+### Graceful Shutdown
+
+- On `SIGINT` or `SIGTERM`, the worker process stops claiming new jobs.
+- It waits for all in-flight jobs to finish before closing the database connection and exiting.
+
+### Multi-Worker Concurrency
+
+- Workers use `SELECT FOR UPDATE SKIP LOCKED` to atomically claim jobs.
+- Multiple worker instances can safely poll the same database without double-execution.
+- Concurrency per worker instance is configurable via `WORKER_CONCURRENCY` (default: 1).
+
+---

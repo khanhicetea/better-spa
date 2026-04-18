@@ -167,13 +167,13 @@ Individual todo tasks.
 
 Background job queue for async tasks (exports, reports, emails, etc.).
 
-| Column         | Type          | Nullable | Default     | Description                                        |
-| -------------- | ------------- | -------- | ----------- | -------------------------------------------------- |
-| `id`           | `text`        | NO       | -           | Primary key (UUID)                                 |
-| `user_id`      | `text`        | NO       | -           | Foreign key to `user.id`                           |
-| `type`         | `text`        | NO       | -           | Job type (handler name)                            |
+| Column             | Type          | Nullable | Default     | Description                                        |
+| ------------------ | ------------- | -------- | ----------- | -------------------------------------------------- |
+| `id`               | `text`        | NO       | -           | Primary key (UUID)                                 |
+| `user_id`          | `text`        | NO       | -           | Foreign key to `user.id`                           |
+| `type`             | `text`        | NO       | -           | Job type (handler name)                            |
 | `label`        | `text`        | NO       | -           | Human-readable job label                           |
-| `status`       | `text`        | NO       | `'pending'` | `pending`, `running`, `completed`, `failed`        |
+| `status`       | `text`        | NO       | `'pending'` | `pending`, `processing`, `completed`, `failed`, `cancelled` |
 | `progress`     | `integer`     | NO       | `0`         | Progress percentage (0-100)                        |
 | `priority`     | `integer`     | NO       | `5`         | Job priority (0=low, 5=normal, 10=high, 20=urgent) |
 | `payload`      | `jsonb`       | YES      | -           | Job input data                                     |
@@ -182,6 +182,8 @@ Background job queue for async tasks (exports, reports, emails, etc.).
 | `retry_count`  | `integer`     | NO       | `0`         | Number of retry attempts                           |
 | `max_retries`  | `integer`     | NO       | `3`         | Maximum retry attempts                             |
 | `run_at`       | `timestamptz` | NO       | `now()`     | Scheduled execution time                           |
+| `lease_owner`      | `text`        | YES      | -           | Worker ID currently holding the lease              |
+| `lease_expires_at` | `timestamptz` | YES      | -           | Lease expiration time                              |
 | `started_at`   | `timestamptz` | YES      | -           | Job start time                                     |
 | `completed_at` | `timestamptz` | YES      | -           | Job completion time                                |
 | `created_at`   | `timestamptz` | NO       | `now()`     | Job creation time                                  |
@@ -190,8 +192,8 @@ Background job queue for async tasks (exports, reports, emails, etc.).
 **Indexes**:
 
 - `idx_job_user_id` on `user_id`
-- `idx_job_status_priority_created` on (`status`, `priority`, `created_at`)
-- `idx_job_run_at` on (`run_at`, `status`)
+- `idx_job_claim` on (`status`, `run_at`, `priority`, `created_at`)
+- `idx_job_processing_lease` on (`status`, `lease_expires_at`)
 
 **Foreign Keys**:
 

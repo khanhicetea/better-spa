@@ -50,16 +50,32 @@ export type { JobType as WorkerJobType };
  * Worker configuration
  */
 export interface WorkerConfig {
+  workerId: string;
+  concurrency: number;
   pollIntervalMs: number;
-  staleCheckIntervalMs: number;
-  staleThresholdMinutes: number;
+  leaseDurationMs: number;
+  leaseHeartbeatMs: number;
+  recoveryIntervalMs: number;
 }
 
 export const DEFAULT_WORKER_CONFIG: WorkerConfig = {
+  workerId: "default",
+  concurrency: 1,
   pollIntervalMs: 2000,
-  staleCheckIntervalMs: 60000,
-  staleThresholdMinutes: 5,
+  leaseDurationMs: 90000,
+  leaseHeartbeatMs: 30000,
+  recoveryIntervalMs: 15000,
 };
+
+/**
+ * Custom error for non-retryable job failures
+ */
+export class NonRetryableJobError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NonRetryableJobError";
+  }
+}
 
 /**
  * Job with specific status type
