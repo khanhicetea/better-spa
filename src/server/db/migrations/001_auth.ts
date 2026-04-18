@@ -6,29 +6,47 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("name", "text", (col) => col.notNull())
     .addColumn("email", "text", (col) => col.notNull())
-    .addColumn("email_verified", "boolean", (col) => col.notNull().defaultTo(false))
+    .addColumn("email_verified", "boolean", (col) =>
+      col.notNull().defaultTo(false),
+    )
     .addColumn("image", "text")
     .addColumn("role", "text")
     .addColumn("banned", "boolean")
     .addColumn("ban_reason", "text")
     .addColumn("ban_expires", "timestamptz")
-    .addColumn("created_at", "timestamptz", (col) => col.notNull().defaultTo("now()"))
-    .addColumn("updated_at", "timestamptz", (col) => col.notNull().defaultTo("now()"))
+    .addColumn("created_at", "timestamptz", (col) =>
+      col.notNull().defaultTo("now()"),
+    )
+    .addColumn("updated_at", "timestamptz", (col) =>
+      col.notNull().defaultTo("now()"),
+    )
     .execute();
 
-  await db.schema.createIndex("idx_user_email").on("user").column("email").execute();
+  await db.schema
+    .createIndex("idx_user_email")
+    .on("user")
+    .column("email")
+    .execute();
 
   await db.schema
     .createTable("session")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("expires_at", "timestamptz", (col) => col.notNull())
     .addColumn("token", "text", (col) => col.notNull().unique())
-    .addColumn("created_at", "timestamptz", (col) => col.notNull().defaultTo("now()"))
-    .addColumn("updated_at", "timestamptz", (col) => col.notNull().defaultTo("now()"))
+    .addColumn("created_at", "timestamptz", (col) =>
+      col.notNull().defaultTo("now()"),
+    )
+    .addColumn("updated_at", "timestamptz", (col) =>
+      col.notNull().defaultTo("now()"),
+    )
     .addColumn("ip_address", "text")
     .addColumn("user_agent", "text")
     .addColumn("user_id", "text", (col) =>
-      col.notNull().references("user.id").onDelete("cascade").onUpdate("cascade"),
+      col
+        .notNull()
+        .references("user.id")
+        .onDelete("cascade")
+        .onUpdate("cascade"),
     )
     .addColumn("impersonated_by", "text")
     .execute();
@@ -51,7 +69,11 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("account_id", "text", (col) => col.notNull())
     .addColumn("provider_id", "text", (col) => col.notNull())
     .addColumn("user_id", "text", (col) =>
-      col.notNull().references("user.id").onDelete("cascade").onUpdate("cascade"),
+      col
+        .notNull()
+        .references("user.id")
+        .onDelete("cascade")
+        .onUpdate("cascade"),
     )
     .addColumn("access_token", "text")
     .addColumn("refresh_token", "text")
@@ -60,8 +82,12 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("refresh_token_expires_at", "timestamptz")
     .addColumn("scope", "text")
     .addColumn("password", "text")
-    .addColumn("created_at", "timestamptz", (col) => col.notNull().defaultTo("now()"))
-    .addColumn("updated_at", "timestamptz", (col) => col.notNull().defaultTo("now()"))
+    .addColumn("created_at", "timestamptz", (col) =>
+      col.notNull().defaultTo("now()"),
+    )
+    .addColumn("updated_at", "timestamptz", (col) =>
+      col.notNull().defaultTo("now()"),
+    )
     .execute();
 
   await db.schema
@@ -82,8 +108,12 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("identifier", "text", (col) => col.notNull())
     .addColumn("value", "text", (col) => col.notNull())
     .addColumn("expires_at", "timestamptz", (col) => col.notNull())
-    .addColumn("created_at", "timestamptz", (col) => col.notNull().defaultTo("now()"))
-    .addColumn("updated_at", "timestamptz", (col) => col.notNull().defaultTo("now()"))
+    .addColumn("created_at", "timestamptz", (col) =>
+      col.notNull().defaultTo("now()"),
+    )
+    .addColumn("updated_at", "timestamptz", (col) =>
+      col.notNull().defaultTo("now()"),
+    )
     .execute();
 }
 

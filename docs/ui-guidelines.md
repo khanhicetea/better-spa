@@ -275,7 +275,13 @@ function FormWithImages({ initialImages = [] }: { initialImages?: PublicS3File[]
     onUploadComplete: ({ files }) => {
       const uploaded: PublicS3File[] = files.map((f) => ({
         key: f.objectInfo.key,
-        metadata: { public_url: f.objectInfo.metadata.url },
+        bucket: f.objectInfo.metadata.bucket as string | undefined,
+        filename: f.objectInfo.metadata.filename as string | undefined,
+        contentType: f.objectInfo.metadata.contentType as string | undefined,
+        size: f.objectInfo.metadata.size
+          ? Number(f.objectInfo.metadata.size)
+          : undefined,
+        url: f.objectInfo.metadata.url as string,
       }));
       setImages((prev) => [...prev, ...uploaded]);
       setPreviews([]);
@@ -318,7 +324,7 @@ function FormWithImages({ initialImages = [] }: { initialImages?: PublicS3File[]
       {/* Uploaded images */}
       {images.map((image, index) => (
         <div key={image.key} className="group relative aspect-square">
-          <img src={image.metadata.public_url} className="size-full rounded-md object-cover" />
+          <img src={image.url} className="size-full rounded-md object-cover" />
           <button
             type="button"
             onClick={() => removeImage(index)}

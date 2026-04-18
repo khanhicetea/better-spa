@@ -571,7 +571,13 @@ const { upload, isPending: isUploading } = useUploadFile({
   onUploadComplete: ({ file }) => {
     const s3File: PublicS3File = {
       key: file.objectInfo.key,
-      metadata: { public_url: file.objectInfo.metadata.url },
+      bucket: file.objectInfo.metadata.bucket as string | undefined,
+      filename: file.objectInfo.metadata.filename as string | undefined,
+      contentType: file.objectInfo.metadata.contentType as string | undefined,
+      size: file.objectInfo.metadata.size
+        ? Number(file.objectInfo.metadata.size)
+        : undefined,
+      url: file.objectInfo.metadata.url as string,
     };
     form.setValue("cover", s3File);
   },

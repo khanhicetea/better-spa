@@ -1,37 +1,61 @@
 import z from "zod";
 
-export const PublicS3FileSchema = z.object({
-  key: z.string().min(1).max(255),
+export const S3ObjectKeySchema = z.string().min(1).max(1024);
+export const S3BucketNameSchema = z.string().min(1).max(255);
+
+export const StoredS3FileSchema = z.object({
+  key: S3ObjectKeySchema,
+  bucket: S3BucketNameSchema.optional(),
+  filename: z.string().min(1).max(255).optional(),
+  contentType: z.string().min(1).max(255).optional(),
+  size: z.number().int().nonnegative().optional(),
+});
+
+const createS3FilesSchema = <TFile extends z.ZodTypeAny>(fileSchema: TFile) =>
+  z.object({
+    files: z.array(fileSchema),
+  });
+
+const ModernPublicS3FileSchema = StoredS3FileSchema.extend({
+  url: z.url(),
+});
+
+const LegacyPublicS3FileSchema = StoredS3FileSchema.extend({
   metadata: z.object({
     public_url: z.url(),
   }),
-});
+}).transform(({ metadata, ...file }) => ({
+  ...file,
+  url: metadata.public_url,
+}));
 
-export const PublicS3FilesSchema = z.object({
-  files: z.array(PublicS3FileSchema),
-});
+export const PublicS3FileSchema = z.union([
+  ModernPublicS3FileSchema,
+  LegacyPublicS3FileSchema,
+]);
+
+export const PublicS3FilesSchema = createS3FilesSchema(PublicS3FileSchema);
 
 export type PublicS3File = z.infer<typeof PublicS3FileSchema>;
 export type PublicS3Files = z.infer<typeof PublicS3FilesSchema>;
 
-// Private S3 files - only store key, presigned URLs generated on-demand
-export const PrivateS3FileSchema = z.object({
-  key: z.string().min(1).max(255),
-});
+export const PrivateS3FileSchema = StoredS3FileSchema;
 
-export const PrivateS3FilesSchema = z.object({
-  files: z.array(PrivateS3FileSchema),
-});
+export const PrivateS3FilesSchema = createS3FilesSchema(PrivateS3FileSchema);
 
 export type PrivateS3File = z.infer<typeof PrivateS3FileSchema>;
 export type PrivateS3Files = z.infer<typeof PrivateS3FilesSchema>;
 
-// Response type with presigned URLs for displaying private files
-export interface PrivateS3FileWithUrl {
-  key: string;
-  url: string; // Presigned URL with TTL
-}
+export const PrivateS3FileWithUrlSchema = PrivateS3FileSchema.extend({
+  url: z.url(),
+  expiresAt: z.iso.datetime(),
+});
 
-export interface PrivateS3FilesWithUrls {
-  files: PrivateS3FileWithUrl[];
-}
+export const PrivateS3FilesWithUrlsSchema = createS3FilesSchema(
+  PrivateS3FileWithUrlSchema,
+);
+
+export type PrivateS3FileWithUrl = z.infer<typeof PrivateS3FileWithUrlSchema>;
+export type PrivateS3FilesWithUrls = z.infer<
+  typeof PrivateS3FilesWithUrlsSchema
+>;

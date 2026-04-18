@@ -18,12 +18,23 @@
 All types are defined in `@/lib/schemas/s3`:
 
 ```typescript
+// Shared persisted metadata
+export interface StoredS3File {
+  key: string;
+  bucket?: string;
+  filename?: string;
+  contentType?: string;
+  size?: number;
+}
+
 // PUBLIC S3 Files - direct URL access
 export interface PublicS3File {
   key: string;
-  metadata: {
-    public_url: string;
-  };
+  bucket?: string;
+  filename?: string;
+  contentType?: string;
+  size?: number;
+  url: string;
 }
 
 export interface PublicS3Files {
@@ -32,7 +43,11 @@ export interface PublicS3Files {
 
 // PRIVATE S3 Files - presigned URL access (recommended for user data)
 export interface PrivateS3File {
-  key: string; // Only store the key, no URL
+  key: string;
+  bucket?: string;
+  filename?: string;
+  contentType?: string;
+  size?: number;
 }
 
 export interface PrivateS3Files {
@@ -42,7 +57,12 @@ export interface PrivateS3Files {
 // Response type with presigned URLs for displaying private files
 export interface PrivateS3FileWithUrl {
   key: string;
-  url: string; // Presigned URL with TTL
+  bucket?: string;
+  filename?: string;
+  contentType?: string;
+  size?: number;
+  url: string;
+  expiresAt: string; // Presigned URL expiry time
 }
 
 export interface PrivateS3FilesWithUrls {
@@ -68,7 +88,7 @@ export interface ProductTable {
   id: Generated<string>;
   userId: string;
   name: string;
-  images: PrivateS3Files | null; // Store only keys, generate URLs on access
+  images: PrivateS3Files | null; // Store stable file metadata, generate URLs on access
   createdAt: ColumnType<Date, Date | undefined, never>;
   updatedAt: Date;
 }
@@ -80,45 +100,52 @@ Add a route in `src/routes/api/upload.$.ts` with `acl: "private"`:
 
 ```typescript
 import { handleRequest, type Router, route } from "@better-upload/server";
-import { presignGetObject } from "@better-upload/server/helpers";
-import { env } from "@/env/server";
 import { generateUUID, getFileExtFromMimeType } from "@/lib/helpers/data";
-import { s3Client } from "@/server/service/s3";
+import {
+  getDefaultS3BucketName,
+  getPresignedReadUrl,
+  getS3Client,
+} from "@/server/service/s3";
 
-const uploadRouter: Router = {
-  client: s3Client,
-  bucketName: env.S3_BUCKET_NAME || "default-bucket",
-  routes: {
-    // Private images with presigned URLs
-    "product-images": route({
-      fileTypes: ["image/*"],
-      multipleFiles: true,
-      maxFiles: 10,
-      maxFileSize: 1024 * 1024 * 10, // 10MB
-      onBeforeUpload: async () => {
-        return {
-          generateObjectInfo: async ({ file }) => {
-            const key = `products/${generateUUID()}.${getFileExtFromMimeType(file.type)}`;
-            // Generate presigned URL with TTL 3600 (1 hour)
-            const publicUrl = await presignGetObject(s3Client, {
-              bucket: env.S3_BUCKET_NAME || "default-bucket",
-              key,
-              expiresIn: 3600,
-            });
-            return {
-              key,
-              metadata: {
-                url: publicUrl, // Returned to client for immediate display
-                bucket_name: env.S3_BUCKET_NAME || "default-bucket",
-              },
-              acl: "private", // IMPORTANT: Set to private
-            };
-          },
-        };
-      },
-    }),
-  },
-};
+function createUploadRouter(): Router {
+  const bucketName = getDefaultS3BucketName();
+
+  return {
+    client: getS3Client(),
+    bucketName,
+    routes: {
+      private_images: route({
+        fileTypes: ["image/*"],
+        multipleFiles: true,
+        maxFiles: 10,
+        maxFileSize: 1024 * 1024 * 10, // 10MB
+        onBeforeUpload: async () => {
+          return {
+            generateObjectInfo: async ({ file }) => {
+              const key = `private/${generateUUID()}.${getFileExtFromMimeType(file.type)}`;
+              const { url, expiresAt } = await getPresignedReadUrl(key, {
+                bucket: bucketName,
+              });
+
+              return {
+                key,
+                metadata: {
+                  url,
+                  expiresAt,
+                  bucket: bucketName,
+                  filename: file.name,
+                  size: file.size.toString(),
+                  ...(file.type ? { contentType: file.type } : {}),
+                },
+                acl: "private",
+              };
+            },
+          };
+        },
+      }),
+    },
+  };
+}
 ```
 
 ### 3. Presigned URL Utility
@@ -126,38 +153,17 @@ const uploadRouter: Router = {
 Use `src/server/service/s3.ts` for generating presigned URLs:
 
 ```typescript
-import { presignGetObject } from "@better-upload/server/helpers";
-import { env } from "@/env/server";
 import type { PrivateS3Files, PrivateS3FilesWithUrls } from "@/lib/schemas/s3";
-import { s3Client } from "./s3";
+import {
+  DEFAULT_PRESIGNED_READ_TTL_SECONDS,
+  resolvePrivateS3Files,
+} from "@/server/service/s3";
 
-const DEFAULT_TTL = 3600; // 1 hour
-
-export async function getPresignedUrl(
-  key: string,
-  expiresIn = DEFAULT_TTL,
-): Promise<string> {
-  return presignGetObject(s3Client, {
-    bucket: env.S3_BUCKET_NAME || "default-bucket",
-    key,
-    expiresIn,
-  });
-}
-
-export async function addPresignedUrlsToFiles(
+export async function getProductImageUrls(
   files: PrivateS3Files | null,
-  expiresIn = DEFAULT_TTL,
+  expiresIn = DEFAULT_PRESIGNED_READ_TTL_SECONDS,
 ): Promise<PrivateS3FilesWithUrls | null> {
-  if (!files || !files.files.length) return null;
-
-  const filesWithUrls = await Promise.all(
-    files.files.map(async (file) => ({
-      key: file.key,
-      url: await getPresignedUrl(file.key, expiresIn),
-    })),
-  );
-
-  return { files: filesWithUrls };
+  return resolvePrivateS3Files(files, { expiresIn });
 }
 ```
 
@@ -167,7 +173,7 @@ Add presigned URLs when returning data to frontend:
 
 ```typescript
 // src/rpc/handlers/product.ts
-import { addPresignedUrlsToFiles } from "@/server/service/s3";
+import { resolvePrivateS3Files } from "@/server/service/s3";
 
 export const listProducts = authedProcedure
   .input(z.object({ page: z.number().min(1).default(1) }))
@@ -182,7 +188,9 @@ export const listProducts = authedProcedure
     const itemsWithUrls = await Promise.all(
       result.items.map(async (product) => ({
         ...product,
-        imagesWithUrls: await addPresignedUrlsToFiles(product.images, 3600),
+        imagesWithUrls: await resolvePrivateS3Files(product.images, {
+          expiresIn: 3600,
+        }),
       })),
     );
 
@@ -206,7 +214,9 @@ export const createProduct = authedProcedure
 
     return {
       ...newProduct,
-      imagesWithUrls: await addPresignedUrlsToFiles(newProduct?.images, 3600),
+      imagesWithUrls: await resolvePrivateS3Files(newProduct?.images, {
+        expiresIn: 3600,
+      }),
     };
   });
 ```
@@ -218,7 +228,12 @@ import { useUploadFiles } from "@better-upload/client";
 
 interface UploadedImage {
   key: string;
+  bucket?: string;
+  filename?: string;
+  contentType?: string;
+  size?: number;
   url: string;
+  expiresAt?: string;
 }
 
 function ProductImageUploader({ images, setImages }: {
@@ -230,11 +245,18 @@ function ProductImageUploader({ images, setImages }: {
 
   const uploadHook = useUploadFiles({
     api: "/api/upload",
-    route: "product-images",  // Use the private route
+    route: "private_images",
     onUploadComplete: ({ files }) => {
       const newImages = files.map((file) => ({
         key: file.objectInfo.key,
-        url: file.objectInfo.metadata.url as string,  // Presigned URL from upload
+        bucket: file.objectInfo.metadata.bucket as string | undefined,
+        filename: file.objectInfo.metadata.filename as string | undefined,
+        contentType: file.objectInfo.metadata.contentType as string | undefined,
+        size: file.objectInfo.metadata.size
+          ? Number(file.objectInfo.metadata.size)
+          : undefined,
+        url: file.objectInfo.metadata.url as string,
+        expiresAt: file.objectInfo.metadata.expiresAt as string | undefined,
       }));
       setImages((prev) => [...prev, ...newImages]);
       toast.success(`Uploaded ${files.length} image(s)`);
@@ -264,7 +286,7 @@ function ProductImageUploader({ images, setImages }: {
 
 ### 6. Submitting to RPC
 
-Only send the keys to the server, not URLs:
+Only send the stable file metadata to the server, not transient URLs:
 
 ```typescript
 const handleSubmit = async (e: React.FormEvent) => {
@@ -273,7 +295,15 @@ const handleSubmit = async (e: React.FormEvent) => {
     name,
     images:
       images.length > 0
-        ? { files: images.map((img) => ({ key: img.key })) } // Only keys
+        ? {
+            files: images.map((img) => ({
+              key: img.key,
+              bucket: img.bucket,
+              filename: img.filename,
+              contentType: img.contentType,
+              size: img.size,
+            })),
+          }
         : null,
   });
 };
@@ -307,12 +337,14 @@ export interface BlogPostTable {
 In `src/routes/api/upload.$.ts`:
 
 ```typescript
-const uploadRouter: Router = {
-  client: s3Client,
-  bucketName: env.S3_BUCKET_NAME || "default-bucket",
-  routes: {
-    // Public images - direct URL access
-    images: route({
+function createUploadRouter(): Router {
+  const bucketName = getDefaultS3BucketName();
+
+  return {
+    client: getS3Client(),
+    bucketName,
+    routes: {
+      images: route({
       fileTypes: ["image/*"],
       multipleFiles: true,
       maxFiles: 10,
@@ -323,16 +355,20 @@ const uploadRouter: Router = {
           return {
             key,
             metadata: {
-              url: `${env.S3_URL}/${key}`, // Direct public URL
+              url: buildPublicS3Url(key),
+              bucket: bucketName,
+              filename: file.name,
+              size: file.size.toString(),
+              ...(file.type ? { contentType: file.type } : {}),
             },
             cacheControl: "max-age=31536000; public; immutable",
-            // No acl needed - defaults to public
           };
         },
       }),
     }),
-  },
-};
+    },
+  };
+}
 ```
 
 ### 3. RPC Handler Pattern (Public)
@@ -349,7 +385,7 @@ export const listBlogPosts = authedProcedure
       pageSize: 20,
       where: { userId: context.user.id },
     });
-    // No URL generation needed - cover.metadata.public_url is already stored
+    // No URL generation needed - cover.url is already stored
   });
 
 export const createBlogPost = authedProcedure
@@ -388,9 +424,13 @@ function BlogImageUploader({ images, setImages }: {
     onUploadComplete: ({ files }) => {
       const mappedFiles: PublicS3File[] = files.map((file) => ({
         key: file.objectInfo.key,
-        metadata: {
-          public_url: file.objectInfo.metadata.url as string,
-        },
+        bucket: file.objectInfo.metadata.bucket as string | undefined,
+        filename: file.objectInfo.metadata.filename as string | undefined,
+        contentType: file.objectInfo.metadata.contentType as string | undefined,
+        size: file.objectInfo.metadata.size
+          ? Number(file.objectInfo.metadata.size)
+          : undefined,
+        url: file.objectInfo.metadata.url as string,
       }));
       setImages((prev) => [...prev, ...mappedFiles]);
       toast.success(`Uploaded ${files.length} image(s)`);
@@ -420,7 +460,7 @@ function BlogImageUploader({ images, setImages }: {
 
 ### 5. Submitting to RPC (Public)
 
-Send the full object including metadata:
+Send the full object including the stable file metadata:
 
 ```typescript
 const handleSubmit = async (e: React.FormEvent) => {
@@ -439,11 +479,11 @@ Direct URL access from the stored metadata:
 
 ```tsx
 // In your component
-<img src={blogPost.cover?.metadata.public_url} alt={blogPost.title} />;
+<img src={blogPost.cover?.url} alt={blogPost.title} />;
 
 {
   blogPost.images?.files.map((image) => (
-    <img key={image.key} src={image.metadata.public_url} alt="" />
+    <img key={image.key} src={image.url} alt="" />
   ));
 }
 ```
@@ -459,11 +499,18 @@ import { useUploadFile } from "@better-upload/client";
 
 const uploadHook = useUploadFile({
   api: "/api/upload",
-  route: "product-images",
+  route: "private_images",
   onUploadComplete: ({ file }) => {
     setCoverImage({
       key: file.objectInfo.key,
+      bucket: file.objectInfo.metadata.bucket as string | undefined,
+      filename: file.objectInfo.metadata.filename as string | undefined,
+      contentType: file.objectInfo.metadata.contentType as string | undefined,
+      size: file.objectInfo.metadata.size
+        ? Number(file.objectInfo.metadata.size)
+        : undefined,
       url: file.objectInfo.metadata.url as string,
+      expiresAt: file.objectInfo.metadata.expiresAt as string | undefined,
     });
   },
   onError: (error) => toast.error(error.message),
@@ -481,7 +528,7 @@ uploadHook.isPending; // Loading state
 | Route            | ACL     | Use Case                             |
 | ---------------- | ------- | ------------------------------------ |
 | `images`         | public  | Public images (blog covers)          |
-| `product-images` | private | User product images (presigned URLs) |
+| `private_images` | private | User product images (presigned URLs) |
 
 To add a new route, modify `src/routes/api/upload.$.ts`.
 
