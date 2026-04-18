@@ -139,6 +139,23 @@ pnpm task:jobs
 
 The Nitro task runs the same queue worker with a bounded lifecycle. This is best for scheduled or manually triggered polling from Nitro, while `pnpm worker` remains the dedicated always-on worker process.
 
+### Vercel Note
+
+Do not rely on Nitro `scheduledTasks` being auto-detected as Vercel Cron Jobs.
+
+For Vercel, use a normal API route and configure Cron Jobs in the Vercel dashboard to call:
+
+- `/api/internal/cron/poll-jobs`
+
+This route calls `runJobPollingTask()` and uses the same bounded polling strategy as the Nitro task.
+
+Recommended Vercel approach:
+
+- keep each invocation short-lived
+- let the route exit when idle
+- let Vercel invoke it again on the next schedule
+- prefer this over an always-running worker process on Vercel
+
 Strategy:
 
 - keep each task run short-lived instead of permanently blocking one task invocation
