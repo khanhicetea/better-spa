@@ -18,6 +18,7 @@ These rules differ from typical projects. **MUST follow or risk breaking the bui
 | Testing required | **NO TESTING** | Only add tests if explicitly requested |
 | DB seeding | **NO SEEDING** | Never create seed files |
 | Kysely codegen | **NO CODEGEN** | Types are manually defined in `src/server/db/schema/` |
+| shadcn/ui base components | **DON'T EDIT DIRECTLY** | Keep `src/components/ui/*` aligned with upstream. If customization is required, copy from upstream into app-level components and modify there. |
 
 ### Base UI Render Prop Pattern (CRITICAL)
 

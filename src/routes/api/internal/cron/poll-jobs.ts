@@ -28,7 +28,10 @@ export const Route = createFileRoute("/api/internal/cron/poll-jobs")({
             userAgent: request.headers.get("user-agent"),
           });
 
-          return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+          return Response.json(
+            { ok: false, error: "Unauthorized" },
+            { status: 401 },
+          );
         }
 
         const result = await runJobPollingTask();

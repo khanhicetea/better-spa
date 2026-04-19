@@ -112,7 +112,11 @@ function HomePage() {
                 repositories, and worker-backed exports in one flow.
               </p>
             </div>
-            <Button size="lg" render={<Link to="/app/todo" />}>
+            <Button
+              size="lg"
+              nativeButton={false}
+              render={<Link to="/app/todo" />}
+            >
               Open Todo
               <ArrowRight data-icon="inline-end" />
             </Button>
@@ -129,12 +133,21 @@ function HeaderActions() {
   if (user) {
     return (
       <div className="flex flex-wrap gap-3">
-        <Button size="lg" render={<Link to="/app/todo" />}>
+        <Button
+          size="lg"
+          nativeButton={false}
+          render={<Link to="/app/todo" />}
+        >
           Go to App
           <ArrowRight data-icon="inline-end" />
         </Button>
         {user.role === "admin" && (
-          <Button variant="outline" size="lg" render={<Link to="/admin" />}>
+          <Button
+            variant="outline"
+            size="lg"
+            nativeButton={false}
+            render={<Link to="/admin" />}
+          >
             Open Admin
           </Button>
         )}
@@ -144,10 +157,19 @@ function HeaderActions() {
 
   return (
     <div className="flex flex-wrap gap-3">
-      <Button size="lg" render={<Link to="/signup" />}>
+      <Button
+        size="lg"
+        nativeButton={false}
+        render={<Link to="/signup" />}
+      >
         Create account
       </Button>
-      <Button variant="outline" size="lg" render={<Link to="/login" />}>
+      <Button
+        variant="outline"
+        size="lg"
+        nativeButton={false}
+        render={<Link to="/login" />}
+      >
         Sign in
       </Button>
     </div>
