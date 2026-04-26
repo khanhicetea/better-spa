@@ -13,6 +13,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import type React from "react";
 import { ThemeProvider } from "@/components/spa/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { DefaultCatchBoundary } from "@/components/spa/default-catch-boundary";
 import { useShellData } from "@/lib/hooks/app";
 import type { RPCClient } from "@/lib/orpc";
 import {
@@ -59,6 +60,7 @@ export const Route = createRootRouteWithContext<{
     links: [{ rel: "stylesheet", href: appCss }],
   }),
   ssr: true,
+  errorComponent: DefaultCatchBoundary,
   shellComponent: RootShell,
   component: RootComponent,
 });

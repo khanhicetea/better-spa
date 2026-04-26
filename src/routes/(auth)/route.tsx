@@ -8,10 +8,7 @@ export const Route = createFileRoute("/(auth)")({
   beforeLoad: async ({ context }) => {
     const REDIRECT_URL = "/app/todo";
 
-    const user = await context.queryClient.ensureQueryData({
-      ...authQueryOptions(),
-      revalidateIfStale: true,
-    });
+    const user = await context.queryClient.ensureQueryData(authQueryOptions());
     if (user) {
       throw redirect({
         to: "/app/todo",

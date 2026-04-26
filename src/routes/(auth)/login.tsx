@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import authClient from "@/lib/auth/auth-client";
+import { QUERY_KEYS } from "@/lib/queries";
 import { AuthShell } from "./-auth/auth-shell";
 import { AuthSocialButtons } from "./-auth/social-buttons";
 
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/(auth)/login")({
 
 function LoginForm() {
   const navigate = Route.useNavigate();
+  const queryClient = useQueryClient();
   const { redirectUrl } = Route.useRouteContext();
 
   const { mutate: emailLoginMutate, isPending: isSubmittingLogin } =
@@ -30,7 +32,8 @@ function LoginForm() {
               toast.error(error.message || "Unable to sign in.");
             },
             onSuccess: () => {
-              navigate({ to: redirectUrl, reloadDocument: true });
+              queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth });
+              navigate({ to: redirectUrl });
             },
           },
         ),

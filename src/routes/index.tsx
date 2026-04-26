@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { authQueryOptions } from "@/lib/queries";
 
 export const Route = createFileRoute("/")({
@@ -128,16 +129,21 @@ function HomePage() {
 }
 
 function HeaderActions() {
-  const { data: user } = useSuspenseQuery(authQueryOptions());
+  const { data: user, isLoading } = useQuery(authQueryOptions());
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-wrap gap-3">
+        <Skeleton className="h-11 w-32 rounded-md" />
+        <Skeleton className="h-11 w-24 rounded-md" />
+      </div>
+    );
+  }
 
   if (user) {
     return (
       <div className="flex flex-wrap gap-3">
-        <Button
-          size="lg"
-          nativeButton={false}
-          render={<Link to="/app/todo" />}
-        >
+        <Button size="lg" nativeButton={false} render={<Link to="/app/todo" />}>
           Go to App
           <ArrowRight data-icon="inline-end" />
         </Button>
@@ -157,11 +163,7 @@ function HeaderActions() {
 
   return (
     <div className="flex flex-wrap gap-3">
-      <Button
-        size="lg"
-        nativeButton={false}
-        render={<Link to="/signup" />}
-      >
+      <Button size="lg" nativeButton={false} render={<Link to="/signup" />}>
         Create account
       </Button>
       <Button

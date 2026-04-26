@@ -7,6 +7,6 @@ export function useShellData() {
 }
 
 export function useSessionUser() {
-  const { data } = useQuery(authQueryOptions());
-  return data;
+  const { data, isLoading } = useQuery(authQueryOptions());
+  return { user: data, isLoading };
 }

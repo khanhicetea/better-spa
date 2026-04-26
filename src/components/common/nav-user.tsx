@@ -17,14 +17,19 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import authClient from "@/lib/auth/auth-client";
 import { useSessionUser } from "@/lib/hooks/app";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
-  const user = useSessionUser();
+  const { user, isLoading } = useSessionUser();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  if (isLoading) {
+    return <NavUserSkeleton />;
+  }
 
   if (!user) return null;
 
@@ -100,7 +105,7 @@ export function NavUser() {
                     fetchOptions: {
                       onResponse: () => {
                         queryClient.clear();
-                        window.location.assign("/");
+                        navigate({ to: "/" });
                       },
                     },
                   })
@@ -114,6 +119,22 @@ export function NavUser() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  );
+}
+
+function NavUserSkeleton() {
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <div className="flex items-center gap-2 px-2 py-1.5">
+          <Skeleton className="h-8 w-8 rounded-lg" />
+          <div className="grid flex-1 gap-1.5">
+            <Skeleton className="h-3.5 w-24" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+        </div>
       </SidebarMenuItem>
     </SidebarMenu>
   );

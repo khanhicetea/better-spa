@@ -7,10 +7,7 @@ export const Route = createFileRoute("/(user)")({
   component: UserLayout,
   errorComponent: DefaultCatchBoundary,
   beforeLoad: async ({ context }) => {
-    const user = await context.queryClient.ensureQueryData({
-      ...authQueryOptions(),
-      revalidateIfStale: true,
-    });
+    const user = await context.queryClient.ensureQueryData(authQueryOptions());
 
     if (!user) {
       throw redirect({ to: "/login" });

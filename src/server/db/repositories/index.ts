@@ -1,14 +1,13 @@
 import type { DB } from "../init";
+import { Repository } from "./base";
 import { JobRepository } from "./job.repo";
-import { TodoItemRepository } from "./todoItem.repo";
-import { UserRepository } from "./user.repo";
 
 export type Repositories = ReturnType<typeof createRepos>;
 
 export function createRepos(db: DB) {
   const repos = {
-    user: new UserRepository(db),
-    todoItem: new TodoItemRepository(db),
+    user: new Repository(db, "user"),
+    todoItem: new Repository(db, "todoItem"),
     job: new JobRepository(db),
   };
 

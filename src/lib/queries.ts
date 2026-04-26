@@ -19,7 +19,8 @@ export const authQueryOptions = () =>
       );
       return user;
     },
-    staleTime: 1000 * 60,
+    staleTime: Infinity,
+    retry: 1,
     refetchOnWindowFocus: true,
   });
 
@@ -54,4 +55,3 @@ export async function invalidateAuthAndShellQueries(queryClient: QueryClient) {
 }
 
 export type AuthQueryResult = Outputs["auth"]["getCurrentUser"];
-export type ShellQueryResult = Outputs["app"]["shellData"];
