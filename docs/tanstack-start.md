@@ -48,12 +48,19 @@ Examples:
 
 `src/routes/__root.tsx` owns:
 
-- shell prefetch
-- auth prefetch
 - top-level providers
 - HTML shell
 
 Keep it focused on app-wide concerns.
+
+## Shell + SPA Opt-In
+
+- Put `ssr: "data-only"` on the prefix or pathless layout that should behave like an SPA branch.
+- Preload shell/auth cache at that same boundary instead of in `__root.tsx`.
+- Current opted prefixes:
+  - `src/routes/(user)/app/route.tsx` -> `/app/*`
+  - `src/routes/admin/route.tsx` -> `/admin/*`
+- Non-opted routes like `/` can stay full SSR in the shared shell.
 
 ## Protected Layouts
 

@@ -4,6 +4,7 @@ import { DefaultCatchBoundary } from "@/components/spa/default-catch-boundary";
 import { ShellProgressBar } from "@/components/spa/shell-progress-bar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { authQueryOptions } from "@/lib/queries";
+import { preloadShellSpa } from "@/lib/router/shell-spa";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/admin")({
     if (user.role !== "admin") {
       throw redirect({ to: "/app" });
     }
+
+    await preloadShellSpa(context.queryClient);
 
     return { user };
   },

@@ -12,6 +12,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { authQueryOptions } from "@/lib/queries";
 
 export const Route = createFileRoute("/")({
+  loader: async ({ context }) => {
+    await context.queryClient.ensureQueryData(authQueryOptions());
+  },
   component: HomePage,
 });
 

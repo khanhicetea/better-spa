@@ -16,7 +16,6 @@ export const Route = createFileRoute("/(user)")({
     // re-return to update type as non-null for child routes
     return { user };
   },
-  ssr: "data-only",
 });
 
 function UserLayout() {

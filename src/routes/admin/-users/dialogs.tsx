@@ -33,7 +33,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import authClient from "@/lib/auth/auth-client";
-import type { User } from "./types";
+import type { User } from "./columns";
 
 interface BanUserDialogProps {
   user: User;

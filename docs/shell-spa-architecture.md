@@ -4,18 +4,19 @@ Compact reference for how this app is structured today.
 
 ## Core Model
 
-- SSR only the shell: app metadata, auth bootstrap, top-level layout.
-- Run the feature UI as an SPA after hydration.
+- Keep the document shell SSR for every route.
+- Opt individual route prefixes or pathless groups into `shell + SPA`.
+- Leave non-opted routes as regular SSR pages inside the same shell.
 - Use TanStack Query for cached shell and page data.
 - Use oRPC for all server calls.
 
 ## Request Flow
 
-1. `src/routes/__root.tsx` runs on the server first.
-2. It `ensureQueryData(shellQueryOptions())` for shell data.
-3. It `prefetchQuery(authQueryOptions())` without blocking render.
-4. Child routes prefetch their own data in loaders.
-5. Components consume the same query options with `useSuspenseQuery`.
+1. `src/routes/__root.tsx` renders the shared HTML shell and global providers.
+2. Routes that opt into `shell + SPA` preload shell data and auth cache at their own layout boundary.
+3. Those same opt-in layouts set `ssr: "data-only"` so the branch hydrates as an SPA after the shell render.
+4. Non-opted routes stay on normal SSR and only fetch what they need.
+5. Child routes still prefetch their own data in loaders and consume it with TanStack Query.
 
 ## Current Route Surface
 
@@ -31,13 +32,19 @@ Compact reference for how this app is structured today.
 - `/api/rpc/$`
 - `/api/upload/$`
 
+## SPA Boundaries
+
+- `/app/*` opts in at `src/routes/(user)/app/route.tsx`
+- `/admin/*` opts in at `src/routes/admin/route.tsx`
+- Reuse `preloadShellSpa()` from `src/lib/router/shell-spa.ts` if another prefix or route group should behave the same way later
+
 ## Auth Boundaries
 
 - User-protected layout: `src/routes/(user)/route.tsx`
 - Admin-protected layout: `src/routes/admin/route.tsx`
 - Unauthenticated users redirect to `/login`
 - Non-admin users redirect from `/admin/*` to `/app`
-- Both protected layouts use `ssr: "data-only"`
+- Auth protection is separate from SPA opt-in, so protected SSR pages can coexist with protected SPA branches
 
 ## Current Feature Baseline
 
