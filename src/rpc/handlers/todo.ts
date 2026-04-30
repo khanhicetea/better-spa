@@ -72,12 +72,12 @@ export const remove = authedProcedure
 
 export const exportData = authedProcedure.handler(async ({ context }) => {
   const { repos } = context;
-
-  const job = await repos.job.createJob({
-    userId: context.user.id,
-    type: "export_todos",
-    payload: { userId: context.user.id },
+  const todos = await repos.todoItem.find({
+    where: { userId: context.user.id },
+    modify: (qb) => qb.orderBy("createdAt", "desc"),
   });
-
-  return job ?? null;
+  return {
+    total: todos.length,
+    todos,
+  };
 });

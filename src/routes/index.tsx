@@ -1,12 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  Briefcase,
-  CheckCircle2,
-  ListTodo,
-  Shield,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, ListTodo, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,12 +21,6 @@ const valueCards = [
     description:
       "SSR only the application shell and run product interactions as a fast SPA.",
     icon: Shield,
-  },
-  {
-    title: "Background jobs included",
-    description:
-      "Queue long-running work and process it in a dedicated worker runtime.",
-    icon: Briefcase,
   },
   {
     title: "Reference Todo feature",
@@ -56,9 +44,8 @@ function HomePage() {
                 Build on a clean starter that is ready for real product work.
               </h1>
               <p className="max-w-2xl text-base text-muted-foreground md:text-lg">
-                Keep auth, admin user management, jobs, uploads infrastructure,
-                and one reference feature. Remove the demo noise and start
-                shipping.
+                Keep auth, admin user management, uploads infrastructure, and
+                one reference feature. Remove the demo noise and start shipping.
               </p>
               <HeaderActions />
             </div>
@@ -76,7 +63,6 @@ function HomePage() {
                   "/settings",
                   "/admin",
                   "/admin/users",
-                  "/admin/jobs",
                 ].map((path) => (
                   <li key={path} className="flex items-center gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
@@ -109,8 +95,8 @@ function HomePage() {
                 Start from Todo, then expand by domain.
               </h2>
               <p className="mt-2 text-muted-foreground">
-                The Todo page demonstrates auth boundaries, oRPC procedures,
-                repositories, and worker-backed exports in one flow.
+                The Todo page demonstrates auth boundaries, oRPC procedures, and
+                repositories in one flow.
               </p>
             </div>
             <Button

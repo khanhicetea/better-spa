@@ -20,13 +20,7 @@
     "deps:major": "pnpx taze@latest major -Ilw",
     "ui": "pnpx shadcn@latest",
     "auth:secret": "pnpx @better-auth/cli@latest secret",
-    "auth:generate": "pnpx @better-auth/cli@latest generate --config ./src/lib/auth/auth.ts",
-    "worker": "tsx --env-file=.env scripts/worker.ts",
-    "worker:dev": "tsx --env-file=.env scripts/worker.ts",
-    "worker:build": "tsup",
-    "worker:start": "node .output/worker/runner.js",
-    "task:jobs": "nitro task run poll-jobs --dir .",
-    "task:jobs:payload": "nitro task run poll-jobs --dir . --payload"
+    "auth:generate": "pnpx @better-auth/cli@latest generate --config ./src/lib/auth/auth.ts"
   },
   "dependencies": {
     "@better-upload/client": "^3.0.17",

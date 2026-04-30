@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { PagePending } from "@/components/common/page-pending";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useListenJob } from "@/lib/hooks/jobs";
 import { orpc } from "@/lib/orpc";
 import { TodoRow } from "./-todo/todo-row";
 import { TodoSummary } from "./-todo/todo-summary";
@@ -18,8 +17,6 @@ export const Route = createFileRoute("/(user)/app/todo")({
 
 function TodoPage() {
   const [newTodoContent, setNewTodoContent] = useState("");
-  const [exportingJobId, setExportingJobId] = useState<string | null>(null);
-  const [exportingProgress, setExportingProgress] = useState(0);
 
   const { data: todos, refetch: refetchTodos } = useSuspenseQuery(
     orpc.todo.list.queryOptions(),
@@ -36,48 +33,18 @@ function TodoPage() {
 
   const exportMutation = useMutation(
     orpc.todo.export.mutationOptions({
-      onSuccess: (job) => {
-        if (!job) return;
-        setExportingJobId(job.id);
-        setExportingProgress(0);
-        toast.success("Export queued", {
-          description: "The worker will process your todo export.",
+      onSuccess: (result) => {
+        toast.success("Export completed", {
+          description: `Exported ${result.total} todos.`,
         });
       },
       onError: (error) => {
-        toast.error("Unable to create export job", {
+        toast.error("Unable to export todos", {
           description: error.message,
         });
       },
     }),
   );
-
-  useListenJob<"export_todos">({
-    jobId: exportingJobId || "",
-    enabled: !!exportingJobId,
-    onChange: (job) => {
-      if (job.status === "processing") {
-        setExportingProgress(job.progress);
-      }
-    },
-    onSuccess: () => {
-      toast.success("Export completed", {
-        description: "Your todo export is ready.",
-      });
-    },
-    onFailed: (job) => {
-      toast.error("Export failed", {
-        description: job.error || "Unexpected worker error.",
-      });
-    },
-    onCancel: () => {
-      toast.info("Export was cancelled.");
-    },
-    onSettled: () => {
-      setExportingJobId(null);
-      setExportingProgress(0);
-    },
-  });
 
   const totalTodos = todos.length;
   const completedTodos = todos.filter((todo) => todo.completedAt).length;
@@ -98,8 +65,8 @@ function TodoPage() {
           totalTodos={totalTodos}
           completedTodos={completedTodos}
           progressPercentage={progressPercentage}
-          isExporting={!!exportingJobId}
-          exportingProgress={exportingProgress}
+          isExporting={false}
+          exportingProgress={0}
           isExportPending={exportMutation.isPending}
           onExport={() => exportMutation.mutate({})}
         />

@@ -1,10 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import {
-  Briefcase,
-  LayoutDashboard,
-  type LucideIcon,
-  UsersIcon,
-} from "lucide-react";
+import { LayoutDashboard, type LucideIcon, UsersIcon } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -28,11 +23,6 @@ export function NavMain() {
       title: "Users",
       url: "/admin/users",
       icon: UsersIcon,
-    },
-    {
-      title: "Jobs",
-      url: "/admin/jobs",
-      icon: Briefcase,
     },
   ];
 

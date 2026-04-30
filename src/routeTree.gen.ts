@@ -15,7 +15,6 @@ import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
-import { Route as AdminJobsRouteImport } from './routes/admin/jobs'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as userSettingsRouteRouteImport } from './routes/(user)/settings/route'
@@ -26,7 +25,6 @@ import { Route as ApiUploadSplatRouteImport } from './routes/api/upload.$'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as userAppTodoRouteImport } from './routes/(user)/app/todo'
-import { Route as ApiInternalCronPollJobsRouteImport } from './routes/api/internal/cron/poll-jobs'
 
 const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
@@ -54,11 +52,6 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminJobsRoute = AdminJobsRouteImport.update({
-  id: '/jobs',
-  path: '/jobs',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const authSignupRoute = authSignupRouteImport.update({
@@ -111,11 +104,6 @@ const userAppTodoRoute = userAppTodoRouteImport.update({
   path: '/todo',
   getParentRoute: () => userAppRouteRoute,
 } as any)
-const ApiInternalCronPollJobsRoute = ApiInternalCronPollJobsRouteImport.update({
-  id: '/api/internal/cron/poll-jobs',
-  path: '/api/internal/cron/poll-jobs',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -124,7 +112,6 @@ export interface FileRoutesByFullPath {
   '/settings': typeof userSettingsRouteRouteWithChildren
   '/login': typeof authLoginRoute
   '/signup': typeof authSignupRoute
-  '/admin/jobs': typeof AdminJobsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/': typeof AdminIndexRoute
   '/app/todo': typeof userAppTodoRoute
@@ -133,13 +120,11 @@ export interface FileRoutesByFullPath {
   '/api/upload/$': typeof ApiUploadSplatRoute
   '/app/': typeof userAppIndexRoute
   '/settings/': typeof userSettingsIndexRoute
-  '/api/internal/cron/poll-jobs': typeof ApiInternalCronPollJobsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof authLoginRoute
   '/signup': typeof authSignupRoute
-  '/admin/jobs': typeof AdminJobsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin': typeof AdminIndexRoute
   '/app/todo': typeof userAppTodoRoute
@@ -148,7 +133,6 @@ export interface FileRoutesByTo {
   '/api/upload/$': typeof ApiUploadSplatRoute
   '/app': typeof userAppIndexRoute
   '/settings': typeof userSettingsIndexRoute
-  '/api/internal/cron/poll-jobs': typeof ApiInternalCronPollJobsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,7 +144,6 @@ export interface FileRoutesById {
   '/(user)/settings': typeof userSettingsRouteRouteWithChildren
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/signup': typeof authSignupRoute
-  '/admin/jobs': typeof AdminJobsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/': typeof AdminIndexRoute
   '/(user)/app/todo': typeof userAppTodoRoute
@@ -169,7 +152,6 @@ export interface FileRoutesById {
   '/api/upload/$': typeof ApiUploadSplatRoute
   '/(user)/app/': typeof userAppIndexRoute
   '/(user)/settings/': typeof userSettingsIndexRoute
-  '/api/internal/cron/poll-jobs': typeof ApiInternalCronPollJobsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -180,7 +162,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/login'
     | '/signup'
-    | '/admin/jobs'
     | '/admin/users'
     | '/admin/'
     | '/app/todo'
@@ -189,13 +170,11 @@ export interface FileRouteTypes {
     | '/api/upload/$'
     | '/app/'
     | '/settings/'
-    | '/api/internal/cron/poll-jobs'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/signup'
-    | '/admin/jobs'
     | '/admin/users'
     | '/admin'
     | '/app/todo'
@@ -204,7 +183,6 @@ export interface FileRouteTypes {
     | '/api/upload/$'
     | '/app'
     | '/settings'
-    | '/api/internal/cron/poll-jobs'
   id:
     | '__root__'
     | '/'
@@ -215,7 +193,6 @@ export interface FileRouteTypes {
     | '/(user)/settings'
     | '/(auth)/login'
     | '/(auth)/signup'
-    | '/admin/jobs'
     | '/admin/users'
     | '/admin/'
     | '/(user)/app/todo'
@@ -224,7 +201,6 @@ export interface FileRouteTypes {
     | '/api/upload/$'
     | '/(user)/app/'
     | '/(user)/settings/'
-    | '/api/internal/cron/poll-jobs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -235,7 +211,6 @@ export interface RootRouteChildren {
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
   ApiUploadSplatRoute: typeof ApiUploadSplatRoute
-  ApiInternalCronPollJobsRoute: typeof ApiInternalCronPollJobsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -280,13 +255,6 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/jobs': {
-      id: '/admin/jobs'
-      path: '/jobs'
-      fullPath: '/admin/jobs'
-      preLoaderRoute: typeof AdminJobsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/(auth)/signup': {
@@ -359,13 +327,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof userAppTodoRouteImport
       parentRoute: typeof userAppRouteRoute
     }
-    '/api/internal/cron/poll-jobs': {
-      id: '/api/internal/cron/poll-jobs'
-      path: '/api/internal/cron/poll-jobs'
-      fullPath: '/api/internal/cron/poll-jobs'
-      preLoaderRoute: typeof ApiInternalCronPollJobsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -423,13 +384,11 @@ const userRouteRouteWithChildren = userRouteRoute._addFileChildren(
 )
 
 interface AdminRouteRouteChildren {
-  AdminJobsRoute: typeof AdminJobsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
-  AdminJobsRoute: AdminJobsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
@@ -446,7 +405,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
   ApiUploadSplatRoute: ApiUploadSplatRoute,
-  ApiInternalCronPollJobsRoute: ApiInternalCronPollJobsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

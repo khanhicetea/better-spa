@@ -25,9 +25,6 @@ export default defineConfig(({ command }) => ({
                 serverReload: true,
               },
             },
-            scheduledTasks: {
-              "* * * * *": ["poll-jobs"],
-            },
           }
         : {}),
     }),
