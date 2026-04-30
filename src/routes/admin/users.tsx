@@ -28,7 +28,7 @@ import {
   CreateUserSheet,
 } from "./-users/dialogs";
 import { userColumns } from "./-users/columns";
-import type { User } from "./-users/types";
+import type { User } from "./-users/columns";
 import { UserActions } from "./-users/user-actions";
 
 export const Route = createFileRoute("/admin/users")({

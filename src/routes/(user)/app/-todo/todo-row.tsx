@@ -4,7 +4,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { orpc } from "@/lib/orpc";
-import type { TodoItem } from "./types";
+import type { Outputs } from "@/rpc/types";
+
+type TodoItem = Outputs["todo"]["list"][number];
 
 interface TodoRowProps {
   todo: TodoItem;

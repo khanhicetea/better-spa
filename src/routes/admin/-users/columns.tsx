@@ -1,7 +1,9 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { User } from "./types";
+import type { Outputs } from "@/rpc/types";
+
+export type User = Outputs["user"]["list"]["users"][number];
 
 export const userColumns: ColumnDef<User>[] = [
   {

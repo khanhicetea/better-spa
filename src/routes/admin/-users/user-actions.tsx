@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import authClient from "@/lib/auth/auth-client";
-import type { User } from "./types";
+import type { User } from "./columns";
 
 interface UserActionsProps {
   user: User;
