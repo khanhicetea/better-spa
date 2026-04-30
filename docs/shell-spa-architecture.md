@@ -1,112 +1,67 @@
 # Shell SPA Architecture
 
-**For Agents**: Read this doc when you need to understand the overall project architecture.
+Compact reference for how this app is structured today.
 
----
+## Core Model
 
-## Key Concepts
+- SSR only the shell: app metadata, auth bootstrap, top-level layout.
+- Run the feature UI as an SPA after hydration.
+- Use TanStack Query for cached shell and page data.
+- Use oRPC for all server calls.
 
-### Shell SPA Pattern
+## Request Flow
 
-- **SSR (Server-Side Rendered)**: auth/session lookup, app settings, minimal shell layout
-- **SPA (Single Page Application)**: route transitions, data loading, mutations, and feature UI
+1. `src/routes/__root.tsx` runs on the server first.
+2. It `ensureQueryData(shellQueryOptions())` for shell data.
+3. It `prefetchQuery(authQueryOptions())` without blocking render.
+4. Child routes prefetch their own data in loaders.
+5. Components consume the same query options with `useSuspenseQuery`.
 
-### Core Technologies
-
-- **TanStack Start**
-- **TanStack Router**
-- **TanStack Query**
-- **oRPC** (not tRPC)
-- **Better Auth**
-- **Kysely + PostgreSQL**
-- **Job worker** (`pnpm worker`) for queued background tasks
-
----
-
-## Default Route Surface
-
-Production baseline keeps this route set:
+## Current Route Surface
 
 - `/`
 - `/login`
 - `/signup`
-- `/app` (redirects to `/app/todo`)
+- `/app`
 - `/app/todo`
 - `/settings`
 - `/admin`
 - `/admin/users`
-- `/admin/jobs`
-- `/api/*`
-
-`/app/hello-form` is intentionally removed.
-Upload infra (`/api/upload/$`) remains available, but no default upload demo page is included.
-
----
-
-## Shell Implementation
-
-Shell logic is in `src/routes/__root.tsx`:
-
-- server ensures shell data with `shellQueryOptions()`
-- user auth query is prefetched non-blocking
-- client hydration continues with cached query state
-
-Relevant files:
-
-- `src/routes/__root.tsx`
-- `src/rpc/handlers/app.ts`
-- `src/lib/queries.ts`
-
----
+- `/api/auth/$`
+- `/api/rpc/$`
+- `/api/upload/$`
 
 ## Auth Boundaries
 
-- User-protected routes: `src/routes/(user)/route.tsx`
-- Admin-protected routes: `src/routes/admin/route.tsx`
-- Unauthenticated users are redirected to `/login`
-- Non-admin users are redirected from `/admin/*` to `/app`
+- User-protected layout: `src/routes/(user)/route.tsx`
+- Admin-protected layout: `src/routes/admin/route.tsx`
+- Unauthenticated users redirect to `/login`
+- Non-admin users redirect from `/admin/*` to `/app`
+- Both protected layouts use `ssr: "data-only"`
 
-Auth pages use shared route-adjacent modules:
+## Current Feature Baseline
 
-- `src/routes/(auth)/-auth/auth-shell.tsx`
-- `src/routes/(auth)/-auth/social-buttons.tsx`
+- User CRUD example: `src/routes/(user)/app/todo.tsx`
+- Admin list example: `src/routes/admin/users.tsx`
+- Shared auth shell pieces: `src/routes/(auth)/-auth/*`
 
----
+## Route-Adjacent Modules
 
-## Feature Layout Pattern
+Use a sibling folder prefixed with `-` when a route becomes large.
 
-Large routes are split into route-adjacent support modules (prefixed `-`):
+- Good: `src/routes/admin/-users/*`
+- Good: `src/routes/(user)/app/-todo/*`
+- Keep the main route file focused on search params, loaders, queries, and composition.
 
-- `src/routes/(user)/app/-todo/*`
-- `src/routes/admin/-users/*`
-- `src/routes/admin/-jobs/*`
-- `src/routes/(auth)/-auth/*`
+## RPC Boundary
 
-Route files stay focused on:
+- Client code calls `orpc.*` from `src/lib/orpc.ts`.
+- Server-side RPC calls use the router directly through `createIsomorphicFn`.
+- Client-side RPC calls go to `/api/rpc`.
+- Only pass serializable input across the RPC boundary.
 
-- search params validation
-- loaders/prefetching
-- top-level query/mutation orchestration
-- page composition
+## Background Work
 
----
-
-## RPC Surface
-
-Current production-baseline RPC names:
-
-- `orpc.todo.list/create/update/delete/export`
-- `orpc.user.list/get`
-- `orpc.job.listAdmin/list/get/cancel` (`create` remains available)
-
-Todo is the single reference feature that exercises auth, RPC, repositories, and job queue end-to-end.
-
----
-
-## Job Queue Execution Rule
-
-Long-running work must be **queue-only**:
-
-- RPC handlers enqueue jobs and return job records
-- web request context does **not** execute worker jobs directly
-- only worker runtime (`src/server/worker/runner.ts`, `src/server/worker/worker.ts`) processes queued jobs
+- Lightweight post-response work can use `context.waitUntil`.
+- User-visible or long-running work should use a queue model.
+- The current repo has a `job` table but no dedicated worker runtime checked in, so do not document or assume `pnpm worker` unless you add it.

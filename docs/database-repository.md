@@ -1,250 +1,109 @@
 # Database and Repository Pattern
 
-**For Agents**: Read this doc when implementing database queries or creating new repositories.
+Compact reference for DB work in this repo.
 
-**CRITICAL**: No Kysely codegen. Types are manually defined in `src/server/db/schema/`.
+## Non-Negotiables
 
----
+- No Kysely codegen.
+- Schema types are handwritten in `src/server/db/schema/`.
+- Prefer repositories from `context.repos`.
+- Use raw `db` only when the repository abstraction is clearly the wrong fit.
 
-## Database Schema
+## Live Schema Files
 
-Kysely uses TypeScript interfaces for type-safe database queries. Schema definitions are organized in `src/server/db/schema/`:
+- `src/server/db/schema/auth.ts`
+- `src/server/db/schema/todo.ts`
+- `src/server/db/schema/job.ts`
+- `src/server/db/schema/index.ts`
 
-- `schema/auth.ts`: Contains authentication table interfaces (user, session, account, verification)
-- `schema/todo.ts`: Contains feature-related table interfaces (todoCategory, todoItem)
-- `schema/index.ts`: Central Database interface that aggregates all table interfaces
-- Each schema file exports:
-  - `Table` interface (e.g., `UserTable`)
-  - `Selectable` type (e.g., `User`) - for query results
-  - `Insertable` type (e.g., `UserInsert`) - for insert operations
-  - `Updateable` type (e.g., `UserUpdate`) - for update operations
+Each schema file exports:
 
-## Repository Pattern
+- `<Name>Table`
+- `<Name>`
+- `<Name>Insert`
+- `<Name>Update`
 
-The project uses a repository pattern for database operations to provide a clean, type-safe abstraction over Kysely queries. Repositories are located in `src/server/db/repositories/`:
+## Naming
 
-### Structure
+- Database tables are singular in SQL: `user`, `session`, `todo_item`, `job`
+- TypeScript table keys are camelCase: `user`, `todoItem`, `job`
+- Use `snake_case` in raw SQL and `camelCase` in Kysely code
 
-```
-src/server/db/repositories/
-├── base.ts              # BaseRepository interface and Repository class
-├── index.ts             # Exports all repos and createRepos factory
-├── user.repo.ts         # UserRepository
-└── [model].repo.ts     # TodoItemRepository
-```
+## Repository Files
 
-### Available Repositories
+- Base implementation: `src/server/db/repositories/base.ts`
+- Factory: `src/server/db/repositories/index.ts`
 
-- `repos.user`: User table operations
-- `repos.[model]`: Model table operations
+Current live repos:
 
-### BaseRepository Methods
+- `repos.user`
+- `repos.todoItem`
 
-- `find<T>(conditions?)` - Find multiple records
-- `findSelect<T, K>(columns, conditions?)` - Find records with specific columns only
-- `findById(id)` - Find record by ID
-- `findByIdOrFail(id)` - Find record by ID or throw `NotFoundError`
-- `findOne<T>(conditions)` - Find single record matching conditions
-- `findOneOrFail<T>(conditions)` - Find single record or throw `NotFoundError`
-- `findAll()` - Get all records
-- `findPaginated(page, pageSize, conditions?)` - Paginated results with metadata (properly applies limit/offset)
-- `count<T>(conditions?)` - Count records
-- `exists(id)` - Check if record exists by ID (optimized with SELECT 1 LIMIT 1)
-- `existsBy<T>(conditions)` - Check if any record matches conditions (optimized)
-- `deleteById(id)` - Delete by ID
-- `deleteMany<T>(conditions)` - Delete multiple records
-- `updateById(id, data)` - Update record by ID
-- `updateMany<T>(conditions, data)` - Update multiple records
-- `insertReturn(data)` - Insert single record and return it
-- `insertMany(data[])` - Insert multiple records and return them
-- `upsert(data, conflictColumns, updateData?)` - Insert or update on conflict
+## Base Methods
 
-### Query Conditions
+Use the built-in methods before adding custom repository code:
 
-Repositories support two types of conditions:
+- `find({ where, modify })`
+- `findSelect({ select, where, modify })`
+- `findById(id)`
+- `findByIdOrFail(id)`
+- `findOne({ where, modify })`
+- `findPaginated({ page, pageSize, where, modify })`
+- `count(where)`
+- `exists(id)`
+- `existsBy(where)`
+- `insertReturn(data)`
+- `insertMany(data)`
+- `updateById({ id, data })`
+- `updateMany({ where, data })`
+- `deleteById(id)`
+- `deleteMany(where)`
+- `upsert({ data, conflictColumns, updateData })`
 
-1. **Simple object conditions** (partial matches):
+## Query Patterns
 
-```typescript
-// Simple equality conditions
-const users = await repos.user.find({ email: "test@test.com", role: "admin" });
-const todos = await repos.todoItem.find({ userId: "user-id", completed: null });
-```
+Simple equality:
 
-2. **Query builder function** (complex queries with full type inference):
-
-```typescript
-// Complex conditions with full Kysely API
-const users = await repos.user.find((qb) =>
-  qb
-    .where("email", "=", "test@test.com")
-    .where("role", "=", "admin")
-    .orderBy("createdAt", "desc")
-    .limit(10),
-);
-
-// Paginated with ordering
-const result = await repos.user.findPaginated(page, pageSize, (qb) =>
-  qb.orderBy("createdAt", "desc"),
-);
-```
-
-### Creating New Repositories
-
-1. Create new file in `src/server/db/repositories/[name].repo.ts`
-2. Extend Repository base class with table name
-3. Add domain-specific methods (only if complex/reusable)
-4. Register in `createRepos()` factory in `index.ts`
-
-### Repository Design Guidelines
-
-- **DON'T** create simple one-line wrapper methods like `findByUser`, `findByCategoryId` in concrete repositories
-- **DON'T** pollute repositories with methods that just call **BaseRepository Methods** with simple arguments
-- **DON'T** put methods in UserRepository. If the main subject is Product - put them in ProductRepository
-- **DO** only create methods in repositories when:
-  - Implementation is more than 3 lines of logic
-  - Logic is complex or involves multiple operations
-  - OR Logic is reused in multiple places
-
-### Cross-Repository Access
-
-Repositories can access other repositories via `this.repos` for complex operations that span multiple tables:
-
-````typescript
-// src/lib/db/repositories/order.repo.ts
-export class OrderRepository extends Repository<"order"> {
-  async createOrderWithItems(
-    orderData: OrderInsert,
-    items: OrderItemInsert[],
-  ) {
-    // Access other repositories via this.repos
-    const order = await this.insertReturn(orderData);
-    if (!order) throw new Error("Failed to create order");
-
-    // Use another repository
-    const orderItems = await (this.repos.orderItem as OrderItemRepository)
-      .insertMany(items.map((item) => ({ ...item, orderId: order.id })));
-
-    return { order, orderItems };
-  }
-}
-
-**Bad Example (don't do this):**
-
-```typescript
-// src/lib/db/repositories/todoItem.repo.ts
-export class TodoItemRepository extends Repository<"todoItem"> {
-  async findByUserId(userId: string) {
-    return this.find({ userId }); // Too simple, just use find directly
-  }
-
-  async findByCategoryId(categoryId: string) {
-    return this.find({ categoryId }); // Too simple, just use find directly
-  }
-}
-
-// Usage - just use find directly instead
-const todos = await repos.todoItem.find({ userId: "123" });
-````
-
-**Good Example (do this):**
-
-```typescript
-// src/lib/db/repositories/product.repo.ts
-import type { DB } from "../init";
-import { Repository } from "./base";
-
-export class ProductRepository extends Repository<"product"> {
-  async searchByKeyword(keyword: string) {
-    return this.find((qb) =>
-      qb
-        .where("name", "ilike", `%${keyword}%`)
-        .orWhere("description", "ilike", `%${keyword}%`)
-        .orderBy("popularity", "desc")
-        .limit(50),
-    );
-  }
-
-  async findAvailableProducts(filters: ProductFilters) {
-    // Complex logic worth extracting
-    return this.find((qb) => {
-      let query = qb.where("stock", ">", 0);
-      if (filters.minPrice) {
-        query = query.where("price", ">=", filters.minPrice);
-      }
-      if (filters.maxPrice) {
-        query = query.where("price", "<=", filters.maxPrice);
-      }
-      return query.orderBy("createdAt", "desc");
-    });
-  }
-}
-```
-
-Then register in `index.ts`:
-
-```typescript
-import { ProductRepository } from "./product.repo";
-
-export function createRepos(db: DB) {
-  return {
-    user: new UserRepository(db),
-    todoCategory: new TodoCategoryRepository(db),
-    todoItem: new TodoItemRepository(db),
-    product: new ProductRepository(db), // Add new repo
-  };
-}
-```
-
-### Using Repositories Correctly
-
-```typescript
-// ✅ Good - use base methods directly for simple queries
-const todos = await repos.todoItem.find({ userId: "123" });
-const user = await repos.user.findById("456");
-const category = await repos.todoCategory.findOne({ name: "Work" });
-
-// ✅ Good - use query builder for complex conditions
-const recentTodos = await repos.todoItem.find((qb) =>
-  qb
-    .where("userId", "=", "123")
-    .where("createdAt", ">", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
-    .orderBy("createdAt", "desc"),
-);
-
-// ✅ Good - use custom method for reusable complex logic
-const availableProducts = await repos.product.findAvailableProducts({
-  minPrice: 10,
-  maxPrice: 100,
+```ts
+await repos.todoItem.find({
+  where: { userId: context.user.id },
 });
-
-// ✅ Good - use findSelect for fetching specific columns only
-const userIds = await repos.user.findSelect(["id", "email"], { role: "admin" });
-
-// ✅ Good - use findByIdOrFail/findOneOrFail when record must exist
-import { NotFoundError } from "~/lib/db/repositories";
-
-try {
-  const user = await repos.user.findByIdOrFail(userId);
-  const admin = await repos.user.findOneOrFail({ role: "admin" });
-} catch (error) {
-  if (error instanceof NotFoundError) {
-    // Handle not found - return 404, show error, etc.
-  }
-}
-
-// ✅ Good - use upsert for insert-or-update operations
-const setting = await repos.userSetting.upsert(
-  { userId: "123", key: "theme", value: "dark" },
-  ["userId", "key"], // conflict columns
-  { value: "dark" }, // optional: only update specific fields
-);
 ```
 
-### Repository Context Access
+Complex query builder:
 
-Repositories are available in RPC handlers via `context.repos`:
+```ts
+await repos.user.find({
+  modify: (qb) => qb.orderBy("createdAt", "desc").limit(20),
+});
+```
 
-- `baseProcedure`, `authedProcedure`, `adminProcedure` all have access to `repos`
-- Each repository is type-safe with full autocomplete
-- All database operations should go through repositories, not direct Kysely queries
+## When to Add a Custom Repository Class
+
+Add one only when the logic is actually reusable or complex.
+
+- Good: search logic, multi-step transaction helpers, reusable cross-table workflow
+- Bad: `findByUserId(userId) { return this.find({ where: { userId } }) }`
+
+If you add a new repository:
+
+1. Create `src/server/db/repositories/<name>.repo.ts`
+2. Register it in `src/server/db/repositories/index.ts`
+3. Add its table type to `src/server/db/schema/index.ts`
+
+## Migration Workflow
+
+1. Create the migration in `src/server/db/migrations/`
+2. Add or update schema types in `src/server/db/schema/`
+3. Wire repository access if needed
+4. Update `docs/db-schema.md`
+
+## Practical Rule
+
+Most handlers in this repo should stay simple:
+
+- validate input
+- load via `context.repos`
+- enforce auth/ownership
+- write changes
+- return serialized data

@@ -1,143 +1,86 @@
 # TanStack Start Routing Guide
 
-**For Agents**: Read this doc when adding new pages, working with route guards, or data loading.
+Compact reference for route work.
 
----
+## Live Route Shape
 
-This project uses **TanStack Start** (with **TanStack Router**) for type-safe, file-based routing. The routing system handles both Server-Side Rendering (SSR) and Client-Side Rendering (SPA) transitions seamlessly.
-
-## Project Route Structure
-
-The routes are located in `src/routes/`. The file structure directly maps to the URL paths, with some special conventions.
-
-```
+```text
 src/routes/
-├── __root.tsx              # Root route (Shell, Context Provider, HTML entry)
-├── index.tsx               # Home page (/)
-├── (auth)/                 # Route Group: Auth pages (pathless)
-│   ├── route.tsx           # Layout for auth pages
-│   ├── login.tsx           # /login
-│   └── signup.tsx          # /signup
-├── (user)/                 # Route Group: Protected User pages (pathless)
-│   ├── route.tsx           # Auth Guard & Layout
-│   ├── app/                # /app sub-routes
-│   └── settings/           # /settings sub-routes
-├── admin/                  # Admin pages (path prefix: /admin)
-│   ├── -components/        # Added prefix "-" to skip the children route in file-routing
-│   ├── route.tsx           # Admin Layout
-│   └── index.tsx           # /admin
-└── api/                    # API Routes
+  __root.tsx
+  index.tsx
+  (auth)/
+    route.tsx
+    login.tsx
+    signup.tsx
+    -auth/*
+  (user)/
+    route.tsx
+    app/
+      route.tsx
+      index.tsx
+      todo.tsx
+    settings/
+      route.tsx
+      index.tsx
+  admin/
+    route.tsx
+    index.tsx
+    users.tsx
+    -users/*
+  api/
+    auth.$.ts
+    rpc.$.ts
+    upload.$.ts
 ```
 
 ## Route Groups
 
-Directories wrapped in parentheses `(name)` are **Route Groups**.
+- Folders in parentheses do not affect the URL.
+- `(auth)` groups public auth pages.
+- `(user)` groups authenticated pages.
 
-- They **do not** add segments to the URL path.
-- They are useful for organizing routes and applying shared layouts or logic (like auth guards).
+Examples:
 
-**Examples:**
+- `src/routes/(auth)/login.tsx` -> `/login`
+- `src/routes/(user)/app/todo.tsx` -> `/app/todo`
 
-- `src/routes/(auth)/login.tsx` -> URL: `/login`
-- `src/routes/(user)/app/index.tsx` -> URL: `/app`
+## Root Route
 
-## Protected Routes & Auth Guards
+`src/routes/__root.tsx` owns:
 
-We use the `(user)` route group to protect routes that require authentication. The protection logic is implemented in `src/routes/(user)/route.tsx`.
+- shell prefetch
+- auth prefetch
+- top-level providers
+- HTML shell
 
-### `(user)/route.tsx` Implementation
+Keep it focused on app-wide concerns.
 
-This layout route checks if the user is logged in before loading any child route.
+## Protected Layouts
 
-```tsx
-// src/routes/(user)/route.tsx
-export const Route = createFileRoute("/(user)")({
-  component: UserLayout,
-  beforeLoad: async ({ context }) => {
-    // 1. Ensure user data is available
-    const user = await context.queryClient.ensureQueryData({
-      ...authQueryOptions(),
-      revalidateIfStale: true,
-    });
+Use `beforeLoad` in layout routes:
 
-    // 2. Redirect if not authenticated
-    if (!user) {
-      throw redirect({ to: "/login" });
-    }
+- `src/routes/(user)/route.tsx` enforces login
+- `src/routes/admin/route.tsx` enforces login + admin role
 
-    // 3. Return user context to child routes
-    return { user };
-  },
-  ssr: "data-only", // Only fetch data on server, render on client
-});
-```
+Both return the resolved user so child routes get non-null typing.
 
-## Data Loading Logic
+## Data Loading Pattern
 
-### 1. Root Shell (SSR)
+1. Validate search params in the route.
+2. Derive `loaderDeps` if query params affect the fetch.
+3. Prefetch with `context.queryClient.prefetchQuery(...)`.
+4. In the component, read the same query with `useSuspenseQuery(...)`.
 
-The `src/routes/__root.tsx` is responsible for fetching global "Shell" data on the server.
+## Layout Rule
 
-- **`beforeLoad`**: Fetches shell config (app settings, public info) using `ensureQueryData`.
-- **Prefetching**: Intentionally requests user data with `prefetchQuery` but _does not await it_. This allows the page to load instantly while user data streams in or loads on the client.
-
-### 2. Route Loaders
-
-Individual routes can prefetch their specific data.
-
-```tsx
-export const Route = createFileRoute("/admin/users")({
-  loader: async ({ context, deps }) => {
-    // Prefetch data for the route
-    context.queryClient.prefetchQuery(
-      orpc.user.listUsers.queryOptions({ page: deps.page }),
-    );
-    // Note: We often don't return data here, just prefetch into the QueryClient
-  },
-});
-```
-
-### 3. Client Components
-
-Components use `useSuspenseQuery` to consume the data. If the data was prefetched (SSR or Loader), it renders immediately. If not, it suspends.
-
-```tsx
-function UsersPage() {
-  // Reads from the cache populated by the loader
-  const { data } = useSuspenseQuery(orpc.user.listUsers.queryOptions(...));
-  // ...
-}
-```
-
-## Layouts
-
-Directory-based `route.tsx` files serve as Layouts.
-
-- They render an `<Outlet />` where child routes will appear.
-- They can provide UI shells (Sidebars, Navbars).
-- They can enforce data requirements or context.
-
-**Example: User Layout** (`src/routes/(user)/route.tsx`)
-
-```tsx
-function UserLayout() {
-  return (
-    <>
-      <Outlet />
-      <ShellProgressBar /> {/* Shows loading bar for navigations */}
-    </>
-  );
-}
-```
+Use `route.tsx` files for shared shells and guards. Keep page files focused on feature UI.
 
 ## API Routes
 
-TanStack Start also supports API routes in `src/routes/api/`.
-These allow defining server-side endpoints directly.
+Current API routes:
 
-## Key Takeaways
+- `src/routes/api/auth.$.ts`
+- `src/routes/api/rpc.$.ts`
+- `src/routes/api/upload.$.ts`
 
-1.  **File-System Based**: Use folders/files to define URLs.
-2.  **Type-Safe**: Use `createFileRoute` for full type inference.
-3.  **SSR & Hydration**: Logic in `beforeLoad` runs on the server first.
-4.  **Context**: Use `context` in loaders to access `queryClient` and `rpcClient`.
+Do not add server endpoints outside the route tree unless there is a clear runtime reason.
