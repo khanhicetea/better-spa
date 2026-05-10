@@ -13,7 +13,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile --config.allow-builds=esbuild,core-js
+RUN pnpm install --frozen-lockfile --ignore-scripts=false
 # For buildkit cache
 # RUN --mount=type=cache,id=pnpm-prod,target=/pnpm/store pnpm install --frozen-lockfile
 
