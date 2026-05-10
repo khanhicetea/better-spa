@@ -13,7 +13,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN pnpm approve-builds esbuild core-js && pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --frozen-lockfile --ignore-scripts
 # For buildkit cache
 # RUN --mount=type=cache,id=pnpm-prod,target=/pnpm/store pnpm install --frozen-lockfile
 
@@ -30,7 +30,6 @@ ENV NODE_ENV=production
 
 # Build both server and worker
 RUN BUILD_TARGET=node-server pnpm run build
-RUN pnpm run worker:build
 
 # Production image
 FROM node:24-slim as runner
