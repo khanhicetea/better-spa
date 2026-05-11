@@ -54,6 +54,7 @@ Agent-only working reference for this repo. Read this first, then open only the 
 - Root shell data is loaded in `src/routes/__root.tsx` via `shellQueryOptions()`.
 - Auth state is read through `authQueryOptions()` and enforced in route-group `beforeLoad` hooks.
 - Client components should use `orpc.<domain>.<action>.queryOptions()` or `.mutationOptions()`.
+- Prefer TanStack Query (`useQuery` / `useMutation`) over manual `useState` + `useEffect` for any server or async state. Only use `useState` for purely local UI state.
 - Only pass serialized values into RPC inputs.
 - Route-adjacent support modules live in sibling folders prefixed with `-`.
 

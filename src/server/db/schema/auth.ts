@@ -16,6 +16,8 @@ export interface UserTable {
   banned: boolean | null;
   banReason: string | null;
   banExpires: Date | null;
+  timezone: string | null;
+  username: string | null;
   createdAt: ColumnType<Date, Date | undefined, never>;
   updatedAt: Date;
 }

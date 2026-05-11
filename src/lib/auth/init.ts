@@ -17,7 +17,7 @@ export const getAuthConfig = createServerOnlyFn((db: DB) =>
       type: "postgres",
       casing: "camel",
     },
-    plugins: [admin(getAdminPluginConfig()),tanstackStartCookies(),],
+    plugins: [admin(getAdminPluginConfig()), tanstackStartCookies()],
 
     session: {
       cookieCache: {
@@ -43,6 +43,20 @@ export const getAuthConfig = createServerOnlyFn((db: DB) =>
             },
           }
         : {}),
+    },
+
+    user: {
+      additionalFields: {
+        timezone: {
+          type: "string",
+          required: false,
+        },
+        username: {
+          type: "string",
+          required: false,
+          unique: true,
+        },
+      },
     },
 
     emailAndPassword: {

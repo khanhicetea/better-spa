@@ -2,7 +2,7 @@
 
 Current database snapshot for agent use.
 
-Last updated: 2026-04-30
+Last updated: 2026-05-11
 
 ## Global Rules
 
@@ -29,6 +29,8 @@ Key columns:
 - `banned`
 - `ban_reason`
 - `ban_expires`
+- `timezone`
+- `username`
 - `created_at`
 - `updated_at`
 
@@ -36,6 +38,7 @@ Notes:
 
 - `email` is indexed
 - `role` is nullable
+- `username` is unique and indexed, may be null until set
 
 ### `session`
 

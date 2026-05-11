@@ -9,6 +9,7 @@ export const rpcRouter = {
   user: {
     list: user.list,
     get: user.get,
+    updateProfile: user.updateProfile,
   },
   todo: {
     list: todo.list,
