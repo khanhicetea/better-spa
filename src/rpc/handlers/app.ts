@@ -4,7 +4,7 @@ import { baseProcedure } from "../base";
 export const shellData = baseProcedure.handler(async ({ context }) => {
   return {
     app: {
-      name: "Shell SPA",
+      name: "Better SPA",
       version: "1.0.0",
       environment:
         process.env.NODE_ENV === "production" ? "production" : "development",

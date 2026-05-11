@@ -15,7 +15,7 @@ export function AuthShell({ title, subtitle, children }: AuthShellProps) {
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Rocket className="size-5" />
           </div>
-          <span className="sr-only">Shell SPA</span>
+          <span className="sr-only">Better SPA</span>
         </Link>
         <h1 className="text-xl font-bold">{title}</h1>
         <p className="text-sm text-muted-foreground">{subtitle}</p>

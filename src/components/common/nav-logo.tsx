@@ -22,7 +22,7 @@ export function NavLogo() {
             <RocketIcon className="size-4" />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-medium">SHELL SPA</span>
+            <span className="truncate font-medium">BETTER SPA</span>
             <span className="truncate text-xs">Good balance app</span>
           </div>
         </SidebarMenuButton>

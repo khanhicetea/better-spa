@@ -1,12 +1,12 @@
-# Shell SPA Boilerplate
+# Better SPA
 
-A minimal starter template that implements the **Shell SPA** pattern - the perfect balance between SSR and SPA for optimal UX and DX.
+A minimal starter template that implements the **Better SPA** pattern - the perfect balance between SSR and SPA for optimal UX and DX.
 
 ## 🎯 Philosophy
 
 > "The good balance between SSR and SPA is the best stack for UX and DX. Only SSR a shell for SPA (server rendering should check auth, and populate app settings + user settings and pass it into the shell). Everything else, user can wait for first-load."
 
-## 🚀 Shell SPA Pattern
+## 🚀 Better SPA Pattern
 
 ### What gets SSR'd (Server-Side Rendered)
 
@@ -55,7 +55,7 @@ A minimal starter template that implements the **Shell SPA** pattern - the perfe
 ## 📁 Project Structure
 
 ```
-shell-spa/
+better-spa/
 ├── src/
 │   ├── components/          # Reusable UI components
 │   ├── lib/                 # Core utilities
@@ -98,7 +98,7 @@ The shell data structure is defined in `src/rpc/handlers/app.ts`:
 export const shellData = baseProcedure.handler(async ({ context }) => {
   return {
     app: {
-      name: "Shell SPA",
+      name: "Better SPA",
       version: "1.0.0",
       environment: process.env.NODE_ENV === "production" ? "production" : "development",
       theme: getCookie("theme") || "system",
@@ -201,8 +201,8 @@ beforeLoad: async ({ context }) => {
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/shell-spa.git
-cd shell-spa
+git clone https://github.com/your-repo/better-spa.git
+cd better-spa
 
 # Install dependencies
 pnpm install

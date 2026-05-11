@@ -65,7 +65,7 @@ function SignupForm() {
 
   return (
     <AuthShell
-      title="Create your Shell SPA account"
+      title="Create your Better SPA account"
       subtitle="Start with the production baseline."
     >
       <form onSubmit={handleSubmit}>

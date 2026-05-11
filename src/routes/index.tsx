@@ -41,7 +41,7 @@ function HomePage() {
           <div className="grid gap-8 md:grid-cols-[1.6fr_1fr] md:items-end">
             <div className="space-y-5">
               <p className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                Shell SPA Production
+                Better SPA Production
               </p>
               <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
                 Build on a clean starter that is ready for real product work.

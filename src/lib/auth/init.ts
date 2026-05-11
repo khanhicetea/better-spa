@@ -17,7 +17,7 @@ export const getAuthConfig = createServerOnlyFn((db: DB) =>
       type: "postgres",
       casing: "camel",
     },
-    plugins: [tanstackStartCookies(), admin(getAdminPluginConfig())],
+    plugins: [admin(getAdminPluginConfig()),tanstackStartCookies(),],
 
     session: {
       cookieCache: {

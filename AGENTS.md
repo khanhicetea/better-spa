@@ -86,7 +86,7 @@ pnpm auth:generate
 
 ## Doc Map
 
-- `docs/shell-spa-architecture.md`: route and shell model
+- `docs/better-spa-architecture.md`: route and shell model
 - `docs/rpc-architecture.md`: oRPC handler and client patterns
 - `docs/database-repository.md`: schema and repository usage
 - `docs/tanstack-start.md`: route groups, loaders, API routes

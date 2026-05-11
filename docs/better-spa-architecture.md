@@ -1,4 +1,4 @@
-# Shell SPA Architecture
+# Better SPA Architecture
 
 Compact reference for how this app is structured today.
 
@@ -36,7 +36,7 @@ Compact reference for how this app is structured today.
 
 - `/app/*` opts in at `src/routes/(user)/app/route.tsx`
 - `/admin/*` opts in at `src/routes/admin/route.tsx`
-- Reuse `preloadShellSpa()` from `src/lib/router/shell-spa.ts` if another prefix or route group should behave the same way later
+- Reuse `preloadBetterSpa()` from `src/lib/router/better-spa.ts` if another prefix or route group should behave the same way later
 
 ## Auth Boundaries
 

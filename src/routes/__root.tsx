@@ -32,7 +32,7 @@ export const Route = createRootRouteWithContext<{
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "Shell SPA",
+        title: "Better SPA",
       },
       {
         name: "description",

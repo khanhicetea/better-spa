@@ -1,5 +1,5 @@
 {
-  "name": "shell-spa",
+  "name": "better-spa",
   "private": true,
   "type": "module",
   "description": "A minimal shell SPA boilerplate with SSR shell for auth and client-side SPA for everything else",

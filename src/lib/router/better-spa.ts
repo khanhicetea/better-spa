@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { authQueryOptions, shellQueryOptions } from "@/lib/queries";
 
-export async function preloadShellSpa(queryClient: QueryClient) {
+export async function preloadBetterSpa(queryClient: QueryClient) {
   await queryClient.ensureQueryData(shellQueryOptions());
 
   queryClient.prefetchQuery(authQueryOptions()).catch(() => {
