@@ -28,8 +28,9 @@ COPY . .
 # Set environment variables for build
 ENV NODE_ENV=production
 
-# Build both server and worker
+# Build both server and migration runner bundle
 RUN BUILD_TARGET=node-server pnpm run build
+RUN pnpm run build:migrate
 
 # Production image
 FROM node:24-slim as runner
@@ -40,11 +41,13 @@ ENV NODE_ENV=production
 ENV NITRO_PRESET=node-server
 ENV HOST=0.0.0.0
 
-# Copy built application (both server and worker)
+# Copy built application and migration bundle
 COPY --from=builder --chown=node:node /app/.output ./.output
+COPY --from=builder --chown=node:node /app/dist/migrate ./dist/migrate
 
 # Expose port (for server process)
 EXPOSE 3000
 
-# Default command (server)
+# Run migrations before starting the app server
+# CMD ["sh", "-c", "node ./dist/migrate/index.mjs && node ./.output/server/index.mjs"]
 CMD ["node", ".output/server/index.mjs"]

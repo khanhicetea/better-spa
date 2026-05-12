@@ -13,9 +13,9 @@
     "target": "ES2022",
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
-
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@src/*": ["./src/*"]
     },
     "noEmit": true,
     "strictNullChecks": true
