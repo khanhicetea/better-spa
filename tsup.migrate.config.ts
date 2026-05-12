@@ -21,6 +21,7 @@ export default defineConfig({
   outDir: "dist/migrate",
   target: "node24",
   platform: "node",
+  noExternal: [/.*/],
   splitting: false,
   sourcemap: false,
   clean: true,
