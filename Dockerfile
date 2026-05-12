@@ -33,7 +33,7 @@ RUN BUILD_TARGET=node-server pnpm run build
 RUN pnpm run build:migrate
 
 # Production image
-FROM node:24-slim as runner
+FROM base as runner
 WORKDIR /app
 
 # Set production environment
@@ -41,13 +41,17 @@ ENV NODE_ENV=production
 ENV NITRO_PRESET=node-server
 ENV HOST=0.0.0.0
 
+# Install production dependencies for migration runtime
+#COPY package.json pnpm-lock.yaml ./
+#RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+
 # Copy built application and migration bundle
 COPY --from=builder --chown=node:node /app/.output ./.output
-COPY --from=builder --chown=node:node /app/dist/migrate ./migrate
+COPY --from=builder --chown=node:node /app/dist/migrate ./.output/server/migrate
 
 # Expose port (for server process)
 EXPOSE 3000
 
 # Run migrations before starting the app server
-# CMD ["sh", "-c", "node ./dist/migrate/index.mjs && node ./.output/server/index.mjs"]
+# CMD ["sh", "-c", "node ./migrate/index.mjs && node ./.output/server/index.mjs"]
 CMD ["node", ".output/server/index.mjs"]
