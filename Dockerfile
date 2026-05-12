@@ -43,7 +43,7 @@ ENV HOST=0.0.0.0
 
 # Copy built application and migration bundle
 COPY --from=builder --chown=node:node /app/.output ./.output
-COPY --from=builder --chown=node:node /app/.output/migrate ./dist/migrate
+COPY --from=builder --chown=node:node /app/dist/migrate ./migrate
 
 # Expose port (for server process)
 EXPOSE 3000
