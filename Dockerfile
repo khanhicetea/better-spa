@@ -5,12 +5,15 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 WORKDIR /app
 
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
-
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile --ignore-scripts
@@ -44,7 +47,6 @@ ENV HOST=0.0.0.0
 # Install production dependencies for migration runtime
 #COPY package.json pnpm-lock.yaml ./
 #RUN pnpm install --prod --frozen-lockfile --ignore-scripts
-RUN pnpm add pg kysely
 
 # Copy built application and migration bundle
 COPY --from=builder --chown=node:node /app/.output ./.output
