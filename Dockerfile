@@ -42,8 +42,8 @@ ENV NITRO_PRESET=node-server
 ENV HOST=0.0.0.0
 
 # Install production dependencies for migration runtime
-#COPY package.json pnpm-lock.yaml ./
-#RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 # Copy built application and migration bundle
 COPY --from=builder --chown=node:node /app/.output ./.output
