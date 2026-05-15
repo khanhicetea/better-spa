@@ -33,8 +33,8 @@ Agent-only working reference for this repo. Read this first, then open only the 
 - Admin auth boundary: `src/routes/admin/route.tsx`
 - RPC client: `src/lib/orpc.ts`
 - Shared query options: `src/lib/queries.ts`
-- RPC procedures: `src/rpc/base.ts`
-- RPC router: `src/rpc/router.ts`
+- RPC procedures: `src/server/rpc/base.ts`
+- RPC router: `src/server/rpc/router.ts`
 - Server context: `src/server/context.ts`
 - Repository base: `src/server/db/repositories/base.ts`
 - DB schema index: `src/server/db/schema/index.ts`

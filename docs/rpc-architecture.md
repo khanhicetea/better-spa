@@ -5,7 +5,7 @@ Compact oRPC reference. This project does **not** use tRPC.
 ## Files
 
 ```text
-src/rpc/
+src/server/rpc/
   base.ts
   middlewares.ts
   router.ts

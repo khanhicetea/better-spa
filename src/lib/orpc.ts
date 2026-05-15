@@ -5,7 +5,7 @@ import type { RouterClient } from "@orpc/server";
 import { createRouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { createIsomorphicFn } from "@tanstack/react-start";
-import { rpcRouter } from "@/rpc/router";
+import { rpcRouter } from "@/server/rpc/router";
 import {
   getCurrentAuth,
   getCurrentDB,

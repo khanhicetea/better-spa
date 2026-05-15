@@ -59,5 +59,3 @@ export async function down(db: Kysely<any>): Promise<void> {
     .columns(["status", "lease_expires_at"])
     .execute();
 }
-
-

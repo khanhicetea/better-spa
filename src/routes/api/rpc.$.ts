@@ -4,7 +4,7 @@ import { BatchHandlerPlugin } from "@orpc/server/plugins";
 import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
 import { tryAuthMiddleware } from "@/lib/middlewares";
-import { rpcRouter } from "@/rpc/router";
+import { rpcRouter } from "@/server/rpc/router";
 import { logger } from "@/server/logger";
 
 const plugins = [

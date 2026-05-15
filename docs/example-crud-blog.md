@@ -44,7 +44,7 @@ If you need reusable complex queries, add `src/server/db/repositories/<domain>.r
 
 ## 4. RPC Handlers
 
-Create `src/rpc/handlers/<domain>.ts` with the usual actions:
+Create `src/server/rpc/handlers/<domain>.ts` with the usual actions:
 
 - `list`
 - `get`
@@ -62,7 +62,7 @@ Typical handler concerns:
 
 ## 5. Router Entry
 
-Register the domain in `src/rpc/router.ts` and choose the client-facing names carefully.
+Register the domain in `src/server/rpc/router.ts` and choose the client-facing names carefully.
 
 Example:
 

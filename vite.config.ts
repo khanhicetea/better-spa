@@ -7,36 +7,36 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig(({ command }) => ({
-    resolve: {
-        tsconfigPaths: true,
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [
+    devtools(),
+    tanstackStart(),
+    // https://tanstack.com/start/latest/docs/framework/react/guide/hosting
+    nitro({
+      preset: process.env.NITRO_PRESET || undefined,
+      ...(command === "build"
+        ? {
+            scanDirs: ["src/nitro"],
+            experimental: {
+              tasks: true,
+              vite: {
+                serverReload: true,
+              },
+            },
+          }
+        : {}),
+    }),
+    babel({
+      presets: [reactCompilerPreset()],
+    }),
+    react(),
+    tailwindcss(),
+  ],
+  build: {
+    rollupOptions: {
+      external: ["pg", "kysely"],
     },
-    plugins: [
-        devtools(),
-        tanstackStart(),
-        // https://tanstack.com/start/latest/docs/framework/react/guide/hosting
-        nitro({
-            preset: process.env.NITRO_PRESET || undefined,
-            ...(command === "build"
-                ? {
-                      scanDirs: ["src/nitro"],
-                      experimental: {
-                          tasks: true,
-                          vite: {
-                              serverReload: true,
-                          },
-                      },
-                  }
-                : {}),
-        }),
-        babel({
-            presets: [reactCompilerPreset()],
-        }),
-        react(),
-        tailwindcss(),
-    ],
-    build: {
-        rollupOptions: {
-            external: ["pg", "kysely"],
-        },
-    },
+  },
 }));

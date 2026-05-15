@@ -1,6 +1,6 @@
 import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import { rpcClient } from "@/lib/orpc";
-import type { Outputs } from "@/rpc/types";
+import type { Outputs } from "@/server/rpc/types";
 
 export const QUERY_KEYS = {
   shell: ["shell"] as const,

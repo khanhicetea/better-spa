@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { orpc } from "@/lib/orpc";
-import type { Outputs } from "@/rpc/types";
+import type { Outputs } from "@/server/rpc/types";
 
 type TodoItem = Outputs["todo"]["list"][number];
 
