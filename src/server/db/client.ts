@@ -62,11 +62,19 @@ export const createQueryLoggingPlugin = () => new QueryLoggingPlugin();
 // DB client factory
 // ---------------------------------------------------------------------------
 
-export const getDatabasePooling = createServerOnlyFn((connectionString: string) => {
+declare global {
+  // eslint-disable-next-line no-var
+  var __db: Kysely<Database> | undefined;
+}
+
+const MAX_CONNECTIONS = parseInt(process.env.DATABASE_MAX_CONNECTIONS || "2", 10);
+
+export const getDatabasePooling = (connectionString: string) => {
   const pool = new Pool({
     connectionString,
-    max: parseInt(process.env.DATABASE_MAX_CONNECTIONS || "2", 10),
+    max: MAX_CONNECTIONS,
   });
+
   return new Kysely<Database>({
     dialect: new PostgresDialect({ pool }),
     plugins: [
@@ -76,10 +84,17 @@ export const getDatabasePooling = createServerOnlyFn((connectionString: string) 
       createQueryLoggingPlugin(),
     ],
   });
-});
+};
 
 export const getDatabase = createServerOnlyFn((connectionString: string) => {
-  return getDatabasePooling(connectionString);
+  if (globalThis.__db) {
+    return globalThis.__db;
+  }
+
+  const db = getDatabasePooling(connectionString);
+  globalThis.__db = db;
+
+  return db;
 });
 
 export type DB = ReturnType<typeof getDatabase>;
