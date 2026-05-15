@@ -5,63 +5,59 @@ import { getAuthConfig } from "@/lib/auth/server";
 import { getDatabase } from "@/server/db/client";
 import { createRepos } from "@/server/db/repositories";
 import { logger } from "@/server/logger";
-import { workerCtx } from "./context";
+import { requestStorage } from "./context";
+
+/**
+ * Build a dev-friendly `waitUntil` that drains promises after the response.
+ * In production runtimes the native `waitUntil` on the request object is used instead.
+ */
+function createWaitUntil(request: Request) {
+  const nativeWaitUntil = (request as any).waitUntil;
+  if (nativeWaitUntil) {
+    return {
+      waitUntil: (p: Promise<unknown>) => nativeWaitUntil.call(request, p),
+      drain: undefined,
+    };
+  }
+
+  const pool: Promise<unknown>[] = [];
+  return {
+    waitUntil: (p: Promise<unknown>) => {
+      pool.push(
+        p.catch((error) => {
+          logger.error("waitUntil promise failed", { error });
+        }),
+      );
+    },
+    drain: () => {
+      if (pool.length === 0) return;
+      Promise.allSettled(pool).then((results) => {
+        const failed = results.filter((r) => r.status === "rejected");
+        if (failed.length > 0) {
+          logger.error("waitUntil promises failed", { failedCount: failed.length });
+        }
+      });
+    },
+  };
+}
 
 export function createNodeHandler(serverEntry: ServerEntry) {
-  // Singleton DB, Auth, Repos
+  // Singleton DB, Auth, Repos — created once at startup
   const db = getDatabase(env.DATABASE_URL);
   const auth = getAuthConfig(db);
   const repos = createRepos(db);
 
   return {
-    async fetch(request: Request, opts?: RequestOptions<undefined>) {
-      const session = await auth.api.getSession({
-        headers: request.headers,
-      });
+    async fetch(request: Request, _opts?: RequestOptions<undefined>) {
+      const session = await auth.api.getSession({ headers: request.headers });
+      const { waitUntil, drain } = createWaitUntil(request);
 
-      // Check if request has native waitUntil (production serverless runtime)
-      const nativeWaitUntil = (request as any).waitUntil;
+      const ctx = { headers: request.headers, db, auth, session, repos, waitUntil };
 
-      // Fallback for development: promise pool
-      const promisePool: Promise<unknown>[] = [];
-
-      const waitUntil = nativeWaitUntil
-        ? (promise: Promise<unknown>) => nativeWaitUntil.call(request, promise)
-        : (promise: Promise<unknown>) => {
-            promisePool.push(
-              promise.catch((error) => {
-                logger.error("waitUntil promise failed", { error });
-              }),
-            );
-          };
-
-      const reqCtx = {
-        headers: request.headers,
-        db,
-        auth,
-        session,
-        repos,
-        waitUntil,
-      };
-
-      return workerCtx.run(reqCtx, async () => {
+      return requestStorage.run(ctx, async () => {
         try {
-          const response = await serverEntry.fetch(request, {
-            context: undefined,
-          });
-
-          // In development (no native waitUntil), wait for all promises after response
-          if (!nativeWaitUntil && promisePool.length > 0) {
-            Promise.allSettled(promisePool).then((results) => {
-              const failed = results.filter((r) => r.status === "rejected");
-              if (failed.length > 0) {
-                logger.error("waitUntil promises failed", {
-                  failedCount: failed.length,
-                });
-              }
-            });
-          }
-
+          const response = await serverEntry.fetch(request, { context: undefined });
+          drain?.();
           return response;
         } catch (error) {
           logger.error("Node server request failed", { error });

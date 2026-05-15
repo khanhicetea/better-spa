@@ -1,47 +1,31 @@
 import { redirect } from "@tanstack/react-router";
 import { createMiddleware } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
-import {
-  getCurrentAuth,
-  getCurrentDB,
-  getCurrentRepos,
-  getCurrentSession,
-  getWaitUntil,
-} from "@/server/context";
+import { getRequestContext } from "@/server/context";
 
-export const dbMiddleware = createMiddleware().server(async ({ next }) => {
-  const db = getCurrentDB();
-  return next({ context: { db } });
+/**
+ * Injects the full request context (db, auth, repos, session, waitUntil)
+ * into the TanStack middleware chain in a single step.
+ */
+export const requestContextMiddleware = createMiddleware().server(async ({ next, request }) => {
+  const ctx = getRequestContext();
+  return next({
+    context: {
+      db: ctx.db,
+      auth: ctx.auth,
+      repos: ctx.repos,
+      session: ctx.session,
+      headers: request.headers,
+      waitUntil: ctx.waitUntil,
+    },
+  });
 });
-
-export const reposMiddleware = createMiddleware()
-  .middleware([dbMiddleware])
-  .server(async ({ next }) => {
-    const repos = getCurrentRepos();
-    return next({ context: { repos } });
-  });
-
-export const betterAuthMiddleware = createMiddleware()
-  .middleware([reposMiddleware])
-  .server(async ({ next }) => {
-    const auth = getCurrentAuth();
-    return next({ context: { auth } });
-  });
-
-export const tryAuthMiddleware = createMiddleware()
-  .middleware([betterAuthMiddleware])
-  .server(async ({ next, request }) => {
-    const headers = request.headers;
-    const session = getCurrentSession();
-    const waitUntil = getWaitUntil();
-    return next({ context: { session, headers, waitUntil } });
-  });
 
 /**
  * Middleware to force authentication on server requests (including server functions), and add the user to the context.
  */
 export const authMiddleware = createMiddleware()
-  .middleware([tryAuthMiddleware])
+  .middleware([requestContextMiddleware])
   .server(async ({ next, context }) => {
     if (!context.session) {
       setResponseStatus(401);

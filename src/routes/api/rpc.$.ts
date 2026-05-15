@@ -3,7 +3,7 @@ import { CompressionPlugin, RPCHandler } from "@orpc/server/fetch";
 import { BatchHandlerPlugin } from "@orpc/server/plugins";
 import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
-import { tryAuthMiddleware } from "@/lib/middlewares";
+import { getRequestContext } from "@/server/context";
 import { rpcRouter } from "@/server/rpc/router";
 import { logger } from "@/server/logger";
 
@@ -52,19 +52,11 @@ const handler = new RPCHandler(rpcRouter, {
 
 export const Route = createFileRoute("/api/rpc/$")({
   server: {
-    middleware: [tryAuthMiddleware],
     handlers: {
-      ANY: async ({ request, context }) => {
+      ANY: async ({ request }) => {
         const { response } = await handler.handle(request, {
           prefix: "/api/rpc",
-          context: {
-            headers: request.headers,
-            session: context.session,
-            db: context.db,
-            auth: context.auth,
-            repos: context.repos,
-            waitUntil: context.waitUntil,
-          },
+          context: getRequestContext(),
         });
 
         return response ?? new Response("Not Found", { status: 404 });

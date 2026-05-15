@@ -13,41 +13,18 @@ export type RequestContext = {
   waitUntil: (promise: Promise<unknown>) => void;
 };
 
-// For Async Local Storage
-export const workerCtx = new AsyncLocalStorage<RequestContext>();
+/**
+ * Async-local request context.
+ * `requestStorage` is the raw ALS instance — only the server handler should call `.run()`.
+ * Everything else should use `getRequestContext()`.
+ */
+export const requestStorage = new AsyncLocalStorage<RequestContext>();
 
-export function getCurrentRequestContext() {
-  const ctx = workerCtx.getStore();
-  if (!ctx) throw new Error("No worker context");
+/**
+ * Return the current per-request context. Throws if called outside a request.
+ */
+export function getRequestContext(): RequestContext {
+  const ctx = requestStorage.getStore();
+  if (!ctx) throw new Error("No request context — are you inside a request handler?");
   return ctx;
-}
-
-export function getRequestHeaders() {
-  const ctx = getCurrentRequestContext();
-  return ctx.headers;
-}
-
-export function getCurrentDB() {
-  const ctx = getCurrentRequestContext();
-  return ctx.db;
-}
-
-export function getCurrentAuth() {
-  const ctx = getCurrentRequestContext();
-  return ctx.auth;
-}
-
-export function getCurrentSession() {
-  const ctx = getCurrentRequestContext();
-  return ctx.session;
-}
-
-export function getCurrentRepos() {
-  const ctx = getCurrentRequestContext();
-  return ctx.repos;
-}
-
-export function getWaitUntil() {
-  const ctx = getCurrentRequestContext();
-  return ctx.waitUntil;
 }

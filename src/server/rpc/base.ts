@@ -1,19 +1,10 @@
 import { os } from "@orpc/server";
 import * as z from "zod";
-import type { ServerAuth, ServerAuthSession } from "@/lib/auth/server";
-import type { DB } from "@/server/db/client";
-import type { Repositories } from "@/server/db/repositories";
+import type { RequestContext } from "@/server/context";
 import { adminMiddleware, authMiddleware, rateLimitMiddleware } from "./middlewares";
 
 export const baseProcedure = os
-  .$context<{
-    headers: Headers;
-    session: ServerAuthSession;
-    db: DB;
-    auth: ServerAuth;
-    repos: Repositories;
-    waitUntil: (promise: Promise<unknown>) => void;
-  }>()
+  .$context<RequestContext>()
   .errors({
     RATE_LIMITED: {
       data: z.object({
