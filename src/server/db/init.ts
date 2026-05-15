@@ -1,3 +1,4 @@
+import "@tanstack/react-start/server-only";
 import { createServerOnlyFn } from "@tanstack/react-start";
 import { CamelCasePlugin, Kysely, PostgresDialect } from "kysely";
 import pg from "pg";

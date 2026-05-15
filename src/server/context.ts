@@ -1,3 +1,4 @@
+import "@tanstack/react-start/server-only";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { ServerAuth, ServerAuthSession } from "@/lib/auth/init";
 import type { DB } from "@/server/db/init";

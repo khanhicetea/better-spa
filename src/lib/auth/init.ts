@@ -1,3 +1,4 @@
+import "@tanstack/react-start/server-only";
 import { createServerOnlyFn } from "@tanstack/react-start";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
