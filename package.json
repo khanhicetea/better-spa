@@ -21,7 +21,7 @@
     "ui": "pnpx shadcn@latest",
     "auth:secret": "pnpx @better-auth/cli@latest secret",
     "auth:generate": "pnpx @better-auth/cli@latest generate --config ./src/lib/auth/auth.ts",
-    "build:migrate": "tsup --config tsup.migrate.config.ts",
+    "build:migrate": "tsup --config ./src/server/db/tsup.migrate.config.ts",
     "migrate:db": "node dist/migrate/index.mjs"
   },
   "dependencies": {
