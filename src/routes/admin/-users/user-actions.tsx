@@ -13,12 +13,7 @@ interface UserActionsProps {
   onUpdated: (message: string) => void;
 }
 
-export function UserActions({
-  user,
-  onBan,
-  onChangePassword,
-  onUpdated,
-}: UserActionsProps) {
+export function UserActions({ user, onBan, onChangePassword, onUpdated }: UserActionsProps) {
   const navigate = useNavigate();
   const [isUnbanning, setIsUnbanning] = useState(false);
 
@@ -49,11 +44,7 @@ export function UserActions({
           Ban
         </Button>
       )}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onChangePassword(user)}
-      >
+      <Button variant="outline" size="sm" onClick={() => onChangePassword(user)}>
         <KeyIcon />
         Password
       </Button>

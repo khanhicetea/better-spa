@@ -11,9 +11,7 @@ export const userColumns: ColumnDef<User>[] = [
     header: ({ table }) => (
       <Checkbox
         checked={table.getIsAllPageRowsSelected()}
-        indeterminate={
-          !table.getIsAllPageRowsSelected() && table.getIsSomePageRowsSelected()
-        }
+        indeterminate={!table.getIsAllPageRowsSelected() && table.getIsSomePageRowsSelected()}
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(value)}
         aria-label="Select all"
       />

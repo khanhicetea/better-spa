@@ -54,14 +54,14 @@ Use the same query options in both places:
 
 ```ts
 loader: async ({ context }) => {
-  context.queryClient.prefetchQuery(orpc.user.list.queryOptions({
-    input: { page: 1 },
-  }));
-}
+  context.queryClient.prefetchQuery(
+    orpc.user.list.queryOptions({
+      input: { page: 1 },
+    }),
+  );
+};
 
-const { data, refetch } = useSuspenseQuery(
-  orpc.user.list.queryOptions({ input: { page } }),
-);
+const { data, refetch } = useSuspenseQuery(orpc.user.list.queryOptions({ input: { page } }));
 ```
 
 ## Mutation Pattern

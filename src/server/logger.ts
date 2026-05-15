@@ -9,12 +9,7 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
 
 function resolveLogLevel(): LogLevel {
   const fromEnv = process.env.LOG_LEVEL?.toLowerCase();
-  if (
-    fromEnv === "debug" ||
-    fromEnv === "info" ||
-    fromEnv === "warn" ||
-    fromEnv === "error"
-  ) {
+  if (fromEnv === "debug" || fromEnv === "info" || fromEnv === "warn" || fromEnv === "error") {
     return fromEnv;
   }
 

@@ -231,6 +231,7 @@ pnpm db studio
 ```
 
 ## JS runtimes:
+
 - NodeJS 24+ runtime : use copy `vite.config.node.ts` into `vite.config.ts`
 - Cloudflare Worker runtime : use copy `vite.config.cf.ts` into `vite.config.ts`
 

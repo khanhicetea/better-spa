@@ -2,35 +2,24 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Shield, Users2 } from "lucide-react";
 import type { ComponentType } from "react";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { orpc } from "@/lib/orpc";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminOverviewPage,
   loader: async ({ context }) => {
-    context.queryClient.prefetchQuery(
-      orpc.user.list.queryOptions({ input: { page: 1 } }),
-    );
+    context.queryClient.prefetchQuery(orpc.user.list.queryOptions({ input: { page: 1 } }));
   },
 });
 
 function AdminOverviewPage() {
-  const { data: usersPage } = useSuspenseQuery(
-    orpc.user.list.queryOptions({ input: { page: 1 } }),
-  );
+  const { data: usersPage } = useSuspenseQuery(orpc.user.list.queryOptions({ input: { page: 1 } }));
 
   return (
     <div className="space-y-4 py-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Admin Overview</h1>
-        <p className="text-sm text-muted-foreground">
-          Quick health check for users.
-        </p>
+        <p className="text-sm text-muted-foreground">Quick health check for users.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -43,9 +32,7 @@ function AdminOverviewPage() {
         <MetricCard
           icon={Shield}
           label="Admins on page"
-          value={String(
-            usersPage.users.filter((user) => user.role === "admin").length,
-          )}
+          value={String(usersPage.users.filter((user) => user.role === "admin").length)}
           description="Based on the current paginated users view"
         />
       </div>

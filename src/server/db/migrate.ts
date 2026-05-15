@@ -1,13 +1,7 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  CamelCasePlugin,
-  FileMigrationProvider,
-  Kysely,
-  Migrator,
-  PostgresDialect,
-} from "kysely";
+import { CamelCasePlugin, FileMigrationProvider, Kysely, Migrator, PostgresDialect } from "kysely";
 import pg from "pg";
 import type { Database } from "@/server/db/schema";
 
@@ -50,9 +44,7 @@ const { error, results } = await migrator.migrateToLatest();
 
 for (const result of results ?? []) {
   if (result.status === "Success") {
-    console.log(
-      `migration "${result.migrationName}" was executed successfully`,
-    );
+    console.log(`migration "${result.migrationName}" was executed successfully`);
   } else if (result.status === "Error") {
     console.error(`migration "${result.migrationName}" failed`);
   }

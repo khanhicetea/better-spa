@@ -1,11 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -33,10 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const profileSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Name is required")
-    .max(100, "Name must be 100 characters or less"),
+  name: z.string().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
   username: z
     .string()
     .min(1, "Username is required")
@@ -59,8 +52,7 @@ export function UpdateProfileCard() {
     defaultValues: {
       name: user?.name ?? "",
       username: user?.username ?? "",
-      timezone:
-        user?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timezone: user?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
     },
   });
 
@@ -174,14 +166,10 @@ export function UpdateProfileCard() {
 
         <CardFooter className="flex flex-col justify-between gap-4 rounded-b-xl border-t bg-sidebar md:flex-row !py-4">
           <p className="text-muted-foreground text-xs md:text-sm text-center md:text-start">
-            Your username must be unique and can only contain letters, numbers,
-            hyphens, and underscores.
+            Your username must be unique and can only contain letters, numbers, hyphens, and
+            underscores.
           </p>
-          <Button
-            type="submit"
-            form="update-profile-form"
-            disabled={updateProfile.isPending}
-          >
+          <Button type="submit" form="update-profile-form" disabled={updateProfile.isPending}>
             {updateProfile.isPending ? "Saving..." : "Save"}
           </Button>
         </CardFooter>

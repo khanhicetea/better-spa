@@ -1,17 +1,6 @@
-import type {
-  ColumnType,
-  Generated,
-  Insertable,
-  Selectable,
-  Updateable,
-} from "kysely";
+import type { ColumnType, Generated, Insertable, Selectable, Updateable } from "kysely";
 
-export type JobStatus =
-  | "pending"
-  | "processing"
-  | "completed"
-  | "failed"
-  | "cancelled";
+export type JobStatus = "pending" | "processing" | "completed" | "failed" | "cancelled";
 
 export enum JobPriority {
   LOW = 0,

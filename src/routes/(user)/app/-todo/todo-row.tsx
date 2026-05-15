@@ -48,9 +48,7 @@ export function TodoRow({ todo, onRefetch }: TodoRowProps) {
   return (
     <div
       className={`flex items-center gap-3 rounded-lg border p-3 transition-all ${
-        isCompleted
-          ? "bg-muted border-border"
-          : "bg-card border-border hover:border-foreground/20"
+        isCompleted ? "bg-muted border-border" : "bg-card border-border hover:border-foreground/20"
       }`}
     >
       <Checkbox
@@ -86,9 +84,7 @@ export function TodoRow({ todo, onRefetch }: TodoRowProps) {
       ) : (
         <p
           className={`flex-1 cursor-pointer text-sm ${
-            isCompleted
-              ? "text-muted-foreground line-through"
-              : "text-foreground"
+            isCompleted ? "text-muted-foreground line-through" : "text-foreground"
           }`}
           onClick={() => setIsEditingContent(true)}
         >

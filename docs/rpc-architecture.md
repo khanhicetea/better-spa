@@ -76,18 +76,18 @@ In loaders, prefetch with the same query options the component will use:
 
 ```ts
 loader: async ({ context }) => {
-  context.queryClient.prefetchQuery(orpc.user.list.queryOptions({
-    input: { page: 1 },
-  }));
-}
+  context.queryClient.prefetchQuery(
+    orpc.user.list.queryOptions({
+      input: { page: 1 },
+    }),
+  );
+};
 ```
 
 In components:
 
 ```ts
-const { data, refetch } = useSuspenseQuery(
-  orpc.user.list.queryOptions({ input: { page } }),
-);
+const { data, refetch } = useSuspenseQuery(orpc.user.list.queryOptions({ input: { page } }));
 
 const mutation = useMutation(
   orpc.todo.create.mutationOptions({

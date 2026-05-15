@@ -18,17 +18,15 @@ export const authMiddleware = os
     return result;
   });
 
-export const adminMiddleware = authMiddleware.concat(
-  async ({ context, next }) => {
-    if (context.user.role !== "admin") {
-      throw new ORPCError("UNAUTHORIZED");
-    }
+export const adminMiddleware = authMiddleware.concat(async ({ context, next }) => {
+  if (context.user.role !== "admin") {
+    throw new ORPCError("UNAUTHORIZED");
+  }
 
-    const result = await next();
+  const result = await next();
 
-    return result;
-  },
-);
+  return result;
+});
 
 /**
  * Rate limiting middleware

@@ -27,11 +27,7 @@ export function NavLogo() {
           </div>
         </SidebarMenuButton>
         <Button className="size-8" variant="ghost" onClick={toggleSidebar}>
-          {open ? (
-            <PanelRightOpen className="size-4" />
-          ) : (
-            <PanelRightClose className="size-4" />
-          )}
+          {open ? <PanelRightOpen className="size-4" /> : <PanelRightClose className="size-4" />}
         </Button>
       </SidebarMenuItem>
     </SidebarMenu>

@@ -6,11 +6,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .createTable("job")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("user_id", "text", (col) =>
-      col
-        .notNull()
-        .references("user.id")
-        .onDelete("cascade")
-        .onUpdate("cascade"),
+      col.notNull().references("user.id").onDelete("cascade").onUpdate("cascade"),
     )
     .addColumn("type", "text", (col) => col.notNull())
     .addColumn("label", "text", (col) => col.notNull())
@@ -22,26 +18,16 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("retry_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_retries", "integer", (col) => col.notNull().defaultTo(3))
     .addColumn("priority", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("run_at", "timestamptz", (col) =>
-      col.notNull().defaultTo(sql`now()`),
-    )
+    .addColumn("run_at", "timestamptz", (col) => col.notNull().defaultTo(sql`now()`))
     .addColumn("lease_owner", "text")
     .addColumn("lease_expires_at", "timestamptz")
     .addColumn("started_at", "timestamptz")
     .addColumn("completed_at", "timestamptz")
-    .addColumn("created_at", "timestamptz", (col) =>
-      col.notNull().defaultTo("now()"),
-    )
-    .addColumn("updated_at", "timestamptz", (col) =>
-      col.notNull().defaultTo("now()"),
-    )
+    .addColumn("created_at", "timestamptz", (col) => col.notNull().defaultTo("now()"))
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull().defaultTo("now()"))
     .execute();
 
-  await db.schema
-    .createIndex("idx_job_user_id")
-    .on("job")
-    .column("user_id")
-    .execute();
+  await db.schema.createIndex("idx_job_user_id").on("job").column("user_id").execute();
 
   await db.schema
     .createIndex("idx_job_claim")

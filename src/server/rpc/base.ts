@@ -3,11 +3,7 @@ import * as z from "zod";
 import type { ServerAuth, ServerAuthSession } from "@/lib/auth/server";
 import type { DB } from "@/server/db/client";
 import type { Repositories } from "@/server/db/repositories";
-import {
-  adminMiddleware,
-  authMiddleware,
-  rateLimitMiddleware,
-} from "./middlewares";
+import { adminMiddleware, authMiddleware, rateLimitMiddleware } from "./middlewares";
 
 export const baseProcedure = os
   .$context<{

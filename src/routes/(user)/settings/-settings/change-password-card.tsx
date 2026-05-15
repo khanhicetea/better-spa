@@ -64,9 +64,7 @@ export function ChangePasswordCard() {
       toast.success("Password changed successfully");
       form.reset();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to change password",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to change password");
     }
   };
 
@@ -162,14 +160,10 @@ export function ChangePasswordCard() {
 
         <CardFooter className="flex flex-col justify-between gap-4 rounded-b-xl border-t bg-sidebar md:flex-row !py-4">
           <p className="text-muted-foreground text-xs md:text-sm text-center md:text-start">
-            Use a strong password that you don&apos;t use elsewhere. All other
-            sessions will be signed out.
+            Use a strong password that you don&apos;t use elsewhere. All other sessions will be
+            signed out.
           </p>
-          <Button
-            type="submit"
-            form="change-password-form"
-            disabled={isSubmitting}
-          >
+          <Button type="submit" form="change-password-form" disabled={isSubmitting}>
             {isSubmitting ? "Saving..." : "Change password"}
           </Button>
         </CardFooter>

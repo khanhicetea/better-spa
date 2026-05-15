@@ -32,10 +32,7 @@ interface AuthSocialButtonsProps {
   isPending: boolean;
 }
 
-export function AuthSocialButtons({
-  callbackURL,
-  isPending,
-}: AuthSocialButtonsProps) {
+export function AuthSocialButtons({ callbackURL, isPending }: AuthSocialButtonsProps) {
   const providers = Object.keys(enabledSocialProviders) as SocialProvider[];
 
   return (

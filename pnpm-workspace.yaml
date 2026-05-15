@@ -1,8 +1,8 @@
 minimumReleaseAge: 5000
 packages:
-    - "."
+  - "."
 
 allowBuilds:
-    - esbuild
-    - sharp
-    - workerd
+  - esbuild
+  - sharp
+  - workerd

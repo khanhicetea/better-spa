@@ -7,13 +7,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import authClient from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -62,9 +56,7 @@ export function DeleteAccountCard() {
 
       toast.success("Account deleted successfully");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to delete account",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to delete account");
       setIsDeleting(false);
     }
   };
@@ -81,8 +73,7 @@ export function DeleteAccountCard() {
 
         <CardFooter className="flex flex-col justify-between gap-4 rounded-b-xl border-t border-destructive/30 bg-destructive/15 md:flex-row !py-4">
           <p className="text-muted-foreground text-xs md:text-sm text-center md:text-start">
-            This action is irreversible. All your data will be permanently
-            removed.
+            This action is irreversible. All your data will be permanently removed.
           </p>
           <Button variant="destructive" onClick={() => setDialogOpen(true)}>
             Delete Account
@@ -93,12 +84,10 @@ export function DeleteAccountCard() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-lg md:text-xl">
-              Delete Account
-            </DialogTitle>
+            <DialogTitle className="text-lg md:text-xl">Delete Account</DialogTitle>
             <DialogDescription className="text-xs md:text-sm">
-              Enter your password to confirm account deletion for{" "}
-              <strong>{user?.email}</strong>. This action cannot be undone.
+              Enter your password to confirm account deletion for <strong>{user?.email}</strong>.
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
 
@@ -133,11 +122,7 @@ export function DeleteAccountCard() {
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  variant="destructive"
-                  disabled={isDeleting}
-                >
+                <Button type="submit" variant="destructive" disabled={isDeleting}>
                   {isDeleting ? "Deleting..." : "Delete Account"}
                 </Button>
               </DialogFooter>

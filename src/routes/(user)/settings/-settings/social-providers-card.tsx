@@ -4,13 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Account } from "better-auth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import authClient from "@/lib/auth/client";
 
@@ -46,9 +40,7 @@ export function SocialProvidersCard() {
       });
     },
     onError: (error) => {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to link account",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to link account");
     },
   });
 
@@ -64,9 +56,7 @@ export function SocialProvidersCard() {
       await queryClient.invalidateQueries({ queryKey: accountsQueryKey });
     },
     onError: (error) => {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to unlink account",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to unlink account");
     },
   });
 
@@ -85,10 +75,7 @@ export function SocialProvidersCard() {
         <div className="grid gap-3">
           {isPending
             ? KNOWN_PROVIDERS.map((p) => (
-                <Card
-                  key={p.id}
-                  className="flex-row items-center gap-3 px-4 py-3"
-                >
+                <Card key={p.id} className="flex-row items-center gap-3 px-4 py-3">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <Skeleton className="size-4 shrink-0" />
                     <div className="flex min-w-0 flex-col">
@@ -102,24 +89,15 @@ export function SocialProvidersCard() {
                 const isLinked = linkedProviderIds.includes(provider.id);
 
                 return (
-                  <Card
-                    key={provider.id}
-                    className="flex-row items-center gap-3 px-4 py-3"
-                  >
+                  <Card key={provider.id} className="flex-row items-center gap-3 px-4 py-3">
                     <div className="flex min-w-0 flex-1 items-center gap-3">
-                      <span className="text-sm font-medium shrink-0">
-                        {provider.name}
-                      </span>
+                      <span className="text-sm font-medium shrink-0">{provider.name}</span>
                     </div>
 
                     <Button
                       size="sm"
                       variant={isLinked ? "outline" : "default"}
-                      disabled={
-                        isLinked
-                          ? unlinkMutation.isPending
-                          : linkMutation.isPending
-                      }
+                      disabled={isLinked ? unlinkMutation.isPending : linkMutation.isPending}
                       onClick={
                         isLinked
                           ? () => unlinkMutation.mutate(provider.id)

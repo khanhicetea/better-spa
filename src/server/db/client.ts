@@ -27,10 +27,7 @@ const { Pool } = pg;
  * consider using Kysely's built-in `log` configuration instead.
  */
 export class QueryLoggingPlugin implements KyselyPlugin {
-  private queryInfo = new WeakMap<
-    object,
-    { startTime: number; kind: string }
-  >();
+  private queryInfo = new WeakMap<object, { startTime: number; kind: string }>();
 
   transformQuery(args: PluginTransformQueryArgs): RootOperationNode {
     this.queryInfo.set(args.queryId, {
@@ -40,9 +37,7 @@ export class QueryLoggingPlugin implements KyselyPlugin {
     return args.node;
   }
 
-  async transformResult(
-    args: PluginTransformResultArgs,
-  ): Promise<QueryResult<any>> {
+  async transformResult(args: PluginTransformResultArgs): Promise<QueryResult<any>> {
     const info = this.queryInfo.get(args.queryId);
 
     if (info) {
@@ -67,23 +62,21 @@ export const createQueryLoggingPlugin = () => new QueryLoggingPlugin();
 // DB client factory
 // ---------------------------------------------------------------------------
 
-export const getDatabasePooling = createServerOnlyFn(
-  (connectionString: string) => {
-    const pool = new Pool({
-      connectionString,
-      max: parseInt(process.env.DATABASE_MAX_CONNECTIONS || "2", 10),
-    });
-    return new Kysely<Database>({
-      dialect: new PostgresDialect({ pool }),
-      plugins: [
-        new CamelCasePlugin({
-          maintainNestedObjectKeys: true,
-        }),
-        createQueryLoggingPlugin(),
-      ],
-    });
-  },
-);
+export const getDatabasePooling = createServerOnlyFn((connectionString: string) => {
+  const pool = new Pool({
+    connectionString,
+    max: parseInt(process.env.DATABASE_MAX_CONNECTIONS || "2", 10),
+  });
+  return new Kysely<Database>({
+    dialect: new PostgresDialect({ pool }),
+    plugins: [
+      new CamelCasePlugin({
+        maintainNestedObjectKeys: true,
+      }),
+      createQueryLoggingPlugin(),
+    ],
+  });
+});
 
 export const getDatabase = createServerOnlyFn((connectionString: string) => {
   return getDatabasePooling(connectionString);

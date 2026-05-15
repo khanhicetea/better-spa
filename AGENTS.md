@@ -8,7 +8,8 @@ Agent-only working reference for this repo. Read this first, then open only the 
 - UI primitives are **Base UI** (`@base-ui/react`), not Radix. Use the `render` prop, never `asChild`.
 - React Compiler is enabled. Do **not** add `useCallback`, `useMemo`, or `memo`.
 - Tailwind is v4. Use theme tokens such as `bg-primary`, `text-muted-foreground`, and `border-border`. Avoid literal colors unless the user asks.
-- Biome owns formatting and linting. End every task with `pnpm check`.
+- Oxlint owns linting and Prettier owns formatting.
+- End every task with `pnpm check`.
 - Do not add tests unless the user explicitly asks.
 - Do not add seed files.
 - Do not use Kysely codegen. Schema types are handwritten in `src/server/db/schema/`.

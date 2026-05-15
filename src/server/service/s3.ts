@@ -18,18 +18,11 @@ type S3ReadUrlOptions = {
 let cachedS3Client: ReturnType<typeof custom> | null = null;
 
 function getRequiredConfigValue(
-  key:
-    | "S3_ACCESS_KEY_ID"
-    | "S3_BUCKET_NAME"
-    | "S3_ENDPOINT"
-    | "S3_SECRET_ACCESS_KEY"
-    | "S3_URL",
+  key: "S3_ACCESS_KEY_ID" | "S3_BUCKET_NAME" | "S3_ENDPOINT" | "S3_SECRET_ACCESS_KEY" | "S3_URL",
 ): string {
   const value = env[key];
   if (!value) {
-    throw new Error(
-      `Missing ${key}. Configure S3 before using file upload or download helpers.`,
-    );
+    throw new Error(`Missing ${key}. Configure S3 before using file upload or download helpers.`);
   }
 
   return value;
@@ -67,10 +60,7 @@ export function getS3Client() {
 }
 
 export function buildPublicS3Url(key: string): string {
-  return new URL(
-    key,
-    ensureTrailingSlash(getRequiredConfigValue("S3_URL")),
-  ).toString();
+  return new URL(key, ensureTrailingSlash(getRequiredConfigValue("S3_URL"))).toString();
 }
 
 /**

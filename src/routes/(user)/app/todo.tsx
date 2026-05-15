@@ -18,9 +18,7 @@ export const Route = createFileRoute("/(user)/app/todo")({
 function TodoPage() {
   const [newTodoContent, setNewTodoContent] = useState("");
 
-  const { data: todos, refetch: refetchTodos } = useSuspenseQuery(
-    orpc.todo.list.queryOptions(),
-  );
+  const { data: todos, refetch: refetchTodos } = useSuspenseQuery(orpc.todo.list.queryOptions());
 
   const createTodoMutation = useMutation(
     orpc.todo.create.mutationOptions({
@@ -48,8 +46,7 @@ function TodoPage() {
 
   const totalTodos = todos.length;
   const completedTodos = todos.filter((todo) => todo.completedAt).length;
-  const progressPercentage =
-    totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
+  const progressPercentage = totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 p-8">
@@ -103,9 +100,7 @@ function TodoPage() {
             No tasks yet. Add one to get started.
           </div>
         ) : (
-          todos.map((todo) => (
-            <TodoRow key={todo.id} todo={todo} onRefetch={refetchTodos} />
-          ))
+          todos.map((todo) => <TodoRow key={todo.id} todo={todo} onRefetch={refetchTodos} />)
         )}
       </div>
     </div>

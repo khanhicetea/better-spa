@@ -76,6 +76,4 @@ export const auth = getAuthConfig(getDatabase(process.env.DATABASE_URL!));
 // --- Types ---
 
 export type ServerAuth = ReturnType<typeof getAuthConfig>;
-export type ServerAuthSession = Awaited<
-  ReturnType<ServerAuth["api"]["getSession"]>
->;
+export type ServerAuthSession = Awaited<ReturnType<ServerAuth["api"]["getSession"]>>;

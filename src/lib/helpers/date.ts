@@ -36,9 +36,7 @@ export function formatDate(
   timeZone?: string,
 ): string {
   const dateObj = typeof date === "string" ? parseISO(date) : date;
-  return timeZone
-    ? formatInTimeZone(dateObj, timeZone, formatStr)
-    : format(dateObj, formatStr);
+  return timeZone ? formatInTimeZone(dateObj, timeZone, formatStr) : format(dateObj, formatStr);
 }
 
 /**
@@ -80,10 +78,7 @@ export function formatDateOnly(date: Date | string, timeZone?: string): string {
  * formatRelativeTime(new Date()) // "just now"
  * formatRelativeTime(new Date(Date.now() - 3600000)) // "1 hour ago"
  */
-export function formatRelativeTime(
-  date: Date | string,
-  addSuffix: boolean = true,
-): string {
+export function formatRelativeTime(date: Date | string, addSuffix: boolean = true): string {
   const dateObj = typeof date === "string" ? parseISO(date) : date;
   return formatDistanceToNow(dateObj, { addSuffix });
 }

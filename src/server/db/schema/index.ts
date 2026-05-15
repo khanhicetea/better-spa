@@ -1,9 +1,4 @@
-import type {
-  UserTable,
-  SessionTable,
-  AccountTable,
-  VerificationTable,
-} from "./auth";
+import type { UserTable, SessionTable, AccountTable, VerificationTable } from "./auth";
 import type { JobTable } from "./job";
 import type { TodoItemTable } from "./todo";
 

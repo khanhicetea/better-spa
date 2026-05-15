@@ -20,9 +20,7 @@ export const handleFormError = <TFieldValues extends FieldValues>(
   }
 };
 
-export const handleToastError = <_TFieldValues extends FieldValues>(
-  error: unknown,
-) => {
+export const handleToastError = <_TFieldValues extends FieldValues>(error: unknown) => {
   if (error && typeof error === "object" && "message" in error) {
     toast.error((error as { message: string }).message);
   }

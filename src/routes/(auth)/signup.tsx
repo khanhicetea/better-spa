@@ -20,11 +20,7 @@ function SignupForm() {
   const queryClient = useQueryClient();
 
   const { mutate: signupMutate, isPending: isSubmittingSignup } = useMutation({
-    mutationFn: async (data: {
-      name: string;
-      email: string;
-      password: string;
-    }) => {
+    mutationFn: async (data: { name: string; email: string; password: string }) => {
       await authClient.signUp.email(
         {
           ...data,
@@ -115,12 +111,7 @@ function SignupForm() {
                 required
               />
             </div>
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              disabled={isSubmittingSignup}
-            >
+            <Button type="submit" className="w-full" size="lg" disabled={isSubmittingSignup}>
               {isSubmittingSignup && <LoaderCircle className="animate-spin" />}
               {isSubmittingSignup ? "Creating account..." : "Sign up"}
             </Button>
@@ -130,10 +121,7 @@ function SignupForm() {
               Or continue with
             </span>
           </div>
-          <AuthSocialButtons
-            callbackURL={redirectUrl}
-            isPending={isSubmittingSignup}
-          />
+          <AuthSocialButtons callbackURL={redirectUrl} isPending={isSubmittingSignup} />
         </div>
       </form>
 

@@ -5,12 +5,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -20,10 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import {
   Sheet,
   SheetContent,
@@ -42,12 +34,7 @@ interface BanUserDialogProps {
   onSuccess: () => void;
 }
 
-export function BanUserDialog({
-  user,
-  open,
-  onOpenChange,
-  onSuccess,
-}: BanUserDialogProps) {
+export function BanUserDialog({ user, open, onOpenChange, onSuccess }: BanUserDialogProps) {
   const form = useForm<{ banReason: string; banExpire: string | undefined }>({
     defaultValues: {
       banReason: "",
@@ -63,9 +50,7 @@ export function BanUserDialog({
       userId: user.id,
       banReason: data.banReason,
       banExpiresIn: data.banExpire
-        ? Math.floor(
-            (new Date(`${data.banExpire}:00`).getTime() - Date.now()) / 1000,
-          )
+        ? Math.floor((new Date(`${data.banExpire}:00`).getTime() - Date.now()) / 1000)
         : undefined,
     });
     setIsPending(false);
@@ -143,8 +128,7 @@ export function ChangePasswordDialog({
   });
 
   const handleGeneratePassword = () => {
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let result = "";
     for (let i = 0; i < 12; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -173,9 +157,7 @@ export function ChangePasswordDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            Change password for &quot;{user.email}&quot;
-          </DialogTitle>
+          <DialogTitle>Change password for &quot;{user.email}&quot;</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -192,22 +174,16 @@ export function ChangePasswordDialog({
                         placeholder="Enter new password"
                         {...field}
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleGeneratePassword}
-                      >
+                      <Button type="button" variant="outline" onClick={handleGeneratePassword}>
                         <Dice2Icon />
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => {
-                          navigator.clipboard
-                            .writeText(field.value)
-                            .then(() => {
-                              toast.success("Password copied to clipboard");
-                            });
+                          navigator.clipboard.writeText(field.value).then(() => {
+                            toast.success("Password copied to clipboard");
+                          });
                         }}
                       >
                         <CopyIcon />
@@ -328,11 +304,7 @@ export function CreateUserSheet({ onSuccess }: CreateUserSheetProps) {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Enter password"
-                        {...field}
-                      />
+                      <Input type="password" placeholder="Enter password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -345,16 +317,9 @@ export function CreateUserSheet({ onSuccess }: CreateUserSheetProps) {
                   <FormItem>
                     <FormLabel>User role</FormLabel>
                     <FormControl>
-                      <NativeSelect
-                        onChange={field.onChange}
-                        value={field.value}
-                      >
-                        <NativeSelectOption value="user">
-                          User
-                        </NativeSelectOption>
-                        <NativeSelectOption value="admin">
-                          Admin
-                        </NativeSelectOption>
+                      <NativeSelect onChange={field.onChange} value={field.value}>
+                        <NativeSelectOption value="user">User</NativeSelectOption>
+                        <NativeSelectOption value="admin">Admin</NativeSelectOption>
                       </NativeSelect>
                     </FormControl>
                     <FormMessage />

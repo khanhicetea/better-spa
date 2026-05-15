@@ -29,10 +29,7 @@ const LegacyPublicS3FileSchema = StoredS3FileSchema.extend({
   url: metadata.public_url,
 }));
 
-export const PublicS3FileSchema = z.union([
-  ModernPublicS3FileSchema,
-  LegacyPublicS3FileSchema,
-]);
+export const PublicS3FileSchema = z.union([ModernPublicS3FileSchema, LegacyPublicS3FileSchema]);
 
 export const PublicS3FilesSchema = createS3FilesSchema(PublicS3FileSchema);
 
@@ -51,11 +48,7 @@ export const PrivateS3FileWithUrlSchema = PrivateS3FileSchema.extend({
   expiresAt: z.iso.datetime(),
 });
 
-export const PrivateS3FilesWithUrlsSchema = createS3FilesSchema(
-  PrivateS3FileWithUrlSchema,
-);
+export const PrivateS3FilesWithUrlsSchema = createS3FilesSchema(PrivateS3FileWithUrlSchema);
 
 export type PrivateS3FileWithUrl = z.infer<typeof PrivateS3FileWithUrlSchema>;
-export type PrivateS3FilesWithUrls = z.infer<
-  typeof PrivateS3FilesWithUrlsSchema
->;
+export type PrivateS3FilesWithUrls = z.infer<typeof PrivateS3FilesWithUrlsSchema>;

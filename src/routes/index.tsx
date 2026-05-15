@@ -2,12 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, ListTodo, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authQueryOptions } from "@/lib/queries";
 
@@ -21,14 +16,12 @@ export const Route = createFileRoute("/")({
 const valueCards = [
   {
     title: "Shell-first architecture",
-    description:
-      "SSR only the application shell and run product interactions as a fast SPA.",
+    description: "SSR only the application shell and run product interactions as a fast SPA.",
     icon: Shield,
   },
   {
     title: "Reference Todo feature",
-    description:
-      "A compact, production-oriented feature to copy for new modules.",
+    description: "A compact, production-oriented feature to copy for new modules.",
     icon: ListTodo,
   },
 ] as const;
@@ -47,8 +40,8 @@ function HomePage() {
                 Build on a clean starter that is ready for real product work.
               </h1>
               <p className="max-w-2xl text-base text-muted-foreground md:text-lg">
-                Keep auth, admin user management, uploads infrastructure, and
-                one reference feature. Remove the demo noise and start shipping.
+                Keep auth, admin user management, uploads infrastructure, and one reference feature.
+                Remove the demo noise and start shipping.
               </p>
               <HeaderActions />
             </div>
@@ -98,15 +91,11 @@ function HomePage() {
                 Start from Todo, then expand by domain.
               </h2>
               <p className="mt-2 text-muted-foreground">
-                The Todo page demonstrates auth boundaries, oRPC procedures, and
-                repositories in one flow.
+                The Todo page demonstrates auth boundaries, oRPC procedures, and repositories in one
+                flow.
               </p>
             </div>
-            <Button
-              size="lg"
-              nativeButton={false}
-              render={<Link to="/app/todo" />}
-            >
+            <Button size="lg" nativeButton={false} render={<Link to="/app/todo" />}>
               Open Todo
               <ArrowRight data-icon="inline-end" />
             </Button>
@@ -137,12 +126,7 @@ function HeaderActions() {
           <ArrowRight data-icon="inline-end" />
         </Button>
         {user.role === "admin" && (
-          <Button
-            variant="outline"
-            size="lg"
-            nativeButton={false}
-            render={<Link to="/admin" />}
-          >
+          <Button variant="outline" size="lg" nativeButton={false} render={<Link to="/admin" />}>
             Open Admin
           </Button>
         )}
@@ -155,12 +139,7 @@ function HeaderActions() {
       <Button size="lg" nativeButton={false} render={<Link to="/signup" />}>
         Create account
       </Button>
-      <Button
-        variant="outline"
-        size="lg"
-        nativeButton={false}
-        render={<Link to="/login" />}
-      >
+      <Button variant="outline" size="lg" nativeButton={false} render={<Link to="/login" />}>
         Sign in
       </Button>
     </div>

@@ -28,9 +28,7 @@ export class NotFoundError extends Error {
   }
 }
 
-export class Repository<TTable extends keyof Database>
-  implements BaseRepository<TTable>
-{
+export class Repository<TTable extends keyof Database> implements BaseRepository<TTable> {
   protected _repos: Repositories | null = null;
 
   constructor(
@@ -44,16 +42,15 @@ export class Repository<TTable extends keyof Database>
 
   protected get repos(): Repositories {
     if (!this._repos) {
-      throw new Error(
-        "Repos not initialized. Make sure createRepos() was called.",
-      );
+      throw new Error("Repos not initialized. Make sure createRepos() was called.");
     }
     return this._repos;
   }
 
-  protected applySelectConditions<
-    Q extends SelectQueryBuilder<Database, any, any>,
-  >(query: Q, conditions?: SelectQueryCondition<TTable>): Q {
+  protected applySelectConditions<Q extends SelectQueryBuilder<Database, any, any>>(
+    query: Q,
+    conditions?: SelectQueryCondition<TTable>,
+  ): Q {
     if (!conditions) return query;
 
     if (typeof conditions === "function") {
@@ -65,17 +62,20 @@ export class Repository<TTable extends keyof Database>
     let result = query;
     for (const [key, value] of Object.entries(conditions)) {
       if (value === undefined) continue;
-      result = (
-        result as unknown as SelectQueryBuilder<Database, TTable, object>
-      ).where(key as never, "=", value as never) as unknown as Q;
+      result = (result as unknown as SelectQueryBuilder<Database, TTable, object>).where(
+        key as never,
+        "=",
+        value as never,
+      ) as unknown as Q;
     }
 
     return result;
   }
 
-  protected applyDeleteConditions<
-    Q extends DeleteQueryBuilder<Database, any, any>,
-  >(query: Q, conditions?: DeleteQueryCondition<TTable>): Q {
+  protected applyDeleteConditions<Q extends DeleteQueryBuilder<Database, any, any>>(
+    query: Q,
+    conditions?: DeleteQueryCondition<TTable>,
+  ): Q {
     if (!conditions) return query;
 
     if (typeof conditions === "function") {
@@ -87,41 +87,36 @@ export class Repository<TTable extends keyof Database>
     let result = query;
     for (const [key, value] of Object.entries(conditions)) {
       if (value === undefined) continue;
-      result = (
-        result as unknown as DeleteQueryBuilder<Database, TTable, DeleteResult>
-      ).where(key as never, "=", value as never) as unknown as Q;
+      result = (result as unknown as DeleteQueryBuilder<Database, TTable, DeleteResult>).where(
+        key as never,
+        "=",
+        value as never,
+      ) as unknown as Q;
     }
 
     return result;
   }
 
-  protected applyUpdateConditions<
-    Q extends UpdateQueryBuilder<Database, any, any, any>,
-  >(query: Q, conditions?: UpdateQueryCondition<TTable>): Q {
+  protected applyUpdateConditions<Q extends UpdateQueryBuilder<Database, any, any, any>>(
+    query: Q,
+    conditions?: UpdateQueryCondition<TTable>,
+  ): Q {
     if (!conditions) return query;
 
     if (typeof conditions === "function") {
       return conditions(
-        query as unknown as UpdateQueryBuilder<
-          Database,
-          TTable,
-          TTable,
-          object
-        >,
+        query as unknown as UpdateQueryBuilder<Database, TTable, TTable, object>,
       ) as unknown as Q;
     }
 
     let result = query;
     for (const [key, value] of Object.entries(conditions)) {
       if (value === undefined) continue;
-      result = (
-        result as unknown as UpdateQueryBuilder<
-          Database,
-          TTable,
-          TTable,
-          object
-        >
-      ).where(key as never, "=", value as never) as unknown as Q;
+      result = (result as unknown as UpdateQueryBuilder<Database, TTable, TTable, object>).where(
+        key as never,
+        "=",
+        value as never,
+      ) as unknown as Q;
     }
 
     return result;
@@ -158,9 +153,7 @@ export class Repository<TTable extends keyof Database>
       ) as unknown as typeof query;
     }
 
-    const rows = await (
-      query as unknown as SelectQueryBuilder<Database, TTable, object>
-    )
+    const rows = await (query as unknown as SelectQueryBuilder<Database, TTable, object>)
       .select(options.select as never)
       .execute();
     return rows as Pick<TableRow<TTable>, K>[];
@@ -168,11 +161,7 @@ export class Repository<TTable extends keyof Database>
 
   async findById(id: IdOf<TTable>): Promise<TableRow<TTable> | undefined> {
     const row = await (
-      this.db.selectFrom(this.tableName) as unknown as SelectQueryBuilder<
-        Database,
-        TTable,
-        object
-      >
+      this.db.selectFrom(this.tableName) as unknown as SelectQueryBuilder<Database, TTable, object>
     )
       .where("id" as never, "=", id as never)
       .selectAll()
@@ -184,9 +173,7 @@ export class Repository<TTable extends keyof Database>
   async findByIdOrFail(id: IdOf<TTable>): Promise<TableRow<TTable>> {
     const record = await this.findById(id);
     if (!record) {
-      throw new NotFoundError(
-        `${String(this.tableName)} with id ${String(id)} not found`,
-      );
+      throw new NotFoundError(`${String(this.tableName)} with id ${String(id)} not found`);
     }
     return record;
   }
@@ -218,9 +205,7 @@ export class Repository<TTable extends keyof Database>
     return record;
   }
 
-  async findAll(
-    queryBuilder?: QueryModifier<TTable>,
-  ): Promise<TableRow<TTable>[]> {
+  async findAll(queryBuilder?: QueryModifier<TTable>): Promise<TableRow<TTable>[]> {
     let query = this.db.selectFrom(this.tableName);
     if (queryBuilder) {
       query = queryBuilder(
@@ -273,12 +258,8 @@ export class Repository<TTable extends keyof Database>
     let query = this.db.selectFrom(this.tableName);
     query = this.applySelectConditions(query, conditions);
 
-    const result = await (
-      query as unknown as SelectQueryBuilder<Database, TTable, object>
-    )
-      .select((eb: ExpressionBuilder<Database, TTable>) => [
-        eb.fn.count("id").as("count"),
-      ])
+    const result = await (query as unknown as SelectQueryBuilder<Database, TTable, object>)
+      .select((eb: ExpressionBuilder<Database, TTable>) => [eb.fn.count("id").as("count")])
       .executeTakeFirst();
 
     return Number(result?.count) ?? 0;
@@ -286,15 +267,9 @@ export class Repository<TTable extends keyof Database>
 
   async exists(id: IdOf<TTable>): Promise<boolean> {
     const row = await (
-      this.db.selectFrom(this.tableName) as unknown as SelectQueryBuilder<
-        Database,
-        TTable,
-        object
-      >
+      this.db.selectFrom(this.tableName) as unknown as SelectQueryBuilder<Database, TTable, object>
     )
-      .select((eb: ExpressionBuilder<Database, TTable>) =>
-        eb.lit(1).as("exists"),
-      )
+      .select((eb: ExpressionBuilder<Database, TTable>) => eb.lit(1).as("exists"))
       .where("id" as never, "=", id as never)
       .limit(1)
       .executeTakeFirst();
@@ -306,12 +281,8 @@ export class Repository<TTable extends keyof Database>
     let query = this.db.selectFrom(this.tableName);
     query = this.applySelectConditions(query, conditions);
 
-    const row = await (
-      query as unknown as SelectQueryBuilder<Database, TTable, object>
-    )
-      .select((eb: ExpressionBuilder<Database, TTable>) =>
-        eb.lit(1).as("exists"),
-      )
+    const row = await (query as unknown as SelectQueryBuilder<Database, TTable, object>)
+      .select((eb: ExpressionBuilder<Database, TTable>) => eb.lit(1).as("exists"))
       .limit(1)
       .executeTakeFirst();
 
@@ -330,9 +301,7 @@ export class Repository<TTable extends keyof Database>
       .execute();
   }
 
-  async deleteMany(
-    conditions: DeleteQueryCondition<TTable>,
-  ): Promise<DeleteResult[]> {
+  async deleteMany(conditions: DeleteQueryCondition<TTable>): Promise<DeleteResult[]> {
     let query = this.db.deleteFrom(this.tableName);
     query = this.applyDeleteConditions(query, conditions);
 
@@ -377,9 +346,7 @@ export class Repository<TTable extends keyof Database>
     return rows as TableRow<TTable>[];
   }
 
-  async insertReturn(
-    data: TableInsert<TTable>,
-  ): Promise<TableRow<TTable> | undefined> {
+  async insertReturn(data: TableInsert<TTable>): Promise<TableRow<TTable> | undefined> {
     const row = await this.db
       .insertInto(this.tableName)
       .values(data)
@@ -390,11 +357,7 @@ export class Repository<TTable extends keyof Database>
   }
 
   async insertMany(data: TableInsert<TTable>[]): Promise<TableRow<TTable>[]> {
-    const rows = await this.db
-      .insertInto(this.tableName)
-      .values(data)
-      .returningAll()
-      .execute();
+    const rows = await this.db.insertInto(this.tableName).values(data).returningAll().execute();
 
     return rows as TableRow<TTable>[];
   }
@@ -410,9 +373,7 @@ export class Repository<TTable extends keyof Database>
       .insertInto(this.tableName)
       .values(options.data)
       .onConflict((oc) =>
-        oc
-          .columns(options.conflictColumns as never)
-          .doUpdateSet(dataToUpdate as never),
+        oc.columns(options.conflictColumns as never).doUpdateSet(dataToUpdate as never),
       )
       .returningAll()
       .executeTakeFirst();

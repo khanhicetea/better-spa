@@ -11,9 +11,7 @@ import { NavUser } from "../common/nav-user";
 import { ThemeToggle } from "../spa/theme-toggle";
 import { NavMain } from "./nav-main";
 
-export function AdminSidebar({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) {
+export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

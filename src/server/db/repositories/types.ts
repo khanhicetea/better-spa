@@ -13,15 +13,9 @@ import type { Database } from "../schema";
 // Row-level helpers
 // ---------------------------------------------------------------------------
 
-export type TableRow<TTable extends keyof Database> = Selectable<
-  Database[TTable]
->;
-export type TableInsert<TTable extends keyof Database> = Insertable<
-  Database[TTable]
->;
-export type TableUpdate<TTable extends keyof Database> = Updateable<
-  Database[TTable]
->;
+export type TableRow<TTable extends keyof Database> = Selectable<Database[TTable]>;
+export type TableInsert<TTable extends keyof Database> = Insertable<Database[TTable]>;
+export type TableUpdate<TTable extends keyof Database> = Updateable<Database[TTable]>;
 
 export type IdOf<TTable extends keyof Database> =
   TableRow<TTable> extends {
@@ -112,9 +106,7 @@ export interface BaseRepository<TTable extends keyof Database> {
     where: UpdateQueryCondition<TTable>;
     data: TableUpdate<TTable>;
   }): Promise<TableRow<TTable>[]>;
-  insertReturn(
-    data: TableInsert<TTable>,
-  ): Promise<TableRow<TTable> | undefined>;
+  insertReturn(data: TableInsert<TTable>): Promise<TableRow<TTable> | undefined>;
   insertMany(data: TableInsert<TTable>[]): Promise<TableRow<TTable>[]>;
   upsert(options: {
     data: TableInsert<TTable>;

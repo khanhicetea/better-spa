@@ -24,13 +24,7 @@ function Container({
   );
 }
 
-function Bar({
-  animationDuration,
-  progress,
-}: {
-  animationDuration: number;
-  progress: number;
-}) {
+function Bar({ animationDuration, progress }: { animationDuration: number; progress: number }) {
   return (
     <div
       style={{

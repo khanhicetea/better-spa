@@ -14,14 +14,8 @@ export function UnauthorizedError() {
     <Empty>
       <EmptyHeader>
         <EmptyTitle>403 - Forbidden</EmptyTitle>
-        <EmptyDescription>
-          You don't have permission to access this page.
-        </EmptyDescription>
-        <Button
-          variant="default"
-          nativeButton={false}
-          render={<Link to="/">Back to Home</Link>}
-        />
+        <EmptyDescription>You don't have permission to access this page.</EmptyDescription>
+        <Button variant="default" nativeButton={false} render={<Link to="/">Back to Home</Link>} />
       </EmptyHeader>
     </Empty>
   );
@@ -51,11 +45,7 @@ export function DefaultCatchBoundary({ error }: Readonly<ErrorComponentProps>) {
           Try Again
         </Button>
         {isRoot ? (
-          <Button
-            variant="secondary"
-            nativeButton={false}
-            render={<Link to="/">Home</Link>}
-          />
+          <Button variant="secondary" nativeButton={false} render={<Link to="/">Home</Link>} />
         ) : (
           <Button
             variant="secondary"

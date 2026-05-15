@@ -33,9 +33,8 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
     () =>
-      (typeof window !== "undefined"
-        ? (localStorage.getItem(storageKey) as Theme)
-        : null) || defaultTheme,
+      (typeof window !== "undefined" ? (localStorage.getItem(storageKey) as Theme) : null) ||
+      defaultTheme,
   );
 
   // Listen for system preference changes
@@ -71,7 +70,7 @@ export function ThemeProvider({
       targetTheme = theme;
     }
 
-    // biome-ignore lint/suspicious/noDocumentCookie: store cookie theme for SSR
+    // eslint-disable-next-line -- store cookie theme for SSR
     window.document.cookie = `theme=${targetTheme}; path=/`;
 
     // Only update if the target theme is not already applied
@@ -104,8 +103,7 @@ export function ThemeProvider({
 export const useTheme = () => {
   const context = use(ThemeProviderContext);
 
-  if (context === undefined)
-    throw new Error("useTheme must be used within a ThemeProvider");
+  if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider");
 
   return context;
 };

@@ -3,12 +3,7 @@ import type { Kysely } from "kysely";
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema.alterTable("user").addColumn("username", "text").execute();
 
-  await db.schema
-    .createIndex("idx_user_username")
-    .on("user")
-    .column("username")
-    .unique()
-    .execute();
+  await db.schema.createIndex("idx_user_username").on("user").column("username").unique().execute();
 
   await db.schema.alterTable("user").addColumn("timezone", "text").execute();
 }

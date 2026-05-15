@@ -28,9 +28,7 @@ export function TodoSummary({
     <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-3">
       <div className="flex items-center gap-2">
         <ListTodo className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">
-          {totalTodos} tasks
-        </span>
+        <span className="text-sm text-muted-foreground">{totalTodos} tasks</span>
       </div>
       <div className="h-4 w-px bg-border" />
       <div className="flex items-center gap-2">

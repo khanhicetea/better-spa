@@ -19,25 +19,24 @@ function LoginForm() {
   const queryClient = useQueryClient();
   const { redirectUrl } = Route.useRouteContext();
 
-  const { mutate: emailLoginMutate, isPending: isSubmittingLogin } =
-    useMutation({
-      mutationFn: async (data: { email: string; password: string }) =>
-        await authClient.signIn.email(
-          {
-            ...data,
-            callbackURL: redirectUrl,
+  const { mutate: emailLoginMutate, isPending: isSubmittingLogin } = useMutation({
+    mutationFn: async (data: { email: string; password: string }) =>
+      await authClient.signIn.email(
+        {
+          ...data,
+          callbackURL: redirectUrl,
+        },
+        {
+          onError: ({ error }) => {
+            toast.error(error.message || "Unable to sign in.");
           },
-          {
-            onError: ({ error }) => {
-              toast.error(error.message || "Unable to sign in.");
-            },
-            onSuccess: () => {
-              queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth });
-              navigate({ to: redirectUrl });
-            },
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth });
+            navigate({ to: redirectUrl });
           },
-        ),
-    });
+        },
+      ),
+  });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -78,12 +77,7 @@ function LoginForm() {
                 required
               />
             </div>
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              disabled={isSubmittingLogin}
-            >
+            <Button type="submit" className="w-full" size="lg" disabled={isSubmittingLogin}>
               {isSubmittingLogin && <LoaderCircle className="animate-spin" />}
               {isSubmittingLogin ? "Signing in..." : "Sign in"}
             </Button>
@@ -93,10 +87,7 @@ function LoginForm() {
               Or continue with
             </span>
           </div>
-          <AuthSocialButtons
-            callbackURL={redirectUrl}
-            isPending={isSubmittingLogin}
-          />
+          <AuthSocialButtons callbackURL={redirectUrl} isPending={isSubmittingLogin} />
         </div>
       </form>
 

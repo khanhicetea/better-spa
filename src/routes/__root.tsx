@@ -3,12 +3,7 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
-import {
-  createRootRouteWithContext,
-  HeadContent,
-  Outlet,
-  Scripts,
-} from "@tanstack/react-router";
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import type React from "react";
 import { ThemeProvider } from "@/components/spa/theme-provider";
@@ -36,8 +31,7 @@ export const Route = createRootRouteWithContext<{
       },
       {
         name: "description",
-        content:
-          "A minimal shell SPA boilerplate with SSR shell and client-side SPA",
+        content: "A minimal shell SPA boilerplate with SSR shell and client-side SPA",
       },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
