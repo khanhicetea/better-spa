@@ -34,7 +34,10 @@ export const Route = createRootRouteWithContext<{
         content: "A minimal shell SPA boilerplate with SSR shell and client-side SPA",
       },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+    ],
   }),
   ssr: true,
   errorComponent: DefaultCatchBoundary,
