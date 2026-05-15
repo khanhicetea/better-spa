@@ -6,7 +6,10 @@ import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { CamelCasePlugin } from "kysely";
 import { env } from "@/env/server";
 import type { DB } from "@/server/db/init";
-import { getAdminPluginConfig } from "./permissions";
+import { getDatabase } from "@/server/db/init";
+import { getAdminPluginConfig } from "./rbac";
+
+// --- Auth config factory (server-only) ---
 
 export const getAuthConfig = createServerOnlyFn((db: DB) =>
   betterAuth({
@@ -65,6 +68,12 @@ export const getAuthConfig = createServerOnlyFn((db: DB) =>
     },
   }),
 );
+
+// --- Singleton (consume via server context / node-server) ---
+
+export const auth = getAuthConfig(getDatabase(process.env.DATABASE_URL!));
+
+// --- Types ---
 
 export type ServerAuth = ReturnType<typeof getAuthConfig>;
 export type ServerAuthSession = Awaited<

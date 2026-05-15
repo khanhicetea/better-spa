@@ -1,6 +1,6 @@
 import { os } from "@orpc/server";
 import * as z from "zod";
-import type { ServerAuth, ServerAuthSession } from "@/lib/auth/init";
+import type { ServerAuth, ServerAuthSession } from "@/lib/auth/server";
 import type { DB } from "@/server/db/init";
 import type { Repositories } from "@/server/db/repositories";
 import {

@@ -1,7 +1,7 @@
 import type { RequestOptions } from "@tanstack/react-start/server";
 import type { ServerEntry } from "@tanstack/react-start/server-entry";
 import { env } from "@/env/server";
-import { getAuthConfig } from "@/lib/auth/init";
+import { getAuthConfig } from "@/lib/auth/server";
 import { getDatabase } from "@/server/db/init";
 import { createRepos } from "@/server/db/repositories";
 import { logger } from "@/server/logger";

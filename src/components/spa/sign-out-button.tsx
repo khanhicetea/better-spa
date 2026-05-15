@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import authClient from "@/lib/auth/auth-client";
+import authClient from "@/lib/auth/client";
 
 export function SignOutButton() {
   const queryClient = useQueryClient();

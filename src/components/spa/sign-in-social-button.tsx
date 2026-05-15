@@ -1,9 +1,6 @@
 import { Button } from "@/components/ui/button";
-import authClient from "@/lib/auth/auth-client";
-import {
-  SOCIAL_PROVIDER_LABELS,
-  type SocialProvider,
-} from "@/lib/auth/providers";
+import authClient from "@/lib/auth/client";
+import { SOCIAL_PROVIDER_LABELS, type SocialProvider } from "@/lib/auth/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 

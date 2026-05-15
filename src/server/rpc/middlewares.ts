@@ -1,5 +1,5 @@
 import { ORPCError, os } from "@orpc/server";
-import type { ServerAuthSession } from "@/lib/auth/init";
+import type { ServerAuthSession } from "@/lib/auth/server";
 import { apiRateLimiter } from "@/lib/rate-limiter";
 
 export const authMiddleware = os

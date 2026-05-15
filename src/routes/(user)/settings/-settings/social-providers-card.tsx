@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import authClient from "@/lib/auth/auth-client";
+import authClient from "@/lib/auth/client";
 
 type ProviderInfo = {
   id: string;

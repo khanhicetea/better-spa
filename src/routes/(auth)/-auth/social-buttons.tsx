@@ -4,7 +4,7 @@ import {
   enabledSocialProviders,
   isSocialProviderEnabled,
   type SocialProvider,
-} from "@/lib/auth/providers";
+} from "@/lib/auth/client";
 
 const providerIcons: Record<SocialProvider, ReactNode> = {
   github: (

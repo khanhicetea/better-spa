@@ -32,7 +32,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import authClient from "@/lib/auth/auth-client";
+import authClient from "@/lib/auth/client";
 import type { User } from "./columns";
 
 interface BanUserDialogProps {
