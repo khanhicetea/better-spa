@@ -2,111 +2,30 @@ import type {
   DeleteQueryBuilder,
   DeleteResult,
   ExpressionBuilder,
-  Insertable,
-  Selectable,
   SelectQueryBuilder,
-  Updateable,
   UpdateQueryBuilder,
 } from "kysely";
-import type { DB } from "../init";
+import type { DB } from "../client";
 import type { Database } from "../schema";
 import type { Repositories } from ".";
+import type {
+  BaseRepository,
+  DeleteQueryCondition,
+  IdOf,
+  PaginatedResult,
+  QueryModifier,
+  SelectQueryCondition,
+  TableInsert,
+  TableRow,
+  TableUpdate,
+  UpdateQueryCondition,
+} from "./types";
 
 export class NotFoundError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "NotFoundError";
   }
-}
-
-type TableRow<TTable extends keyof Database> = Selectable<Database[TTable]>;
-type TableInsert<TTable extends keyof Database> = Insertable<Database[TTable]>;
-type TableUpdate<TTable extends keyof Database> = Updateable<Database[TTable]>;
-
-export type IdOf<TTable extends keyof Database> =
-  TableRow<TTable> extends {
-    id: infer TId;
-  }
-    ? TId
-    : never;
-
-export type SelectQueryCondition<TTable extends keyof Database> =
-  | Partial<TableRow<TTable>>
-  | ((
-      qb: SelectQueryBuilder<Database, TTable, object>,
-    ) => SelectQueryBuilder<Database, TTable, object>);
-
-export type QueryModifier<TTable extends keyof Database> = (
-  qb: SelectQueryBuilder<Database, TTable, object>,
-) => SelectQueryBuilder<Database, TTable, object>;
-
-export type DeleteQueryCondition<TTable extends keyof Database> =
-  | Partial<TableRow<TTable>>
-  | ((
-      qb: DeleteQueryBuilder<Database, TTable, DeleteResult>,
-    ) => DeleteQueryBuilder<Database, TTable, DeleteResult>);
-
-export type UpdateQueryCondition<TTable extends keyof Database> =
-  | Partial<TableRow<TTable>>
-  | ((
-      qb: UpdateQueryBuilder<Database, TTable, TTable, object>,
-    ) => UpdateQueryBuilder<Database, TTable, TTable, object>);
-
-export interface BaseRepository<TTable extends keyof Database> {
-  find(options?: {
-    where?: SelectQueryCondition<TTable>;
-    modify?: QueryModifier<TTable>;
-  }): Promise<TableRow<TTable>[]>;
-  findSelect<K extends keyof TableRow<TTable>>(options: {
-    select: K[];
-    where?: SelectQueryCondition<TTable>;
-    modify?: QueryModifier<TTable>;
-  }): Promise<Pick<TableRow<TTable>, K>[]>;
-  findById(id: IdOf<TTable>): Promise<TableRow<TTable> | undefined>;
-  findByIdOrFail(id: IdOf<TTable>): Promise<TableRow<TTable>>;
-  findOne(options: {
-    where: SelectQueryCondition<TTable>;
-    modify?: QueryModifier<TTable>;
-  }): Promise<TableRow<TTable> | undefined>;
-  findOneOrFail(options: {
-    where: SelectQueryCondition<TTable>;
-    modify?: QueryModifier<TTable>;
-  }): Promise<TableRow<TTable>>;
-  findAll(queryBuilder?: QueryModifier<TTable>): Promise<TableRow<TTable>[]>;
-  findPaginated(options: {
-    page: number;
-    pageSize: number;
-    where?: SelectQueryCondition<TTable>;
-    modify?: QueryModifier<TTable>;
-  }): Promise<{
-    items: TableRow<TTable>[];
-    totalCount: number;
-    pageCount: number;
-    page: number;
-    pageSize: number;
-  }>;
-  count(conditions?: SelectQueryCondition<TTable>): Promise<number>;
-  exists(id: IdOf<TTable>): Promise<boolean>;
-  existsBy(conditions: SelectQueryCondition<TTable>): Promise<boolean>;
-  deleteById(id: IdOf<TTable>): Promise<DeleteResult[]>;
-  deleteMany(conditions: DeleteQueryCondition<TTable>): Promise<DeleteResult[]>;
-  updateById(options: {
-    id: IdOf<TTable>;
-    data: TableUpdate<TTable>;
-  }): Promise<TableRow<TTable> | undefined>;
-  updateMany(options: {
-    where: UpdateQueryCondition<TTable>;
-    data: TableUpdate<TTable>;
-  }): Promise<TableRow<TTable>[]>;
-  insertReturn(
-    data: TableInsert<TTable>,
-  ): Promise<TableRow<TTable> | undefined>;
-  insertMany(data: TableInsert<TTable>[]): Promise<TableRow<TTable>[]>;
-  upsert(options: {
-    data: TableInsert<TTable>;
-    conflictColumns: (keyof TableRow<TTable>)[];
-    updateData?: Partial<TableInsert<TTable>>;
-  }): Promise<TableRow<TTable> | undefined>;
 }
 
 export class Repository<TTable extends keyof Database>
@@ -318,13 +237,7 @@ export class Repository<TTable extends keyof Database>
     pageSize: number;
     where?: SelectQueryCondition<TTable>;
     modify?: QueryModifier<TTable>;
-  }): Promise<{
-    items: TableRow<TTable>[];
-    totalCount: number;
-    pageCount: number;
-    page: number;
-    pageSize: number;
-  }> {
+  }): Promise<PaginatedResult<TTable>> {
     const offset = (options.page - 1) * options.pageSize;
 
     let query = this.db.selectFrom(this.tableName);

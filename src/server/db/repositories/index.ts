@@ -1,5 +1,5 @@
-import type { DB } from "../init";
-import { Repository } from "./base";
+import type { DB } from "../client";
+import { Repository } from "./repository";
 
 export type Repositories = ReturnType<typeof createRepos>;
 

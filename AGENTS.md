@@ -36,7 +36,8 @@ Agent-only working reference for this repo. Read this first, then open only the 
 - RPC procedures: `src/server/rpc/base.ts`
 - RPC router: `src/server/rpc/router.ts`
 - Server context: `src/server/context.ts`
-- Repository base: `src/server/db/repositories/base.ts`
+- Repository base: `src/server/db/repositories/repository.ts`
+- Repository types: `src/server/db/repositories/types.ts`
 - DB schema index: `src/server/db/schema/index.ts`
 - Reference user page: `src/routes/(user)/app/todo.tsx`
 - Reference admin page: `src/routes/admin/users.tsx`

@@ -14,7 +14,7 @@ const migrationEntries = Object.fromEntries(
 
 export default defineConfig({
   entry: {
-    index: "src/server/db/migrate-db.ts",
+    index: "src/server/db/migrate.ts",
     ...migrationEntries,
   },
   format: ["esm"],

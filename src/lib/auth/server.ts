@@ -5,8 +5,8 @@ import { admin } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { CamelCasePlugin } from "kysely";
 import { env } from "@/env/server";
-import type { DB } from "@/server/db/init";
-import { getDatabase } from "@/server/db/init";
+import type { DB } from "@/server/db/client";
+import { getDatabase } from "@/server/db/client";
 import { getAdminPluginConfig } from "./rbac";
 
 // --- Auth config factory (server-only) ---

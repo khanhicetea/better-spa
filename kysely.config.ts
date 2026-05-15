@@ -1,5 +1,5 @@
 import { defineConfig } from "kysely-ctl";
-import { getDatabase } from "./src/server/db/init";
+import { getDatabase } from "./src/server/db/client";
 
 export default defineConfig({
   migrations: {

@@ -9,6 +9,41 @@ Compact reference for DB work in this repo.
 - Prefer repositories from `context.repos`.
 - Use raw `db` only when the repository abstraction is clearly the wrong fit.
 
+## DB Module Structure
+
+```
+src/server/db/
+├── client.ts          # DB client factory (getDatabase, getDatabasePooling) + QueryLoggingPlugin
+├── migrate.ts         # Migration runner script (used by build:migrate)
+├── index.ts           # Barrel re-export of client + repository factory
+├── schema/
+│   ├── auth.ts        # User, Session, Account, Verification table types
+│   ├── todo.ts        # TodoItem table types
+│   ├── job.ts         # Job table types + enums
+│   └── index.ts       # Database interface (combines all tables)
+├── repositories/
+│   ├── types.ts       # Shared TS types: TableRow, IdOf, query conditions, BaseRepository interface
+│   ├── repository.ts  # Repository<TTable> class implementation
+│   └── index.ts       # createRepos() factory + Repositories type
+└── migrations/        # Kysely migration files
+```
+
+### Key imports
+
+```ts
+// DB client and type
+import { getDatabase } from "@/server/db/client";
+import type { DB } from "@/server/db/client";
+
+// Repository factory and type
+import { createRepos } from "@/server/db/repositories";
+import type { Repositories } from "@/server/db/repositories";
+
+// Or use the barrel:
+import { getDatabase, createRepos } from "@/server/db";
+import type { DB, Repositories } from "@/server/db";
+```
+
 ## Live Schema Files
 
 - `src/server/db/schema/auth.ts`
@@ -31,7 +66,8 @@ Each schema file exports:
 
 ## Repository Files
 
-- Base implementation: `src/server/db/repositories/base.ts`
+- Types / interface: `src/server/db/repositories/types.ts`
+- Base implementation: `src/server/db/repositories/repository.ts`
 - Factory: `src/server/db/repositories/index.ts`
 
 Current live repos:
