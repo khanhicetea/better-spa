@@ -1,74 +1,55 @@
 # Better SPA Architecture
 
-Compact reference for how this app is structured today.
+How routing works in this repo today.
 
 ## Core Model
 
-- Keep the document shell SSR for every route.
-- Opt individual route prefixes or pathless groups into `shell + SPA`.
-- Leave non-opted routes as regular SSR pages inside the same shell.
-- Use TanStack Query for cached shell and page data.
+- `src/routes/__root.tsx` always renders the document shell and global providers.
+- Only selected branches opt into SPA behavior.
+- Use TanStack Query for cached shell/page data.
 - Use oRPC for all server calls.
 
-## Request Flow
-
-1. `src/routes/__root.tsx` renders the shared HTML shell and global providers.
-2. Routes that opt into `shell + SPA` preload shell data and auth cache at their own layout boundary.
-3. Those same opt-in layouts set `ssr: "data-only"` so the branch hydrates as an SPA after the shell render.
-4. Non-opted routes stay on normal SSR and only fetch what they need.
-5. Child routes still prefetch their own data in loaders and consume it with TanStack Query.
-
-## Current Route Surface
-
-- `/`
-- `/login`
-- `/signup`
-- `/app`
-- `/app/todo`
-- `/settings`
-- `/admin`
-- `/admin/users`
-- `/api/auth/$`
-- `/api/rpc/$`
-- `/api/upload/$`
-
-## SPA Boundaries
+## SPA Branches
 
 - `/app/*` opts in at `src/routes/(user)/app/route.tsx`
 - `/admin/*` opts in at `src/routes/admin/route.tsx`
-- Reuse `preloadBetterSpa()` from `src/lib/router/better-spa.ts` if another prefix or route group should behave the same way later
+- New SPA branches should reuse `preloadBetterSpa()` from `src/lib/router/better-spa.ts`
+
+SPA branches should:
+
+1. set `ssr: "data-only"` at the layout boundary
+2. preload shell/auth data at that same boundary
+3. prefetch page data in child loaders with the same query options used in the component
 
 ## Auth Boundaries
 
-- User-protected layout: `src/routes/(user)/route.tsx`
-- Admin-protected layout: `src/routes/admin/route.tsx`
+- User auth guard: `src/routes/(user)/route.tsx`
+- Admin auth guard: `src/routes/admin/route.tsx`
 - Unauthenticated users redirect to `/login`
 - Non-admin users redirect from `/admin/*` to `/app`
-- Auth protection is separate from SPA opt-in, so protected SSR pages can coexist with protected SPA branches
 
-## Current Feature Baseline
+Auth protection and SPA opt-in are separate. Protected SSR pages can exist outside SPA branches.
 
-- User CRUD example: `src/routes/(user)/app/todo.tsx`
-- Admin list example: `src/routes/admin/users.tsx`
-- Shared auth shell pieces: `src/routes/(auth)/-auth/*`
+## Route Rules
 
-## Route-Adjacent Modules
+- Keep `route.tsx` for layout, guards, and shared preloading.
+- Keep page files focused on search params, loaders, queries, and composition.
+- Move route-adjacent support code into a sibling `-folder` when the route grows.
 
-Use a sibling folder prefixed with `-` when a route becomes large.
+Live references:
 
-- Good: `src/routes/admin/-users/*`
-- Good: `src/routes/(user)/app/-todo/*`
-- Keep the main route file focused on search params, loaders, queries, and composition.
+- User page: `src/routes/(user)/app/todo.tsx`
+- Admin page: `src/routes/admin/users.tsx`
+- Shared auth UI: `src/routes/(auth)/-auth/*`
 
 ## RPC Boundary
 
-- Client code calls `orpc.*` from `src/lib/orpc.ts`.
-- Server-side RPC calls use the router directly through `createIsomorphicFn`.
-- Client-side RPC calls go to `/api/rpc`.
-- Only pass serializable input across the RPC boundary.
+- Client calls go through `src/lib/orpc.ts` to `/api/rpc/$`.
+- Server-side route code can call the router directly.
+- Only pass serialized values across the RPC boundary.
 
 ## Background Work
 
-- Lightweight post-response work can use `context.waitUntil`.
-- User-visible or long-running work should use a queue model.
-- The current repo has a `job` table but no dedicated worker runtime checked in, so do not document or assume `pnpm worker` unless you add it.
+- Use `context.waitUntil` only for lightweight post-response work.
+- Long-running or user-visible work should use a queue.
+- The repo has a `job` table, but no dedicated worker runtime is checked in.

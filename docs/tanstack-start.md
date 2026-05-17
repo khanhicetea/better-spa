@@ -1,6 +1,6 @@
 # TanStack Start Routing Guide
 
-Compact reference for route work.
+Routing reference for this repo.
 
 ## Live Route Shape
 
@@ -22,6 +22,7 @@ src/routes/
     settings/
       route.tsx
       index.tsx
+      -settings/*
   admin/
     route.tsx
     index.tsx
@@ -35,52 +36,42 @@ src/routes/
 
 ## Route Groups
 
-- Folders in parentheses do not affect the URL.
+- Parentheses do not affect the URL.
 - `(auth)` groups public auth pages.
 - `(user)` groups authenticated pages.
 
-Examples:
+Easy mapping:
 
 - `src/routes/(auth)/login.tsx` -> `/login`
 - `src/routes/(user)/app/todo.tsx` -> `/app/todo`
 
-## Root Route
+## Layout Rules
 
-`src/routes/__root.tsx` owns:
+- `src/routes/__root.tsx` owns app-wide providers and the HTML shell.
+- Use `route.tsx` for layout, guards, and shared preloading.
+- Keep page files focused on feature UI.
 
-- top-level providers
-- HTML shell
+## SPA Opt-In
 
-Keep it focused on app-wide concerns.
-
-## Shell + SPA Opt-In
-
-- Put `ssr: "data-only"` on the prefix or pathless layout that should behave like an SPA branch.
-- Preload shell/auth cache at that same boundary instead of in `__root.tsx`.
-- Current opted prefixes:
+- Put `ssr: "data-only"` on the layout that should behave as an SPA branch.
+- Preload shell and auth data at that same boundary.
+- Current SPA branches:
   - `src/routes/(user)/app/route.tsx` -> `/app/*`
   - `src/routes/admin/route.tsx` -> `/admin/*`
-- Non-opted routes like `/` can stay full SSR in the shared shell.
 
 ## Protected Layouts
 
-Use `beforeLoad` in layout routes:
-
 - `src/routes/(user)/route.tsx` enforces login
-- `src/routes/admin/route.tsx` enforces login + admin role
+- `src/routes/admin/route.tsx` enforces login and admin role
 
 Both return the resolved user so child routes get non-null typing.
 
 ## Data Loading Pattern
 
-1. Validate search params in the route.
-2. Derive `loaderDeps` if query params affect the fetch.
-3. Prefetch with `context.queryClient.prefetchQuery(...)`.
-4. In the component, read the same query with `useSuspenseQuery(...)`.
-
-## Layout Rule
-
-Use `route.tsx` files for shared shells and guards. Keep page files focused on feature UI.
+1. validate search params in the route
+2. derive `loaderDeps` when search params affect the fetch
+3. prefetch with `context.queryClient.prefetchQuery(...)`
+4. read the same query in the component with `useSuspenseQuery(...)`
 
 ## API Routes
 
@@ -90,4 +81,4 @@ Current API routes:
 - `src/routes/api/rpc.$.ts`
 - `src/routes/api/upload.$.ts`
 
-Do not add server endpoints outside the route tree unless there is a clear runtime reason.
+Do not add server endpoints outside the route tree unless the runtime requires it.

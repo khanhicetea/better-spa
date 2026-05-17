@@ -1,8 +1,8 @@
 # React Conventions
 
-Compact React rules for this repo.
+React rules for this repo.
 
-## Critical Rule: React Compiler
+## React Compiler
 
 Do not add manual memoization.
 
@@ -18,33 +18,30 @@ const value = deriveValue(data)
 function Component() {}
 ```
 
-## Component Style
+## Component Rules
 
 - Use function components only.
 - Destructure props in the function signature.
 - Use default parameter values instead of `defaultProps`.
-- Keep simple event handlers inline; extract only when the logic is reused or long.
+- Keep simple event handlers inline. Extract only when reused or long.
 
-## File and Naming Pattern
+## File and State Rules
 
-- Components: PascalCase names
-- Files: kebab-case for helpers/components, route file names follow route structure
-- Route-adjacent support code belongs in a sibling `-folder`
-
-## State Rules
-
-- Keep server state in TanStack Query, not duplicated local state.
-- Avoid derived state when it can be computed during render.
-- Prefer one mutation owner per item row/card when a list supports independent actions.
+- Components use PascalCase names.
+- Helper and component files use kebab-case.
+- Route-adjacent support code belongs in a sibling `-folder`.
+- Keep server state in TanStack Query.
+- Avoid derived state that can be computed during render.
+- Prefer one mutation owner per row or card when list items act independently.
 
 ## Resetting Local State
 
 Use `key` when a dialog, form, or detail panel must reset when its backing record changes.
 
-Examples:
+Typical cases:
 
-- edit form switching between two records
-- dialog reopened for a fresh create flow
+- switching an edit form between records
+- reopening a create flow as a fresh form
 
 ## Query and Mutation Pattern
 
@@ -54,7 +51,7 @@ Examples:
 
 ## Anti-Patterns
 
-- No class components
-- No manual memoization
-- No optimistic updates by default
-- No giant route files when a `-folder` would make the route clearer
+- class components
+- manual memoization
+- optimistic updates by default
+- giant route files that should be split into a `-folder`

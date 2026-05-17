@@ -1,8 +1,8 @@
 # RPC Architecture
 
-Compact oRPC reference. This project does **not** use tRPC.
+oRPC reference for this repo. Do not write tRPC-style code here.
 
-## Files
+## Live Files
 
 ```text
 src/server/rpc/
@@ -16,14 +16,14 @@ src/server/rpc/
     user.ts
 ```
 
-## Procedure Types
+## Procedures
 
 - `baseProcedure`: request context + rate limiting
 - `publicProcedure`: alias of `baseProcedure`
 - `authedProcedure`: authenticated user required
 - `adminProcedure`: admin user required
 
-The live context includes:
+Live context includes:
 
 - `headers`
 - `session`
@@ -32,7 +32,16 @@ The live context includes:
 - `repos`
 - `waitUntil`
 
-## Current RPC Surface
+## Handler Rules
+
+- One handler file per domain.
+- Export short action names such as `list`, `get`, `create`, `update`, `remove`.
+- Validate all input with `zod`.
+- Prefer `context.repos`.
+- Enforce ownership and auth inside the handler.
+- Return plain serialized objects.
+
+## Live RPC Surface
 
 - `app.shellData`
 - `auth.getCurrentUser`
@@ -44,66 +53,24 @@ The live context includes:
 - `user.list`
 - `user.get`
 
-Router aliases matter. For example, `todo.remove` is exported to the client as `todo.delete`.
+Easy mistake: router aliases matter. `todo.remove` is exported to the client as `todo.delete`.
 
-## Handler Rules
+## Client Pattern
 
-- One handler file per domain.
-- Export short action names: `list`, `get`, `create`, `update`, `remove`.
-- Validate all input with `zod`.
-- Prefer `context.repos` for data access.
-- Enforce ownership checks inside the handler, not only in the UI.
-- Return plain serialized objects.
+- In loaders, prefetch with the same query options the component will use.
+- In components, read with `useSuspenseQuery(...)`.
+- Mutate with `useMutation(...)`.
+- Refetch from the screen that owns the data.
 
-## Handler Template
+## Background and Errors
 
-```ts
-export const list = authedProcedure
-  .input(z.object({ page: z.number().int().positive().catch(1) }))
-  .handler(async ({ input, context }) => {
-    return context.repos.todoItem.findPaginated({
-      page: input.page,
-      pageSize: 20,
-      where: { userId: context.user.id },
-      modify: (qb) => qb.orderBy("createdAt", "desc"),
-    });
-  });
-```
-
-## Client Usage
-
-In loaders, prefetch with the same query options the component will use:
-
-```ts
-loader: async ({ context }) => {
-  context.queryClient.prefetchQuery(
-    orpc.user.list.queryOptions({
-      input: { page: 1 },
-    }),
-  );
-};
-```
-
-In components:
-
-```ts
-const { data, refetch } = useSuspenseQuery(orpc.user.list.queryOptions({ input: { page } }));
-
-const mutation = useMutation(
-  orpc.todo.create.mutationOptions({
-    onSuccess: () => refetch(),
-  }),
-);
-```
-
-## Error and Background Rules
-
-- Use typed procedure errors such as `errors.NOT_FOUND()` when available.
+- Use typed procedure errors when available.
 - Use `waitUntil` only for lightweight best-effort work.
 - Do not hide long-running user-facing work inside `waitUntil`.
 
 ## Common Mistakes
 
-- Do not write tRPC-style routers or hooks.
-- Do not pass functions, `Date` instances from uncontrolled inputs, or class instances as RPC input.
-- Do not invalidate optimistically by default; refetch from the component that owns the data.
+- writing tRPC-style routers or hooks
+- passing non-serializable values across the RPC boundary
+- enforcing ownership only in the UI
+- defaulting to optimistic invalidation instead of refetch

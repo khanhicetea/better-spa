@@ -1,28 +1,23 @@
 # Cloudflare Worker Support
 
-Compact reference for making this app run on Cloudflare Workers.
+Cloudflare is optional. The live repo is Node-first and does not ship a finalized Worker entry.
 
-## Status
+## If You Add Worker Support
 
-Cloudflare is an optional target. The current baseline repo is Node-first and does not ship a finalized Cloudflare entry setup.
-
-## What You Need
+You need:
 
 - `wrangler`
 - `@cloudflare/vite-plugin`
 - a Worker-compatible `vite.config.ts`
-- a server entry that creates request-scoped DB, auth, repos, and `waitUntil`
+- a Worker server entry that preserves the existing request context contract
 
 ## Required Adaptations
 
-1. Swap Vite config to a Cloudflare-compatible setup.
-2. Change `src/server.ts` to use a Worker handler instead of the Node handler.
-3. Build request context per request using the Worker environment.
-4. Preserve the same context contract used by `src/server/context.ts`.
+1. Replace the Node server entry with a Worker handler.
+2. Build request-scoped context from the Worker environment.
+3. Preserve the same context shape used by `src/server/context.ts`.
 
-## Request Context Requirements
-
-For each request, initialize:
+Each request must initialize:
 
 - `db`
 - `auth`
@@ -31,11 +26,9 @@ For each request, initialize:
 - `headers`
 - `waitUntil`
 
-Wrap request handling so server code can still access these values through the existing context helpers.
+## Data Access Rule
 
-## Data Access Note
-
-Do not reuse a Node-style singleton DB assumption. In a Worker environment, derive connections from the runtime bindings you actually have available.
+Do not assume a Node-style singleton DB. Build connections from the Worker bindings available for that request.
 
 ## Documentation Rule
 
@@ -46,4 +39,4 @@ If you add real Cloudflare support, update:
 - `docs/commands.md`
 - `AGENTS.md`
 
-with the exact files, commands, and env bindings that the implementation requires.
+Document exact files, commands, and env bindings. Do not leave runtime details implied.

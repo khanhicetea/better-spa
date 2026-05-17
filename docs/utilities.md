@@ -1,10 +1,10 @@
 # Utility Libraries
 
-Compact reference for common helpers.
+Common helpers already used in this repo.
 
 ## Dates
 
-Prefer project helpers in `src/lib/helpers/date.ts`:
+Prefer project helpers from `src/lib/helpers/date.ts`:
 
 - `formatDate`
 - `formatTime`
@@ -18,13 +18,15 @@ Prefer project helpers in `src/lib/helpers/date.ts`:
 
 Rules:
 
-- Store timestamps in PostgreSQL as `timestamptz`
-- Send dates across boundaries as ISO strings when possible
-- Format for display at the edge of the UI
+- store timestamps as `timestamptz`
+- send dates across boundaries as ISO strings when possible
+- format for display at the edge of the UI
 
 ## `date-fns`
 
-Import directly when project helpers are not enough:
+Use direct imports only when project helpers are not enough.
+
+Common cases:
 
 - `format`
 - `parseISO`
@@ -37,7 +39,7 @@ Import directly when project helpers are not enough:
 
 Use named imports only.
 
-Common utilities already used in the repo:
+Already used in the repo:
 
 - `pickBy`
 - `pick`
@@ -47,4 +49,4 @@ Common utilities already used in the repo:
 - `debounce`
 - `throttle`
 
-Use them sparingly; prefer plain JS when the native code is clearer.
+Prefer plain JS when it is clearer.

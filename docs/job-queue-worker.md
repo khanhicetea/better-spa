@@ -1,50 +1,40 @@
 # Job Queue and Background Work
 
-Compact reference for async work.
+Rules for async work in this repo.
 
 ## Current Repo Truth
 
-- The database includes a `job` table and related schema types.
-- A dedicated worker runtime is **not** checked into the current tree.
-- `todo.export` is currently synchronous RPC, not queued work.
+- The DB includes a `job` table and schema types.
+- No dedicated worker runtime is checked in.
+- `todo.export` is still synchronous RPC.
 
-## Rule If You Add Async Jobs
+## Use a Queue When
 
-- Web requests should enqueue work and return immediately.
-- Request handlers should not run long-lived worker logic inline.
-- Use `context.waitUntil` only for lightweight best-effort work such as analytics or cleanup.
+- work is long-running
+- users need progress or retry state
+- the job may outlive the request
+- the operation should be retried or scheduled
 
-## When a Queue Is Appropriate
+Use `context.waitUntil` only for lightweight best-effort work such as analytics or cleanup.
 
-Use queued work for:
+## Minimal Queue Contract
 
-- exports
-- report generation
-- email batches
-- retries or scheduled work
-- progress-tracked user operations
-
-Do not use `waitUntil` for those.
-
-## Minimal Queue Design
-
-If you add a worker system later, keep this contract:
-
-1. RPC handler validates input and inserts a `job` row.
+1. RPC validates input and inserts a `job` row.
 2. A separate runtime claims pending jobs.
 3. The worker updates `status`, `progress`, `result`, and `error`.
 4. The UI polls or subscribes to the job record.
 
-## Job Schema Notes
+## Job Table Notes
 
 The `job` table already supports:
 
-- `status`
-- `progress`
-- `payload`
-- `result`
-- `error`
-- retries and priority
-- leasing fields for multi-worker safety
+- status
+- progress
+- payload
+- result
+- error
+- retries
+- priority
+- lease fields for multi-worker safety
 
-If you implement the missing worker runtime, update this doc and `AGENTS.md` to reflect the actual commands and file paths.
+If you add a worker runtime, update this file and `AGENTS.md` with the exact commands and paths.

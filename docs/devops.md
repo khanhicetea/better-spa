@@ -1,12 +1,10 @@
 # DevOps and Deployment
 
-Compact deployment reference.
+Deployment baseline for this repo.
 
 ## Default Runtime
 
-Node.js is the default deployment target.
-
-Build and run:
+Node.js is the default target.
 
 ```bash
 pnpm build
@@ -15,13 +13,13 @@ node .output/server/index.mjs
 
 ## Optional Runtime
 
-Cloudflare Workers is possible but not the default baseline. See `docs/cloudflare.md` before making runtime-specific changes.
+Cloudflare Workers is possible but not part of the live baseline. Read `docs/cloudflare.md` before making runtime-specific changes.
 
 ## Request Context
 
 Server code depends on request-scoped context from `src/server/context.ts`.
 
-Available helpers include:
+Important helpers:
 
 - `getCurrentDB()`
 - `getCurrentAuth()`
@@ -47,6 +45,6 @@ Optional, depending on features:
 
 ## Production Shape
 
-The live repo builds a single app server output under `.output/server/`.
-
-The repo does not currently define a separate worker build or worker start script. If you add one, document the exact process here and in `docs/commands.md`.
+- The app builds a single server output in `.output/server/`.
+- There is no separate worker build or worker start script in the live repo.
+- If you add one, document the exact process here and in `docs/commands.md`.
