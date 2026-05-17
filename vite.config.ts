@@ -48,9 +48,4 @@ export default defineConfig(({ command }) => ({
     react(),
     tailwindcss(),
   ],
-  build: {
-    rollupOptions: {
-      external: ["pg", "kysely"],
-    },
-  },
 }));
