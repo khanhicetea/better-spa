@@ -1,6 +1,8 @@
 # Commands Reference
 
-Run `pnpm check` after edits.
+Run `pnpm check` at the end of every task.
+
+`package.json` requires Node `>=24`.
 
 ## App
 
@@ -23,15 +25,14 @@ pnpm check
 ## Database
 
 ```bash
-pnpm kysely migrate make <name>
-pnpm kysely migrate latest
-pnpm kysely migrate up
-pnpm kysely migrate down
-pnpm kysely migrate list
-pnpm kysely sql "SELECT * FROM todo_item LIMIT 5" -f json
+pnpm build:migrate
+pnpm migrate:db
+pnpm kysely
 ```
 
-Use `snake_case` in raw SQL.
+- Migrations live in `src/server/db/migrations/`.
+- The app uses handwritten schema types, not Kysely codegen.
+- Use `snake_case` in raw SQL.
 
 ## Auth and UI
 

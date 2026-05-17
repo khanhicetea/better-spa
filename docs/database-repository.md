@@ -4,92 +4,75 @@ Rules for DB work in this repo.
 
 ## Non-Negotiables
 
-- No Kysely codegen.
-- Schema types are handwritten in `src/server/db/schema/`.
-- Prefer `context.repos` in handlers.
-- Use raw `db` only when the repository abstraction is clearly the wrong fit.
+- Do not use Kysely codegen for app schema types.
+- Handwrite schema types in `src/server/db/schema/`.
+- Prefer `context.repos` in RPC handlers.
+- Use raw `context.db` only when the generic repository is a poor fit.
 
 ## Live Structure
 
 ```text
 src/server/db/
   client.ts
-  migrate.ts
   index.ts
+  migrate.ts
+  tsup.migrate.config.ts
+  migrations/
   schema/
     auth.ts
     todo.ts
-    job.ts
     index.ts
   repositories/
     index.ts
     repository.ts
     types.ts
-  migrations/
 ```
+
+`src/server/db/schema/job.ts` still exists as legacy code, but the latest migration drops the `job` table. Do not use it for new work unless you reintroduce the table and update this doc set.
 
 ## Schema Rules
 
-- Each schema file should export `<Name>Table`, `<Name>`, `<Name>Insert`, and `<Name>Update`.
-- SQL tables are singular: `user`, `session`, `todo_item`, `job`.
-- TypeScript table keys are camelCase: `user`, `todoItem`, `job`.
-- Use `snake_case` in raw SQL and `camelCase` in Kysely code.
+- Each schema file exports `<Name>Table`, `<Name>`, `<Name>Insert`, and `<Name>Update`.
+- SQL tables are singular: `user`, `session`, `account`, `verification`, `todo_item`.
+- Kysely table keys are camelCase where needed: `todoItem`.
+- Use `snake_case` in SQL and `camelCase` in TypeScript.
 
 ## Repositories
 
-Current live repos:
+Current live repos from `createRepos()`:
 
 - `repos.user`
 - `repos.todoItem`
 
-Base repository files:
+Use built-in methods before adding custom repository code:
 
-- `src/server/db/repositories/index.ts`
-- `src/server/db/repositories/repository.ts`
-- `src/server/db/repositories/types.ts`
-
-Use the built-in methods before adding custom repository code:
-
-- `find`
-- `findSelect`
-- `findById`
-- `findByIdOrFail`
-- `findOne`
+- `find`, `findSelect`, `findAll`
+- `findById`, `findByIdOrFail`
+- `findOne`, `findOneOrFail`
 - `findPaginated`
-- `count`
-- `exists`
-- `existsBy`
-- `insertReturn`
-- `insertMany`
-- `updateById`
-- `updateMany`
-- `deleteById`
-- `deleteMany`
-- `upsert`
+- `count`, `exists`, `existsBy`
+- `insertReturn`, `insertMany`, `upsert`
+- `updateById`, `updateMany`
+- `deleteById`, `deleteMany`
 
-## When to Add a Custom Repo
-
-Add a custom repository class only for reusable or complex logic.
-
-- Good: search logic, cross-table workflow, transaction helper
-- Bad: thin wrappers over `find({ where })`
-
-If you add one:
-
-1. create `src/server/db/repositories/<name>.repo.ts`
-2. register it in `src/server/db/repositories/index.ts`
-3. update `src/server/db/schema/index.ts` if a new table was added
+Add a custom repository only for reusable complex logic such as search, cross-table workflows, or transaction helpers.
 
 ## Migration Flow
 
-1. create the migration in `src/server/db/migrations/`
-2. update schema types in `src/server/db/schema/`
-3. wire repository access if needed
-4. update `docs/db-schema.md`
+1. add a migration in `src/server/db/migrations/`
+2. update `src/server/db/schema/*`
+3. update `src/server/db/schema/index.ts`
+4. wire `src/server/db/repositories/index.ts` if a new repo is needed
+5. update `docs/db-schema.md`
 
-## Handler Rule
+Build and run migrations with:
 
-Most handlers should stay simple:
+```bash
+pnpm build:migrate
+pnpm migrate:db
+```
+
+## Handler Shape
 
 1. validate input
 2. load via `context.repos`

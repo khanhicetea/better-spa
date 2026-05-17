@@ -70,7 +70,7 @@ Both return the resolved user so child routes get non-null typing.
 
 1. validate search params in the route
 2. derive `loaderDeps` when search params affect the fetch
-3. prefetch with `context.queryClient.prefetchQuery(...)`
+3. preload with `context.queryClient.ensureQueryData(...)` or `prefetchQuery(...)`
 4. read the same query in the component with `useSuspenseQuery(...)`
 
 ## API Routes

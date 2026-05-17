@@ -1,33 +1,30 @@
 # DevOps and Deployment
 
-Deployment baseline for this repo.
+Deployment baseline for this Node-first app.
 
 ## Default Runtime
 
-Node.js is the default target.
+Node.js `>=24` is the default target.
 
 ```bash
 pnpm build
-node .output/server/index.mjs
+pnpm start
 ```
 
 ## Optional Runtime
 
-Cloudflare Workers is possible but not part of the live baseline. Read `docs/cloudflare.md` before making runtime-specific changes.
+Cloudflare Workers support is not live. Read `docs/cloudflare.md` before runtime-specific changes.
 
 ## Request Context
 
-Server code depends on request-scoped context from `src/server/context.ts`.
+`src/server/node-server.ts` creates one DB/auth/repo set at startup, then stores per-request state in `src/server/context.ts`.
 
-Important helpers:
+Use:
 
-- `getCurrentDB()`
-- `getCurrentAuth()`
-- `getCurrentSession()`
-- `getCurrentRepos()`
-- `getRequestHeaders()`
+- `getRequestContext()` for request state
+- `requestStorage.run(...)` only in a server entry
 
-If you change server entry behavior, preserve this context model.
+The context shape is `headers`, `auth`, `session`, `db`, `repos`, and `waitUntil`.
 
 ## Required Environment
 
@@ -39,9 +36,10 @@ Minimum server env:
 
 Optional, depending on features:
 
-- OAuth provider secrets
+- `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
 - `CRON_SECRET`
-- S3 configuration
+- S3 env from `docs/file-storage.md`
 
 ## Production Shape
 

@@ -1,55 +1,53 @@
 # Better SPA Architecture
 
-How routing works in this repo today.
+How the shell-SPA model works here.
 
 ## Core Model
 
-- `src/routes/__root.tsx` always renders the document shell and global providers.
-- Only selected branches opt into SPA behavior.
-- Use TanStack Query for cached shell/page data.
-- Use oRPC for all server calls.
+- `src/routes/__root.tsx` owns the HTML shell, global providers, error boundary, devtools, and toaster.
+- Route groups decide auth and SPA behavior; page files stay focused on data and UI.
+- TanStack Query owns server state. oRPC owns server calls.
+- Server-side oRPC calls use `src/lib/orpc.server.ts`; browser calls use `/api/rpc`.
 
 ## SPA Branches
 
-- `/app/*` opts in at `src/routes/(user)/app/route.tsx`
-- `/admin/*` opts in at `src/routes/admin/route.tsx`
-- New SPA branches should reuse `preloadBetterSpa()` from `src/lib/router/better-spa.ts`
+Current `ssr: "data-only"` branches:
 
-SPA branches should:
+- `/app/*`: `src/routes/(user)/app/route.tsx`
+- `/admin/*`: `src/routes/admin/route.tsx`
 
-1. set `ssr: "data-only"` at the layout boundary
-2. preload shell/auth data at that same boundary
-3. prefetch page data in child loaders with the same query options used in the component
+For a new SPA branch:
+
+1. put `ssr: "data-only"` on the layout boundary
+2. call `preloadBetterSpa(context.queryClient)` in `beforeLoad`
+3. prefetch child page data with the same query options used by the component
+
+`preloadBetterSpa()` loads shell data and best-effort auth data from `src/lib/router/better-spa.ts`.
 
 ## Auth Boundaries
 
-- User auth guard: `src/routes/(user)/route.tsx`
-- Admin auth guard: `src/routes/admin/route.tsx`
-- Unauthenticated users redirect to `/login`
-- Non-admin users redirect from `/admin/*` to `/app`
+- Public auth pages live under `src/routes/(auth)`.
+- `src/routes/(auth)/route.tsx` redirects signed-in users to `/app/todo`.
+- `src/routes/(user)/route.tsx` requires a user and redirects anonymous users to `/login`.
+- `src/routes/admin/route.tsx` requires admin role and redirects non-admin users to `/app`.
 
-Auth protection and SPA opt-in are separate. Protected SSR pages can exist outside SPA branches.
+Auth protection and SPA opt-in are separate. A protected route does not need to be an SPA branch.
 
 ## Route Rules
 
-- Keep `route.tsx` for layout, guards, and shared preloading.
-- Keep page files focused on search params, loaders, queries, and composition.
-- Move route-adjacent support code into a sibling `-folder` when the route grows.
+- Use `route.tsx` for layout, guards, and shared preloading.
+- Use page files for search params, loaders, queries, and composition.
+- Put route-adjacent support code in a sibling `-folder` when a page grows.
 
 Live references:
 
-- User page: `src/routes/(user)/app/todo.tsx`
-- Admin page: `src/routes/admin/users.tsx`
-- Shared auth UI: `src/routes/(auth)/-auth/*`
-
-## RPC Boundary
-
-- Client calls go through `src/lib/orpc.ts` to `/api/rpc/$`.
-- Server-side route code can call the router directly.
-- Only pass serialized values across the RPC boundary.
+- User feature: `src/routes/(user)/app/todo.tsx`
+- Settings feature: `src/routes/(user)/settings/index.tsx`
+- Admin feature: `src/routes/admin/users.tsx`
+- Auth UI: `src/routes/(auth)/-auth/*`
 
 ## Background Work
 
-- Use `context.waitUntil` only for lightweight post-response work.
-- Long-running or user-visible work should use a queue.
-- The repo has a `job` table, but no dedicated worker runtime is checked in.
+- `context.waitUntil` is available for lightweight post-response work only.
+- There is no live worker runtime or active `job` table in the current schema.
+- Add a real queue/table/runtime before documenting user-visible async jobs.

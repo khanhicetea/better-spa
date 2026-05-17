@@ -12,6 +12,7 @@ Prefer project helpers from `src/lib/helpers/date.ts`:
 - `formatRelativeTime`
 - `formatSmart`
 - `toUTCString`
+- `getUserTimeZone`
 - `formatForDateTimeLocal`
 - `isPast`
 - `isFuture`
@@ -42,11 +43,5 @@ Use named imports only.
 Already used in the repo:
 
 - `pickBy`
-- `pick`
-- `omit`
-- `uniqBy`
-- `groupBy`
-- `debounce`
-- `throttle`
 
 Prefer plain JS when it is clearer.

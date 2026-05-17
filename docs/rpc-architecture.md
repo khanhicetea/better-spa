@@ -1,6 +1,6 @@
 # RPC Architecture
 
-oRPC reference for this repo. Do not write tRPC-style code here.
+oRPC only. Do not add tRPC routers, hooks, or naming conventions.
 
 ## Live Files
 
@@ -16,30 +16,36 @@ src/server/rpc/
     user.ts
 ```
 
+Client utilities:
+
+- `src/lib/orpc.ts`: isomorphic client and TanStack Query helpers
+- `src/lib/orpc.server.ts`: server-only router client
+- `src/routes/api/rpc.$.ts`: HTTP endpoint
+
 ## Procedures
 
-- `baseProcedure`: request context + rate limiting
+- `baseProcedure`: request context and rate limit middleware
 - `publicProcedure`: alias of `baseProcedure`
-- `authedProcedure`: authenticated user required
-- `adminProcedure`: admin user required
+- `authedProcedure`: requires `context.user`
+- `adminProcedure`: requires admin user
 
-Live context includes:
+Live context from `src/server/context.ts`:
 
 - `headers`
+- `auth`
 - `session`
 - `db`
-- `auth`
 - `repos`
 - `waitUntil`
 
 ## Handler Rules
 
-- One handler file per domain.
-- Export short action names such as `list`, `get`, `create`, `update`, `remove`.
-- Validate all input with `zod`.
-- Prefer `context.repos`.
-- Enforce ownership and auth inside the handler.
-- Return plain serialized objects.
+- Keep one handler file per domain.
+- Export short server action names: `list`, `get`, `create`, `update`, `remove`.
+- Validate input with `zod`.
+- Prefer `context.repos` over raw Kysely.
+- Enforce auth and ownership in the handler.
+- Return serialized data only.
 
 ## Live RPC Surface
 
@@ -52,25 +58,21 @@ Live context includes:
 - `todo.export`
 - `user.list`
 - `user.get`
+- `user.updateProfile`
 
-Easy mistake: router aliases matter. `todo.remove` is exported to the client as `todo.delete`.
+Router aliases matter: `todo.remove` is exposed as `todo.delete`, and `todo.exportData` is exposed as `todo.export`.
 
 ## Client Pattern
 
-- In loaders, prefetch with the same query options the component will use.
-- In components, read with `useSuspenseQuery(...)`.
-- Mutate with `useMutation(...)`.
-- Refetch from the screen that owns the data.
+- Query with `orpc.domain.action.queryOptions(...)`.
+- Mutate with `orpc.domain.action.mutationOptions(...)`.
+- In loaders, prefetch the same query options used by the component.
+- In components, read prefetched data with `useSuspenseQuery(...)`.
+- After mutation, refetch or invalidate the screen-owned query.
 
-## Background and Errors
+## Avoid
 
-- Use typed procedure errors when available.
-- Use `waitUntil` only for lightweight best-effort work.
-- Do not hide long-running user-facing work inside `waitUntil`.
-
-## Common Mistakes
-
-- writing tRPC-style routers or hooks
-- passing non-serializable values across the RPC boundary
-- enforcing ownership only in the UI
-- defaulting to optimistic invalidation instead of refetch
+- non-serializable RPC inputs or outputs
+- ownership checks only in UI
+- optimistic updates by default
+- long-running user-visible work hidden in `waitUntil`

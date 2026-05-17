@@ -4,24 +4,25 @@ Pattern reference for adding a new CRUD domain. This is not a live feature.
 
 ## Build Order
 
-1. Migration
-2. Schema types
-3. Repository
+1. migration
+2. schema types
+3. repository wiring
 4. RPC handlers
-5. Router entry
-6. Route loader and page
+5. router entry
+6. route loader and page
 7. UI
-8. Navigation
+8. navigation
 9. `pnpm check`
 
 ## Migration
 
 - Create the table in `src/server/db/migrations/`
-- Use `id: text`
+- Use `id text primary key`
 - Add explicit FK delete and update behavior
 - Add `created_at` and `updated_at`
 - Add indexes for common filters and ordering
 - Use `jsonb` for persisted file metadata when needed
+- Run `pnpm build:migrate` and `pnpm migrate:db` when applying locally
 
 ## Schema and Repo
 

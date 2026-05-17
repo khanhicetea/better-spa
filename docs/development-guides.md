@@ -18,14 +18,16 @@ Short implementation checklist for agents.
 
 ## Standard Build Order
 
-1. Migration
-2. Schema types
-3. Repository wiring
+Use only the steps that apply:
+
+1. migration
+2. schema types
+3. repository wiring
 4. RPC handler
-5. Router entry
-6. Route loader and page
+5. router entry
+6. route loader and page
 7. UI composition
-8. Navigation if needed
+8. navigation
 9. `pnpm check`
 
 ## Rules That Matter
@@ -36,6 +38,7 @@ Short implementation checklist for agents.
 - Prefer refetch after mutation.
 - Keep one-off subcomponents in the route file unless reuse is clear.
 - Add a sibling `-folder` when a route grows too large.
+- Use `context.waitUntil` only for lightweight best-effort work.
 
 ## Feature Checklist
 
@@ -48,6 +51,7 @@ Short implementation checklist for agents.
 - Loader prefetch added when the page needs hydrated data
 - Sidebar entry added for new navigable pages
 - `docs/db-schema.md` updated if the DB changed
+- migration built/run with `pnpm build:migrate` and `pnpm migrate:db` when needed
 
 ## Data and Mutations
 
