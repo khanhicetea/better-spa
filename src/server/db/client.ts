@@ -9,7 +9,7 @@ import type {
 } from "kysely";
 import { CamelCasePlugin, Kysely, PostgresDialect } from "kysely";
 import pg from "pg";
-import { logger } from "@/server/logger";
+import { logger } from "../logger";
 import type { Database } from "./schema";
 
 const { Pool } = pg;

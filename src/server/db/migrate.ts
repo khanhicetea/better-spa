@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CamelCasePlugin, FileMigrationProvider, Kysely, Migrator, PostgresDialect } from "kysely";
 import pg from "pg";
-import type { Database } from "@/server/db/schema";
+import type { Database } from "./schema";
 
 const connectionString = process.env.DATABASE_URL;
 

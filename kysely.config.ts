@@ -1,5 +1,5 @@
 import { defineConfig } from "kysely-ctl";
-import { getDatabase } from "./src/server/db/client";
+import { getDatabasePooling } from "./src/server/db/client";
 
 export default defineConfig({
   migrations: {
@@ -15,5 +15,5 @@ export default defineConfig({
       return `${year}-${month}-${day}_${hour}-${minute}_`;
     },
   },
-  kysely: getDatabase(process.env.DATABASE_URL!),
+  kysely: getDatabasePooling(process.env.DATABASE_URL!),
 });
