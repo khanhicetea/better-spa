@@ -18,7 +18,7 @@ Agent reference for this repo. Read this first, then open only the task-specific
 - Do not use optimistic updates. Refetch or use another concurrency-safe pattern.
 - All app writes go through the RPC layer.
 - In RPC handlers, prefer `context.repos` over raw Kysely.
-- After every migration, update `docs/db-schema.md`.
+- After every migration, regenerate `docs/db-schema.md` with `pnpm db:snapshot` (do not hand-edit).
 
 ## Start Order
 

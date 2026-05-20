@@ -1,345 +1,225 @@
 # Better SPA
 
-A minimal starter template that implements the **Better SPA** pattern - the perfect balance between SSR and SPA for optimal UX and DX.
+A minimal starter that implements the **Better SPA** pattern: SSR a thin shell for auth and app settings, then hand off to a SPA for everything else.
 
-## 🎯 Philosophy
+## Philosophy
 
-> "The good balance between SSR and SPA is the best stack for UX and DX. Only SSR a shell for SPA (server rendering should check auth, and populate app settings + user settings and pass it into the shell). Everything else, user can wait for first-load."
+> The good balance between SSR and SPA is the best stack for UX and DX. Only SSR a shell for the SPA — server rendering should check auth and populate app + user settings, then pass them into the shell. Everything else, the user can wait for first-load.
 
-## 🚀 Better SPA Pattern
+## What gets SSR'd
 
-### What gets SSR'd (Server-Side Rendered)
+- **Authentication**: user session validation
+- **App settings**: configuration, feature flags, environment info
+- **User preferences**: theme, language, layout
+- **Shell UI**: minimal HTML structure plus critical data and CSS
 
-- **Authentication**: User session validation
-- **App Settings**: Configuration, feature flags, environment info
-- **User Preferences**: Theme, language, layout preferences
-- **Minimal Shell UI**: Basic HTML structure and critical data and CSS
+## What runs as SPA
 
-### What runs as SPA (Single Page Application)
+- **Routing & navigation**: all client-side
+- **Data fetching**: oRPC via TanStack Query
+- **State**: TanStack Query for server state, `useState` for local UI state
+- **Rendering**: every interactive component
 
-- **Routing & Navigation**: All client-side routing
-- **Data Fetching**: API calls via oRPC
-- **State Management**: React Query for client-side state
-- **UI Rendering**: All interactive components
-- **Everything Else**: Users can wait for first-load
+## Tech stack
 
-## 🔧 Tech Stack
+### Core
 
-### Core Framework
+- **TanStack Start** — full-stack React framework
+- **TanStack Router** — type-safe routing
+- **TanStack Query** — server state
+- **React 19** with the React Compiler
+- **oRPC** — type-safe RPC (mobile/native ready)
 
-- **TanStack Start** - Full-stack React framework
-- **TanStack Router** - Type-safe routing
-- **TanStack Query** - Server state management
-- **React 19** - Latest React with concurrent features
-- **oRPC** - Type-safe RPC for API (mobile/native ready)
+### Auth
 
-### Authentication
-
-- **Better Auth** - Modern auth with cookie sessions
-- **Email/Password** - Built-in authentication
-- **Cookie Caching** - Reduced database calls
+- **Better Auth** — email/password, OAuth (GitHub, Google), cookie sessions
 
 ### Database
 
-- **Kysely** - Type-safe SQL query builder
-- **PostgreSQL** - Production-ready database
-- **SQLite** - Local development (file-based)
+- **Kysely** with handwritten schema types (no codegen)
+- **PostgreSQL** for both dev and prod (a `docker-compose.yml` is included for local Postgres)
 
-### UI & Styling
+### UI
 
-- **shadcn/ui** - Accessible component library
-- **Tailwind CSS v4** - Utility-first styling
-- **Radix UI** - Unstyled primitives
-- **Lucide React** - Icon library
+- **shadcn/ui** components
+- **Base UI** (`@base-ui/react`) primitives — use the `render` prop, never `asChild`
+- **Tailwind CSS v4** with theme tokens (`bg-primary`, `bg-muted`, `text-muted-foreground`, `border-border`)
+- **lucide-react** icons
 
-## 📁 Project Structure
+## Project structure
 
 ```
-better-spa/
+shell-spa/
 ├── src/
-│   ├── components/          # Reusable UI components
-│   ├── lib/                 # Core utilities
-│   │   ├── auth/            # Authentication setup
-│   │   ├── db/              # Database configuration
-│   │   └── orpc.ts          # RPC client setup
-│   ├── routes/             # File-based routing
-│   │   ├── (auth)/          # Public auth pages
-│   │   ├── (user)/          # Protected routes
-│   │   ├── (test)/          # Test routes
-│   │   ├── api/             # API endpoints
-│   │   └── __root.tsx       # Shell implementation
-│   └── rpc/                # RPC procedures
-├── public/                 # Static assets
-└── kysely/                 # Database migrations
+│   ├── components/             # Reusable UI components
+│   ├── env/                    # Validated client + server env (t3-env)
+│   ├── hooks/                  # Custom React hooks
+│   ├── lib/                    # Auth, oRPC client, helpers
+│   ├── nitro/                  # Nitro tasks (cron, etc.)
+│   ├── routes/                 # File-based routing
+│   │   ├── (auth)/             # Public auth pages
+│   │   ├── (user)/             # Protected user routes
+│   │   ├── admin/              # Admin routes
+│   │   ├── api/                # API endpoints (auth, rpc, upload)
+│   │   └── __root.tsx          # Shell implementation
+│   └── server/                 # Server-only code
+│       ├── context.ts          # Request context + AsyncLocalStorage
+│       ├── db/
+│       │   ├── client.ts
+│       │   ├── migrate.ts
+│       │   ├── migrations/     # Kysely migrations
+│       │   ├── repositories/   # Type-safe repos over Kysely
+│       │   └── schema/         # Handwritten table types
+│       └── rpc/
+│           ├── base.ts         # baseProcedure / authedProcedure / adminProcedure
+│           ├── handlers/       # One file per domain
+│           └── router.ts
+├── docs/                       # Agent-oriented architecture docs
+├── public/                     # Static assets
+├── docker-compose.yml          # Local Postgres
+└── AGENTS.md                   # Read first if you're an agent
 ```
 
-## 🔑 Key Features
+## Getting started
 
-### 1. Shell Pattern Implementation
+### Prerequisites
 
-**`src/routes/__root.tsx`** - The heart of the shell pattern:
+- Node.js 24+ (see `.nvmrc`)
+- pnpm
+- PostgreSQL 16 (or use the included `docker-compose.yml`)
 
-```typescript
-// Shell data is fetched via RPC and cached with React Query
+### Install
+
+```bash
+git clone <your-repo-url>
+cd shell-spa
+
+pnpm install
+cp .env.example .env
+
+# Generate auth secret
+pnpm auth:secret
+```
+
+### Start Postgres
+
+```bash
+docker compose up -d
+```
+
+### Migrate the database
+
+```bash
+pnpm build:migrate
+pnpm migrate:db
+```
+
+### Run the dev server
+
+```bash
+pnpm dev
+```
+
+The app starts on `http://localhost:3000`.
+
+## Key features
+
+### 1. Shell pattern
+
+The root route at `src/routes/__root.tsx` loads shell data via RPC and caches it with TanStack Query:
+
+```ts
 beforeLoad: async ({ context }) => {
-  // SSR shell data via RPC with React Query caching
   const shell = await context.queryClient.ensureQueryData(shellQueryOptions());
-
-  // Prefetch user data but don't await it - let client handle it
   context.queryClient.setQueryData(authQueryOptions().queryKey, shell.user);
-
   return { shell };
 };
 ```
 
-The shell data structure is defined in `src/rpc/handlers/app.ts`:
+The handler in `src/server/rpc/handlers/app.ts` returns the shell payload (app metadata + theme cookie). Auth state is loaded separately via `authQueryOptions()` and enforced in route-group `beforeLoad` hooks.
 
-```typescript
-export const shellData = baseProcedure.handler(async ({ context }) => {
-  return {
-    app: {
-      name: "Better SPA",
-      version: "1.0.0",
-      environment: process.env.NODE_ENV === "production" ? "production" : "development",
-      theme: getCookie("theme") || "system",
-    },
-    user: context.session?.user || null,
-  };
-});
-```
+### 2. Protected routes
 
-And the query options are defined in `src/lib/queries.ts`:
-
-```typescript
-export const shellQueryOptions = () =>
-  queryOptions({
-    queryKey: ["shell"],
-    queryFn: async ({ signal }) => {
-      const shellData = await rpcClient.app.shellData({}, { signal });
-      return shellData;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes - shell data doesn't change often
-  });
-```
-
-### 2. Authentication Flow
-
-```mermaid
-graph TD
-  A[User Request] --> B[Root Route]
-  B --> C[SSR Shell Data]
-  C --> D[Prefetch User non-blocking]
-  D --> E[Render Shell]
-  E --> F[Client Hydration]
-  F --> G[SPA Takes Over]
-```
-
-### 3. Router Configuration
-
-The router is configured in `src/router.tsx` with:
-
-- **React Query Integration**: For data fetching and caching
-- **SSR-Query Integration**: For server-side rendering with query support
-- **Default Error Handling**: Custom catch boundary and not found components
-- **Scroll Restoration**: Automatic scroll position management
-- **Structural Sharing**: Optimized component rendering
-
-Key configuration:
-
-```typescript
-// src/router.tsx
-const router = createRouter({
-  routeTree,
-  context: {
-    queryClient,
-    rpcClient,
-    user: null,
-  },
-  defaultPreload: "intent",
-  defaultPreloadStaleTime: 0,
-  defaultErrorComponent: DefaultCatchBoundary,
-  defaultNotFoundComponent: DefaultNotFound,
-  scrollRestoration: true,
-  defaultStructuralSharing: true,
-});
-
-setupRouterSsrQueryIntegration({
-  router,
-  queryClient,
-  handleRedirects: true,
-  wrapQueryClient: true,
-});
-```
-
-### 4. Protected Routes
-
-```typescript
+```ts
 // src/routes/(user)/route.tsx
 beforeLoad: async ({ context }) => {
   const user = await context.queryClient.ensureQueryData({
     ...authQueryOptions(),
     revalidateIfStale: true,
   });
-
-  if (!user) {
-    throw redirect({ to: "/login" });
-  }
-
-  return { user }; // Type-safe user in child routes
+  if (!user) throw redirect({ to: "/login" });
+  return { user };
 };
 ```
 
-## 🚀 Getting Started
+### 3. RPC layer
 
-### Prerequisites
+All app writes go through oRPC handlers in `src/server/rpc/handlers/`. Handlers validate input with `zod`, read/write through `context.repos`, and enforce ownership in the handler — never the UI.
 
-- Node.js 24+
-- pnpm (recommended)
-- PostgreSQL (or SQLite for development)
+See `docs/example-rpc-handler.md` for a copyable handler template, and `docs/example-route-with-loader.md` for the loader + `useSuspenseQuery` pattern.
 
-### Installation
+## Common commands
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-repo/better-spa.git
-cd better-spa
+pnpm dev                # start the dev server
+pnpm build              # production build
+pnpm preview            # run the built server with .env loaded
+pnpm start              # run the built server
 
-# Install dependencies
-pnpm install
+pnpm format             # prettier --write
+pnpm lint               # oxlint --fix
+pnpm check              # read-only: format:check + lint:check + check-types
 
-# Set up environment variables
-cp .env.example .env
+pnpm build:migrate      # bundle migrations
+pnpm migrate:db         # apply migrations
+pnpm kysely             # raw kysely-ctl
+pnpm db:snapshot        # regenerate docs/db-schema.md from the live DB
 
-# Generate auth secret
-pnpm auth:secret
-
-# Start development server
-pnpm dev
+pnpm auth:secret        # generate BETTER_AUTH_SECRET
+pnpm auth:generate      # regenerate Better Auth schema
+pnpm ui add <component> # add a shadcn/ui component
 ```
 
-### Database Setup
+See `docs/commands.md` for the full list.
 
-```bash
-# Generate migrations
-pnpm db generate
+## Deployment
 
-# Push schema to database
-pnpm db push
+- **Node** (default): build with `pnpm build`, run `pnpm start`. See `docs/devops.md`.
+- **Cloudflare Workers**: set `NITRO_PRESET=cloudflare-module`. See `docs/cloudflare.md`.
+- **Vercel**: set `NITRO_PRESET=vercel`.
 
-# Open Kysely Studio (GUI)
-pnpm db studio
-```
+The Nitro preset is selected at build time via the `NITRO_PRESET` env var (see `vite.config.ts`). The same source builds for any supported target — there are no per-target Vite configs.
 
-## JS runtimes:
+## Environment variables
 
-- NodeJS 24+ runtime : use copy `vite.config.node.ts` into `vite.config.ts`
-- Cloudflare Worker runtime : use copy `vite.config.cf.ts` into `vite.config.ts`
+See `.env.example` for the full list, grouped by required / optional / OAuth / S3. The minimum to start:
 
-**Important** : modify `src/server.ts` to use `createCloudflareHandler` or `createNodeHandler`, and dive into the code for modify the how `RequestContext` is created, and passing global variables into a `AsyncLocalStorage` instance in `src/server/context.ts`
+- `VITE_BASE_URL` — public origin (default `http://localhost:3000`)
+- `DATABASE_URL` — Postgres connection string
+- `BETTER_AUTH_SECRET` — generated with `pnpm auth:secret`
 
-## 📱 Mobile/Native Ready
+Both client (`VITE_*`) and server env are validated with `@t3-oss/env-core` in `src/env/`.
 
-The **oRPC** setup is designed for reuse in mobile and native apps:
+## Conventions
 
-```typescript
-// Shared RPC procedures in src/rpc/
-// Can be imported and used in:
-// - React Native apps
-// - Mobile apps (via HTTP client)
-// - Native desktop apps
-// - Other frontend frameworks
+This project is opinionated — see `AGENTS.md` for the rules every change should follow, and `docs/` for architecture deep-dives. Notable rules:
 
-export const rpcRouter = {
-  user: {
-    getCurrentUser: baseProcedure.handler(async ({ context }) => {
-      return context.session?.user || null;
-    }),
-  },
-  // Add your app-specific procedures here
-};
-```
+- React Compiler is enabled. Do **not** add `useMemo`, `useCallback`, or `memo`.
+- Use `@base-ui/react` primitives via the `render` prop. No Radix.
+- All app writes go through the RPC layer.
+- In RPC handlers, prefer `context.repos` over raw Kysely.
+- No optimistic updates. Refetch or use a concurrency-safe pattern.
+- After every migration, regenerate `docs/db-schema.md` with `pnpm db:snapshot`.
+- End every task with `pnpm check`.
 
-## 🎨 Customization
+## Mobile/native ready
 
-### Add New Pages
+The oRPC router in `src/server/rpc/router.ts` is a plain object with typed handlers. Any HTTP client (React Native, native desktop, another framework) can call it via `/api/rpc/*` and get the same end-to-end types.
 
-1. **Public Page**: Add to `src/routes/`
-2. **Protected Page**: Add to `src/routes/(user)/`
-3. **Test Page**: Add to `src/routes/(test)/`
+## Learning resources
 
-### Add New RPC Procedures
-
-1. Create procedure in `src/rpc/`
-2. Add to router in `src/rpc/router.ts`
-3. Use in components via `rpcClient`
-
-### Add New UI Components
-
-```bash
-pnpm ui add component-name
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-```env
-# .env file
-VITE_BASE_URL=http://localhost:3000
-DATABASE_URL="./sqlite.db"  # or postgres://user:pass@localhost:5432/db
-BETTER_AUTH_SECRET=your-secret-here
-```
-
-### Theme Customization
-
-Edit `src/styles.css` for global styles and Tailwind configuration.
-
-## 📊 Performance Optimizations
-
-- **React Query Caching**: 2-minute stale time reduces server calls
-- **Auth Cookie Cache**: 5-minute server-side cache reduces DB queries
-- **Intent-based Preloading**: Faster navigation
-- **React Compiler**: Automatic memoization
-- **SSR-Query Integration**: Optimal data fetching
-
-## 🎯 When to Use This Boilerplate
-
-✅ **App-type websites** (vs document-type websites)
-
-✅ **Projects needing auth + protected routes**
-
-✅ **Applications that may need mobile/native versions later**
-
-✅ **Teams wanting clean separation between SSR shell and SPA**
-
-✅ **Projects requiring type safety throughout the stack**
-
-## 🚫 When NOT to Use This Boilerplate
-
-❌ **Static websites** (use Next.js, Astro, etc.)
-
-❌ **Content-heavy sites** (use traditional SSR)
-
-❌ **Simple landing pages** (overkill for basic sites)
-
-## 📚 Learning Resources
-
-- [TanStack Start Docs](https://tanstack.com/start/latest)
-- [oRPC Documentation](https://orpc.dev/)
-- [Better Auth Docs](https://www.better-auth.com/)
-- [Kysely Docs](https://kysely.dev/)
-
-## 🤝 Contributing
-
-This boilerplate is designed to be minimal and opinionated. Feel free to:
-
-- Add your own components
-- Extend the RPC procedures
-- Customize the authentication flow
-- Adapt the shell pattern to your needs
-
-## 📝 License
-
-> "Perfection is achieved not when there is nothing more to add, but when there is nothing left to take away." - Antoine de Saint-Exupéry
-
-This boilerplate embodies that philosophy - minimal, focused, and ready for your app development.
+- [TanStack Start](https://tanstack.com/start/latest)
+- [oRPC](https://orpc.dev/)
+- [Better Auth](https://www.better-auth.com/)
+- [Kysely](https://kysely.dev/)
+- [Base UI](https://base-ui.com/)

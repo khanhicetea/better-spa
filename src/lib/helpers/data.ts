@@ -11,5 +11,5 @@ export function generateUUID(): string {
 // Fet file ext from file mimetype
 export function getFileExtFromMimeType(mimeType: string): string {
   const match = mimeType.match(/\/([^/]+)$/);
-  return match ? match[1].toLowerCase() : "";
+  return match?.[1]?.toLowerCase() ?? "";
 }

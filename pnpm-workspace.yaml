@@ -3,6 +3,7 @@ packages:
   - "."
 
 allowBuilds:
-  - esbuild
-  - sharp
-  - workerd
+  '0': esbuild
+  '1': sharp
+  '2': workerd
+  esbuild: true

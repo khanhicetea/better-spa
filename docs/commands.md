@@ -16,11 +16,15 @@ pnpm start
 ## Quality
 
 ```bash
-pnpm format
-pnpm lint
+pnpm format         # prettier --write
+pnpm format:check   # prettier --check (read-only)
+pnpm lint           # oxlint --fix
+pnpm lint:check     # oxlint (read-only)
 pnpm check-types
-pnpm check
+pnpm check          # format:check + lint:check + check-types (read-only)
 ```
+
+`pnpm check` is read-only — safe in CI and pre-push. Use `pnpm format` / `pnpm lint` locally to apply fixes.
 
 ## Database
 
@@ -28,6 +32,7 @@ pnpm check
 pnpm build:migrate
 pnpm migrate:db
 pnpm kysely
+pnpm db:snapshot    # regenerates docs/db-schema.md from the live DB
 ```
 
 - Migrations live in `src/server/db/migrations/`.

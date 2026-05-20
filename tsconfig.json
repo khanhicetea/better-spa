@@ -17,6 +17,6 @@
       "@/*": ["./src/*"]
     },
     "noEmit": true,
-    "strictNullChecks": true
+    "noUncheckedIndexedAccess": true
   }
 }
