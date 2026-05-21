@@ -1,6 +1,7 @@
 minimumReleaseAge: 5000
 packages:
-  - "."
+  - "apps/*"
+  - "packages/*"
 
 allowBuilds:
   '0': esbuild

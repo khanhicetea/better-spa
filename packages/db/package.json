@@ -1,0 +1,32 @@
+{
+  "name": "@better-spa/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./schema": "./src/schema/index.ts",
+    "./repositories": "./src/repositories/index.ts"
+  },
+  "scripts": {
+    "kysely": "kysely",
+    "build:migrate": "tsup --config ./tsup.migrate.config.ts",
+    "migrate:db": "node dist/migrate/index.mjs",
+    "db:snapshot": "node --env-file=../../.env src/snapshot.ts",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@better-spa/shared": "workspace:*",
+    "kysely": "^0.28.17",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.2",
+    "@types/pg": "^8.20.0",
+    "kysely-codegen": "^0.20.0",
+    "kysely-ctl": "^0.20.0",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git mv *)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm -r check-types)",
+      "Bash(pnpm build *)",
+      "Bash(pnpm --filter @better-spa/web build)"
+    ]
+  }
+}
