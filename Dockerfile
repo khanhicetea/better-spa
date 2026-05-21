@@ -31,7 +31,7 @@ RUN pnpm run build \
 
 # Produce a prod-only, self-contained bundle of @better-spa/db for running migrations.
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
-    pnpm --filter=@better-spa/db deploy --prod /prod/db
+    pnpm --filter=@better-spa/db deploy --legacy --prod /prod/db
 
 FROM base AS runner
 WORKDIR /app
