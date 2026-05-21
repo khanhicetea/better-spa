@@ -1,56 +1,51 @@
-# Use Node.js 24 Slim image
+# syntax=docker/dockerfile:1.7
 FROM node:24-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 WORKDIR /app
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
-
-# Install dependencies
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts
-
-# Install dependencies only when needed
-FROM base AS deps
-WORKDIR /app
-
-# Install dependencies
-RUN pnpm install --frozen-lockfile --ignore-scripts
-# For buildkit cache
-# RUN --mount=type=cache,id=pnpm-prod,target=/pnpm/store pnpm install --frozen-lockfile
-
-# Build the application
 FROM base AS builder
 WORKDIR /app
 
-# Copy dependencies
-COPY --from=deps /app/node_modules ./node_modules
+# Copy workspace manifests first so the install layer caches independently of source.
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/auth/package.json ./packages/auth/
+COPY packages/db/package.json ./packages/db/
+COPY packages/rpc/package.json ./packages/rpc/
+COPY packages/shared/package.json ./packages/shared/
+
+# Install full workspace deps (build needs dev deps like vite, tsup, tailwind).
+# Scripts run so the packages listed under `allowBuilds` (esbuild, sharp, workerd) install correctly.
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
 COPY . .
 
-# Set environment variables for build
-ENV NODE_ENV=production
-
-# Build both server and migration runner bundle
-RUN BUILD_TARGET=node-server pnpm run build
-RUN pnpm run build:migrate
-
-# Production image
-FROM base as runner
-WORKDIR /app
-
-# Set production environment
 ENV NODE_ENV=production
 ENV NITRO_PRESET=node-server
+
+RUN pnpm run build \
+ && pnpm run build:migrate
+
+# Produce a prod-only, self-contained bundle of @better-spa/db for running migrations.
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm --filter=@better-spa/db deploy --prod /prod/db
+
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 
-# Copy built application and migration bundle
-COPY --from=builder --chown=node:node /app/.output ./.output
-COPY --from=builder --chown=node:node /app/dist/migrate ./.output/server/migrate
+# Nitro emits a self-contained server bundle (with its own node_modules) under apps/web/.output.
+COPY --from=builder --chown=node:node /app/apps/web/.output ./.output
+# Migration runner entrypoint lives at ./migrate/dist/migrate/index.mjs
+COPY --from=builder --chown=node:node /prod/db ./migrate
 
-# Expose port (for server process)
 EXPOSE 3000
 
-# Run migrations before starting the app server
-# CMD ["sh", "-c", "node ./migrate/index.mjs && node ./.output/server/index.mjs"]
+# To run migrations before starting the server, swap the CMD below for:
+# CMD ["sh", "-c", "node ./migrate/dist/migrate/index.mjs && node ./.output/server/index.mjs"]
 CMD ["node", ".output/server/index.mjs"]

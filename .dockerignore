@@ -1,26 +1,33 @@
-node_modules
+**/node_modules
 
 # Ignore lockfiles we don't use
-# package-lock.json
 yarn.lock
-# pnpm-lock.yaml
-# bun.lock
 
 .DS_Store
 .cache
 .env
-
-
+**/.env
 
 .data
+**/.data
 .vercel
+**/.vercel
 .output
+**/.output
 .wrangler
+**/.wrangler
 .netlify
+**/.netlify
 dist
+**/dist
 /build/
 /api/
 /server/build
 /public/build
 
 .tanstack
+**/.tanstack
+
+.git
+.github
+.claude
