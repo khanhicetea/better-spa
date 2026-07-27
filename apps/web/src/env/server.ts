@@ -12,13 +12,18 @@ export const env = createEnv({
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
     CRON_SECRET: z.string().optional(),
-    // S3 configuration for better-upload
+    TRUST_PROXY: z.string().optional(),
+    REQUEST_DEADLINE_MS: z.coerce.number().int().positive().default(30_000),
+    API_BODY_LIMIT_BYTES: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(1024 * 1024),
     S3_ENDPOINT: z.string().optional(),
     S3_ACCESS_KEY_ID: z.string().optional(),
     S3_SECRET_ACCESS_KEY: z.string().optional(),
     S3_BUCKET_NAME: z.string().optional(),
     S3_REGION: z.string().optional(),
-    S3_URL: z.string().optional(),
   },
   runtimeEnv: process.env,
 });

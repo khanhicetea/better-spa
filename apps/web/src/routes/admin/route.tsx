@@ -1,16 +1,15 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { DefaultCatchBoundary } from "@/components/spa/default-catch-boundary";
-import { ShellProgressBar } from "@/components/spa/shell-progress-bar";
+import { AdminSidebar } from "@/components/shell/admin-sidebar";
+import { DefaultCatchBoundary } from "@/components/shell/default-catch-boundary";
+import { ShellProgressBar } from "@/components/shell/shell-progress-bar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { authQueryOptions } from "@/lib/queries";
-import { preloadBetterSpa } from "@/lib/router/better-spa";
+import { bootstrapQueryOptions } from "@/lib/queries";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
   errorComponent: DefaultCatchBoundary,
   beforeLoad: async ({ context }) => {
-    const user = await context.queryClient.ensureQueryData(authQueryOptions());
+    const { user } = await context.queryClient.ensureQueryData(bootstrapQueryOptions());
 
     if (!user) {
       throw redirect({ to: "/login" });
@@ -19,8 +18,6 @@ export const Route = createFileRoute("/admin")({
     if (user.role !== "admin") {
       throw redirect({ to: "/app" });
     }
-
-    await preloadBetterSpa(context.queryClient);
 
     return { user };
   },

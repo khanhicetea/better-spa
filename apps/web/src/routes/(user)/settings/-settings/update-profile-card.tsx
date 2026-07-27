@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { orpc } from "@/lib/orpc";
-import { authQueryOptions, QUERY_KEYS } from "@/lib/queries";
+import { bootstrapQueryOptions, invalidateBootstrap } from "@/lib/queries";
 import { handleFormError, handleToastError } from "@/lib/helpers/form";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,7 +44,8 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export function UpdateProfileCard() {
-  const { data: user, isPending } = useSuspenseQuery(authQueryOptions());
+  const { data: bootstrap, isPending } = useSuspenseQuery(bootstrapQueryOptions());
+  const user = bootstrap.user;
   const queryClient = useQueryClient();
 
   const form = useForm<ProfileFormValues>({
@@ -62,7 +63,7 @@ export function UpdateProfileCard() {
     try {
       await updateProfile.mutateAsync(values);
       toast.success("Profile updated");
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth });
+      await invalidateBootstrap(queryClient);
     } catch (error) {
       handleFormError(error, form.setError);
       handleToastError(error);

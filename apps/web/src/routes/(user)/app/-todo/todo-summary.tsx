@@ -1,25 +1,12 @@
-import { CheckCircle2, Download, ListTodo, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CheckCircle2, ListTodo } from "lucide-react";
 
 interface TodoSummaryProps {
   totalTodos: number;
   completedTodos: number;
   progressPercentage: number;
-  isExporting: boolean;
-  exportingProgress: number;
-  isExportPending: boolean;
-  onExport: () => void;
 }
 
-export function TodoSummary({
-  totalTodos,
-  completedTodos,
-  progressPercentage,
-  isExporting,
-  exportingProgress,
-  isExportPending,
-  onExport,
-}: TodoSummaryProps) {
+export function TodoSummary({ totalTodos, completedTodos, progressPercentage }: TodoSummaryProps) {
   if (totalTodos === 0) {
     return null;
   }
@@ -45,22 +32,6 @@ export function TodoSummary({
         </div>
         <span className="text-sm font-medium">{progressPercentage}%</span>
       </div>
-      <div className="h-4 w-px bg-border" />
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onExport}
-        disabled={isExportPending || isExporting}
-      >
-        {isExporting ? (
-          <div className="flex items-center gap-1">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            <span className="text-xs">{exportingProgress}%</span>
-          </div>
-        ) : (
-          <Download className="h-3 w-3" />
-        )}
-      </Button>
     </div>
   );
 }

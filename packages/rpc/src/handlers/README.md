@@ -5,20 +5,20 @@ One file per domain. Each file exports short server actions: `list`, `get`, `cre
 ## Conventions
 
 - Pick the right procedure base from `../base`:
-  - `baseProcedure` / `publicProcedure` — open
+  - `baseProcedure` — open
   - `authedProcedure` — `context.user` is required
   - `adminProcedure` — admin user is required
 - Validate every input with `zod`. Skip `.input(...)` only when there are no params.
 - Read and write data through `context.repos`. Reach for raw `context.db` only when a query has no repository equivalent.
-- Enforce ownership in the handler, not the UI. For per-row writes, refetch the row and compare `row.userId` to `context.user.id` before mutating.
+- Enforce ownership in the handler, not the UI. For per-row writes, use a repository method that includes `userId` in the SQL mutation predicate.
 - Throw via the typed errors map: `errors.NOT_FOUND()`, `errors.UNAUTHORIZED()`, `errors.RATE_LIMITED({ data: { retryAfter } })`.
-- Generate ids with `generateUUID()` from `@/lib/helpers/data`. Set `createdAt` and `updatedAt` on insert; set `updatedAt: new Date()` on update.
-- Return serialized data only (no class instances, `Map`, `Set`, `File`, etc.). Dates are fine; oRPC serializes them.
+- Generate IDs with `generateUUID()` from `@better-spa/shared/helpers/data`. Set `createdAt` and `updatedAt` on insert; set `updatedAt: new Date()` on update.
+- Declare an output schema and return serialized data only. Dates cross RPC as ISO strings.
 
 ## Wiring a New Action
 
 1. Add or update the handler file here.
-2. Register and (optionally) alias it in `../router.ts`. Aliases are how `todo.remove` becomes `todo.delete` and `todo.exportData` becomes `todo.export`.
+2. Register and optionally alias it in `../router.ts`; for example, `todo.remove` is exposed as `todo.delete`.
 3. Call from the client via `orpc.<domain>.<action>.queryOptions(...)` or `.mutationOptions(...)`.
 
 ## Reference

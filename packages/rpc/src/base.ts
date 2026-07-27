@@ -7,6 +7,7 @@ export const baseProcedure = os
   .$context<RequestContext>()
   .errors({
     RATE_LIMITED: {
+      message: "Too many requests",
       data: z.object({
         retryAfter: z.number(),
       }),
@@ -17,8 +18,19 @@ export const baseProcedure = os
     UNAUTHORIZED: {
       message: "Unauthorized",
     },
+    FORBIDDEN: {
+      message: "Forbidden",
+    },
+    CONFLICT: {
+      message: "Conflict",
+    },
+    VALIDATION_FAILED: {
+      message: "Validation failed",
+    },
+    SERVICE_UNAVAILABLE: {
+      message: "Service unavailable",
+    },
   })
   .use(rateLimitMiddleware);
-export const publicProcedure = baseProcedure;
 export const authedProcedure = baseProcedure.use(authMiddleware);
 export const adminProcedure = baseProcedure.use(adminMiddleware);

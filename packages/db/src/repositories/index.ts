@@ -1,12 +1,13 @@
 import type { DB } from "../client";
-import { Repository } from "./repository";
+import { TodoRepository } from "./todo";
+import { UserRepository } from "./user";
 
 export type Repositories = ReturnType<typeof createRepos>;
 
 export function createRepos(db: DB) {
   const repos = {
-    user: new Repository(db, "user"),
-    todoItem: new Repository(db, "todoItem"),
+    user: new UserRepository(db),
+    todoItem: new TodoRepository(db),
   };
 
   // Inject repos reference into each repository for cross-repository access

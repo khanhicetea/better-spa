@@ -6,17 +6,18 @@ import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import type React from "react";
-import { ThemeProvider } from "@/components/spa/theme-provider";
+import { ThemeProvider } from "@/components/shell/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { DefaultCatchBoundary } from "@/components/spa/default-catch-boundary";
+import { DefaultCatchBoundary } from "@/components/shell/default-catch-boundary";
 import type { RPCClient } from "@/lib/orpc";
+import { bootstrapQueryOptions } from "@/lib/queries";
 import appCss from "@/styles.css?url";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
-  user: null;
   rpcClient: RPCClient;
 }>()({
+  loader: ({ context }) => context.queryClient.ensureQueryData(bootstrapQueryOptions()),
   head: () => ({
     meta: [
       {
@@ -46,8 +47,9 @@ export const Route = createRootRouteWithContext<{
 });
 
 function RootComponent() {
+  const bootstrap = Route.useLoaderData();
   return (
-    <ThemeProvider>
+    <ThemeProvider defaultTheme={bootstrap.preferences.theme}>
       <Outlet />
 
       <Toaster richColors />

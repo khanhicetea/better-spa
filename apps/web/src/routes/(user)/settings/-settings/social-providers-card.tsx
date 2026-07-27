@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import authClient from "@/lib/auth-client";
+import { bootstrapQueryOptions, invalidateBootstrap } from "@/lib/queries";
 
 type ProviderInfo = {
   id: string;
@@ -22,6 +23,10 @@ const accountsQueryKey = ["accounts"] as const;
 
 export function SocialProvidersCard() {
   const queryClient = useQueryClient();
+  const { data: bootstrap } = useQuery(bootstrapQueryOptions());
+  const providers = KNOWN_PROVIDERS.filter((provider) =>
+    bootstrap?.capabilities.oauthProviders.includes(provider.id as "github" | "google"),
+  );
 
   const { data: accounts, isPending } = useQuery({
     queryKey: accountsQueryKey,
@@ -53,7 +58,10 @@ export function SocialProvidersCard() {
     },
     onSuccess: async () => {
       toast.success("Account unlinked");
-      await queryClient.invalidateQueries({ queryKey: accountsQueryKey });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: accountsQueryKey }),
+        invalidateBootstrap(queryClient),
+      ]);
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Failed to unlink account");
@@ -74,7 +82,7 @@ export function SocialProvidersCard() {
       <CardContent>
         <div className="grid gap-3">
           {isPending
-            ? KNOWN_PROVIDERS.map((p) => (
+            ? providers.map((p) => (
                 <Card key={p.id} className="flex-row items-center gap-3 px-4 py-3">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <Skeleton className="size-4 shrink-0" />
@@ -85,7 +93,7 @@ export function SocialProvidersCard() {
                   <Skeleton className="h-7 w-14 ms-auto shrink-0" />
                 </Card>
               ))
-            : KNOWN_PROVIDERS.map((provider) => {
+            : providers.map((provider) => {
                 const isLinked = linkedProviderIds.includes(provider.id);
 
                 return (

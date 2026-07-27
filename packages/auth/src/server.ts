@@ -12,6 +12,7 @@ export type AuthSocialProviderConfig = {
 
 export type AuthOptions = {
   db: DB;
+  baseURL?: string;
   socialProviders?: {
     github?: AuthSocialProviderConfig;
     google?: AuthSocialProviderConfig;
@@ -20,6 +21,7 @@ export type AuthOptions = {
 
 export const getAuthConfig = (options: AuthOptions) =>
   betterAuth({
+    baseURL: options.baseURL,
     telemetry: { enabled: false },
     database: {
       db: options.db.withoutPlugins().withPlugin(new CamelCasePlugin()),

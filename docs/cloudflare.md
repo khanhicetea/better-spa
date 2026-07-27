@@ -1,42 +1,79 @@
-# Cloudflare Worker Support
+# Cloudflare Workers Deployment
 
-Cloudflare is optional. The live repo is Node-first and does not ship a finalized Worker entry.
+The repository has a dedicated Worker build using Wrangler `4.114.0` and
+`@cloudflare/vite-plugin` `1.47.0`.
 
-## If You Add Worker Support
+## Live files
 
-You need:
+- `apps/web/src/server/cloudflare-worker.ts`
+- `apps/web/vite.worker.config.ts`
+- `apps/web/wrangler.jsonc`
+- `apps/web/worker-configuration.d.ts`
 
-- `wrangler`
-- `@cloudflare/vite-plugin`
-- a Worker-compatible `vite.config.ts`
-- a Worker server entry that preserves the existing request context contract
+The configuration pins compatibility date `2026-07-27`, enables `nodejs_compat`, static
+assets, Smart Placement, Worker logs, and sampled traces.
 
-## Required Adaptations
+## PostgreSQL
 
-1. Replace the Node server entry with a Worker handler.
-2. Build request-scoped context from the Worker environment.
-3. Preserve the same context shape used by `src/server/context.ts`.
+`HYPERDRIVE` is required. Replace the placeholder ID in `apps/web/wrangler.jsonc` with a
+real Hyperdrive configuration before deployment.
 
-Each request must initialize:
+Each request builds Kysely/`pg`, auth, and repositories from
+`env.HYPERDRIVE.connectionString`, then destroys the database client in `finally`. Never
+cache request-bound Hyperdrive clients globally.
 
-- `db`
-- `auth`
-- `session`
-- `repos`
-- `headers`
-- `waitUntil`
+The Worker passes background promises with `ctx.waitUntil(promise)` without destructuring
+the method. Request-scoped logging continues to use `AsyncLocalStorage`, supported through
+`nodejs_compat`.
 
-## Data Access Rule
+## Secrets and bindings
 
-Do not assume a Node-style singleton DB. Build connections from the Worker bindings available for that request.
+`HYPERDRIVE` and `ASSETS` are Wrangler bindings. Store application credentials as Worker
+secrets:
 
-## Documentation Rule
+```bash
+wrangler secret put BETTER_AUTH_SECRET
+wrangler secret put VITE_BASE_URL
+wrangler secret put GITHUB_CLIENT_ID
+wrangler secret put GITHUB_CLIENT_SECRET
+wrangler secret put S3_ENDPOINT
+wrangler secret put S3_ACCESS_KEY_ID
+wrangler secret put S3_SECRET_ACCESS_KEY
+wrangler secret put S3_BUCKET_NAME
+wrangler secret put S3_REGION
+```
 
-If you add real Cloudflare support, update:
+Only configure optional OAuth/storage pairs you actually use. `bootstrap.capabilities`
+reflects complete configured pairs.
 
-- this file
-- `docs/devops.md`
-- `docs/commands.md`
-- `AGENTS.md`
+## Build and deploy
 
-Document exact files, commands, and env bindings. Do not leave runtime details implied.
+```bash
+pnpm worker:types
+pnpm build:worker
+pnpm worker:dry-run
+pnpm worker:deploy
+```
+
+The Vite plugin emits the deployable Wrangler configuration under
+`apps/web/dist/server/wrangler.json`; deploy and dry-run scripts use that generated file.
+Commit `worker-configuration.d.ts`. `pnpm worker:types:check` and CI fail when it drifts.
+
+For local runtime smoke:
+
+```bash
+pnpm db:up
+pnpm db:migrate
+pnpm worker:preview
+curl --fail http://127.0.0.1:4173/api/health/live
+curl --fail http://127.0.0.1:4173/api/health/ready
+```
+
+Configure Cloudflare ingress rate-limit rules for general API traffic and stricter admin
+and upload-intent traffic. Mutable in-isolate limit maps are deliberately not used.
+
+References:
+
+- [TanStack Start on Workers](https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/)
+- [Hyperdrive with PostgreSQL drivers](https://developers.cloudflare.com/hyperdrive/examples/connect-to-postgres/)
+- [Node.js AsyncLocalStorage compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/asynclocalstorage/)

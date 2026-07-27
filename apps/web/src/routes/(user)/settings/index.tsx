@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ChangePasswordCard } from "./-settings/change-password-card";
+import { DeleteAccountCard } from "./-settings/delete-account-card";
 import { SocialProvidersCard } from "./-settings/social-providers-card";
 import { UpdateProfileCard } from "./-settings/update-profile-card";
 
@@ -13,6 +14,7 @@ function RouteComponent() {
       <UpdateProfileCard />
       <ChangePasswordCard />
       <SocialProvidersCard />
+      <DeleteAccountCard />
     </div>
   );
 }

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.mjs"]
+    },
+    "apps/web": {
+      "entry": ["src/router.tsx", "src/server.ts", "src/routes/**/*.tsx"]
+    },
+    "packages/auth": {
+      "entry": ["src/**/*.ts", "auth.config.ts"]
+    },
+    "packages/db": {
+      "entry": ["src/**/*.ts", "kysely.config.ts"]
+    },
+    "packages/{observability,rpc,shared}": {
+      "entry": ["src/**/*.ts"]
+    }
+  },
+  "ignore": ["apps/web/src/components/ui/**"],
+  "ignoreDependencies": ["pg"]
+}

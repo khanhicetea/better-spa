@@ -16,26 +16,27 @@ Pattern reference for adding a new CRUD domain. This is not a live feature.
 
 ## Migration
 
-- Create the table in `src/server/db/migrations/`
+- Create the table in `packages/db/src/migrations/`
 - Use `id text primary key`
 - Add explicit FK delete and update behavior
 - Add `created_at` and `updated_at`
 - Add indexes for common filters and ordering
 - Use `jsonb` for persisted file metadata when needed
-- Run `pnpm build:migrate` and `pnpm migrate:db` when applying locally
+- Run `pnpm db:migrate` and `pnpm db:snapshot` when applying locally
 
 ## Schema and Repo
 
-- Add `src/server/db/schema/<domain>.ts`
+- Add `packages/db/src/schema/<domain>.ts`
 - Export `<Domain>Table`, `<Domain>`, `<Domain>Insert`, `<Domain>Update`
-- Register the table in `src/server/db/schema/index.ts`
+- Register the table in `packages/db/src/schema/index.ts`
 - Use the generic `Repository` unless the domain needs reusable complex queries
 
 ## RPC
 
-- Add `src/server/rpc/handlers/<domain>.ts`
+- Add `packages/rpc/src/handlers/<domain>.ts`
 - Typical actions: `list`, `get`, `create`, `update`, `remove`
-- Validate input, enforce auth or admin access, and enforce ownership where needed
+- Validate input, declare serialized output, and enforce auth or admin access
+- Put ownership into repository SQL predicates for update and delete
 - Use `generateUUID()` for new rows
 - Set `updatedAt: new Date()` on writes
 
@@ -62,12 +63,13 @@ blog: {
 
 ## Files
 
-- Persist serialized `PublicS3File` or `PrivateS3Files`
+- Request private upload intents through `file.createUploadIntents`
+- Persist stable serialized metadata only
 - Never persist browser `File` objects
-- Resolve private file URLs in the RPC response
+- Request short-lived reads through `file.createReadUrl`
 
 ## Final Checks
 
 - Add navigation if the feature is user-facing
-- Update `docs/db-schema.md` if the DB changed
+- Run `pnpm db:snapshot` if the DB changed
 - Run `pnpm check`

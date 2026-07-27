@@ -1,6 +1,7 @@
 import { ORPCError, os } from "@orpc/server";
 import type { ServerAuthSession } from "@better-spa/auth/server";
-import { apiRateLimiter } from "./rate-limiter";
+import { logger, updateLogContext } from "@better-spa/observability";
+import type { RateLimitPolicy, RequestContext } from "./context";
 
 export const authMiddleware = os
   .$context<{ session: ServerAuthSession }>()
@@ -20,7 +21,7 @@ export const authMiddleware = os
 
 export const adminMiddleware = authMiddleware.concat(async ({ context, next }) => {
   if (context.user.role !== "admin") {
-    throw new ORPCError("UNAUTHORIZED");
+    throw new ORPCError("FORBIDDEN");
   }
 
   const result = await next();
@@ -33,26 +34,52 @@ export const adminMiddleware = authMiddleware.concat(async ({ context, next }) =
  * Limits requests based on IP address or user ID
  */
 export const rateLimitMiddleware = os
-  .$context<{ session: ServerAuthSession; headers: Headers }>()
-  .middleware(async ({ context, next }) => {
-    // Use user ID if authenticated, otherwise use IP address from headers
-    const identifier =
-      context.session?.user?.id ||
-      context.headers.get("x-forwarded-for") ||
-      context.headers.get("x-real-ip") ||
-      "unknown";
+  .$context<RequestContext>()
+  .middleware(async ({ context, next, path }) => {
+    const procedure = path.join(".");
+    updateLogContext({ procedure });
+    const startedAt = Date.now();
+    const policy: RateLimitPolicy =
+      procedure.startsWith("user.") && procedure !== "user.updateProfile" ? "admin" : "api";
+    const identifier = context.session?.user?.id ?? context.clientIp;
+    const limitResult = context.rateLimit.check(policy, identifier);
 
-    const result = apiRateLimiter.check(identifier);
-
-    if (!result.allowed) {
-      throw new ORPCError("TOO_MANY_REQUESTS", {
-        message: "Too many requests. Please try again later.",
+    if (!limitResult.allowed) {
+      throw new ORPCError("RATE_LIMITED", {
         data: {
-          limit: result.limit,
-          resetAt: result.resetAt,
+          retryAfter: limitResult.retryAfter,
         },
       });
     }
 
-    return next();
+    try {
+      const result = await next();
+      logger.info("RPC procedure completed", {
+        procedure,
+        durationMs: Date.now() - startedAt,
+        resultClass: "success",
+      });
+      return result;
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error.code === "23505" || error.code === "23503")
+      ) {
+        throw new ORPCError("CONFLICT", {
+          message: error.code === "23505" ? "A unique value is already in use" : "Conflict",
+          cause: error,
+        });
+      }
+      const expected = error instanceof ORPCError && error.status < 500;
+      const log = expected ? logger.warn : logger.error;
+      log(expected ? "RPC client error" : "RPC procedure failed", {
+        error,
+        procedure,
+        durationMs: Date.now() - startedAt,
+        resultClass: expected ? "client_error" : "server_error",
+      });
+      throw error;
+    }
   });

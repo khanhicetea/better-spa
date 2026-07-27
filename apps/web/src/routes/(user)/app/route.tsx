@@ -1,13 +1,9 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { AppSidebar } from "@/components/app/app-sidebar";
+import { AppSidebar } from "@/components/shell/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { preloadBetterSpa } from "@/lib/router/better-spa";
 
 export const Route = createFileRoute("/(user)/app")({
   component: AppLayout,
-  beforeLoad: async ({ context }) => {
-    await preloadBetterSpa(context.queryClient);
-  },
   ssr: "data-only",
 });
 

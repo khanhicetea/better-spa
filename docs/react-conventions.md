@@ -47,7 +47,7 @@ Typical cases:
 
 - Query with `useSuspenseQuery(orpc.domain.action.queryOptions(...))`
 - Mutate with `useMutation(orpc.domain.action.mutationOptions(...))`
-- Refetch from the screen that owns the data
+- Invalidate through a feature-owned query helper after successful writes
 
 ## Anti-Patterns
 

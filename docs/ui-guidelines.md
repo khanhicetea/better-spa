@@ -18,7 +18,7 @@ The same rule applies to `DialogTrigger`, `SheetTrigger`, `AlertDialogTrigger`, 
 
 ## Component Source Rule
 
-- Treat `src/components/ui/*` as upstream-style primitives.
+- Treat `apps/web/src/components/ui/*` as upstream-style primitives.
 - If a feature needs app-specific behavior, create an app-level component elsewhere.
 
 ## Styling
@@ -44,7 +44,7 @@ The same rule applies to `DialogTrigger`, `SheetTrigger`, `AlertDialogTrigger`, 
 
 ## References
 
-- Empty state: `src/components/ui/empty.tsx`
-- User nav: `src/components/app/app-sidebar.tsx`
-- Admin nav: `src/components/admin/admin-sidebar.tsx`
+- Empty state: `apps/web/src/components/ui/empty.tsx`
+- User nav: `apps/web/src/components/shell/app-sidebar.tsx`
+- Admin nav: `apps/web/src/components/shell/admin-sidebar.tsx`
 - Icons: `lucide-react`

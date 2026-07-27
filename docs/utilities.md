@@ -4,7 +4,8 @@ Common helpers already used in this repo.
 
 ## Dates
 
-Prefer project helpers from `src/lib/helpers/date.ts`:
+Prefer project helpers from `packages/shared/src/helpers/date.ts`, exported as
+`@better-spa/shared/helpers/date`:
 
 - `formatDate`
 - `formatTime`
@@ -36,12 +37,5 @@ Common cases:
 - `isBefore`
 - `isAfter`
 
-## `lodash-es`
-
-Use named imports only.
-
-Already used in the repo:
-
-- `pickBy`
-
-Prefer plain JS when it is clearer.
+Prefer plain JavaScript for small object transformations. The starter intentionally does
+not depend on `lodash-es`.

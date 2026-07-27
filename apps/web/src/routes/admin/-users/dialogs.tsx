@@ -1,4 +1,4 @@
-import type { UserWithRole } from "better-auth/plugins";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CopyIcon, Dice2Icon, EyeIcon, EyeOff, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -24,17 +24,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import authClient from "@/lib/auth-client";
+import { orpc } from "@/lib/orpc";
 import type { User } from "./columns";
+import { invalidateAdminUsers } from "./queries";
 
 interface BanUserDialogProps {
   user: User;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
 }
 
-export function BanUserDialog({ user, open, onOpenChange, onSuccess }: BanUserDialogProps) {
+export function BanUserDialog({ user, open, onOpenChange }: BanUserDialogProps) {
+  const queryClient = useQueryClient();
   const form = useForm<{ banReason: string; banExpire: string | undefined }>({
     defaultValues: {
       banReason: "",
@@ -42,26 +43,25 @@ export function BanUserDialog({ user, open, onOpenChange, onSuccess }: BanUserDi
     },
   });
 
-  const [isPending, setIsPending] = useState(false);
+  const mutation = useMutation(
+    orpc.user.ban.mutationOptions({
+      onSuccess: async () => {
+        await invalidateAdminUsers(queryClient);
+        toast.success(`User ${user.email} has been banned`);
+        onOpenChange(false);
+      },
+      onError: (error) => toast.error(error.message),
+    }),
+  );
 
-  const handleSubmit = form.handleSubmit(async (data) => {
-    setIsPending(true);
-    const res = await authClient.admin.banUser({
+  const handleSubmit = form.handleSubmit((data) => {
+    mutation.mutate({
       userId: user.id,
       banReason: data.banReason,
       banExpiresIn: data.banExpire
         ? Math.floor((new Date(`${data.banExpire}:00`).getTime() - Date.now()) / 1000)
         : undefined,
     });
-    setIsPending(false);
-
-    if (res.error) {
-      toast.error(res.error.message);
-      return;
-    }
-
-    onOpenChange(false);
-    onSuccess();
   });
 
   return (
@@ -98,8 +98,8 @@ export function BanUserDialog({ user, open, onOpenChange, onSuccess }: BanUserDi
                 </FormItem>
               )}
             />
-            <Button disabled={isPending} type="submit" variant="destructive">
-              {isPending ? "Banning..." : "Ban user"}
+            <Button disabled={mutation.isPending} type="submit" variant="destructive">
+              {mutation.isPending ? "Banning..." : "Ban user"}
             </Button>
           </form>
         </Form>
@@ -112,46 +112,35 @@ interface ChangePasswordDialogProps {
   user: User;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
 }
 
-export function ChangePasswordDialog({
-  user,
-  open,
-  onOpenChange,
-  onSuccess,
-}: ChangePasswordDialogProps) {
+export function ChangePasswordDialog({ user, open, onOpenChange }: ChangePasswordDialogProps) {
+  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
-  const [isPending, setIsPending] = useState(false);
   const form = useForm<{ newPassword: string }>({
     defaultValues: { newPassword: "" },
   });
 
   const handleGeneratePassword = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "";
-    for (let i = 0; i < 12; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    const values = crypto.getRandomValues(new Uint8Array(16));
+    const result = [...values].map((value) => chars[value % chars.length]).join("");
     form.setValue("newPassword", result);
   };
 
-  const handleSubmit = form.handleSubmit(async (data) => {
-    setIsPending(true);
-    const res = await authClient.admin.setUserPassword({
-      userId: user.id,
-      newPassword: data.newPassword,
-    });
-    setIsPending(false);
-
-    if (res.error) {
-      toast.error(res.error.message);
-      return;
-    }
-
-    onOpenChange(false);
-    onSuccess();
-  });
+  const mutation = useMutation(
+    orpc.user.resetPassword.mutationOptions({
+      onSuccess: async () => {
+        await invalidateAdminUsers(queryClient);
+        toast.success(`Password for ${user.email} has been changed`);
+        onOpenChange(false);
+      },
+      onError: (error) => toast.error(error.message),
+    }),
+  );
+  const handleSubmit = form.handleSubmit((data) =>
+    mutation.mutate({ userId: user.id, newPassword: data.newPassword }),
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -201,8 +190,8 @@ export function ChangePasswordDialog({
                 </FormItem>
               )}
             />
-            <Button disabled={isPending} type="submit">
-              {isPending ? "Saving..." : "Change password"}
+            <Button disabled={mutation.isPending} type="submit">
+              {mutation.isPending ? "Saving..." : "Change password"}
             </Button>
           </form>
         </Form>
@@ -218,13 +207,9 @@ type CreateUser = {
   role: "user" | "admin";
 };
 
-interface CreateUserSheetProps {
-  onSuccess: (user: UserWithRole) => void;
-}
-
-export function CreateUserSheet({ onSuccess }: CreateUserSheetProps) {
+export function CreateUserSheet() {
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [isPending, setIsPending] = useState(false);
   const form = useForm<CreateUser>({
     defaultValues: {
       email: "",
@@ -234,25 +219,18 @@ export function CreateUserSheet({ onSuccess }: CreateUserSheetProps) {
     },
   });
 
-  const handleSubmit = form.handleSubmit(async (data) => {
-    setIsPending(true);
-    const res = await authClient.admin.createUser({
-      email: data.email,
-      password: data.password,
-      name: data.name,
-      role: data.role,
-    });
-    setIsPending(false);
-
-    if (res.error) {
-      toast.error(res.error.message);
-      return;
-    }
-
-    setOpen(false);
-    form.reset();
-    onSuccess(res.data.user);
-  });
+  const mutation = useMutation(
+    orpc.user.create.mutationOptions({
+      onSuccess: async () => {
+        await invalidateAdminUsers(queryClient);
+        setOpen(false);
+        form.reset();
+        toast.success("User created");
+      },
+      onError: (error) => toast.error(error.message),
+    }),
+  );
+  const handleSubmit = form.handleSubmit((data) => mutation.mutate(data));
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -328,8 +306,8 @@ export function CreateUserSheet({ onSuccess }: CreateUserSheetProps) {
               />
             </div>
             <SheetFooter className="flex flex-row justify-end">
-              <Button disabled={isPending} type="submit">
-                {isPending ? "Saving..." : "Save"}
+              <Button disabled={mutation.isPending} type="submit">
+                {mutation.isPending ? "Saving..." : "Save"}
               </Button>
             </SheetFooter>
           </form>

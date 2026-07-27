@@ -97,6 +97,16 @@ export class Repository<TTable extends keyof Database> implements BaseRepository
     return result;
   }
 
+  private assertNonEmptyConditions(
+    conditions: DeleteQueryCondition<TTable> | UpdateQueryCondition<TTable>,
+  ): void {
+    if (typeof conditions === "function") return;
+    const definedValues = Object.values(conditions).filter((value) => value !== undefined);
+    if (definedValues.length === 0) {
+      throw new Error(`Refusing unscoped bulk write on ${String(this.tableName)}`);
+    }
+  }
+
   protected applyUpdateConditions<Q extends UpdateQueryBuilder<Database, any, any, any>>(
     query: Q,
     conditions?: UpdateQueryCondition<TTable>,
@@ -262,7 +272,8 @@ export class Repository<TTable extends keyof Database> implements BaseRepository
       .select((eb: ExpressionBuilder<Database, TTable>) => [eb.fn.count("id").as("count")])
       .executeTakeFirst();
 
-    return Number(result?.count) ?? 0;
+    const count = Number(result?.count ?? 0);
+    return Number.isFinite(count) ? count : 0;
   }
 
   async exists(id: IdOf<TTable>): Promise<boolean> {
@@ -302,6 +313,7 @@ export class Repository<TTable extends keyof Database> implements BaseRepository
   }
 
   async deleteMany(conditions: DeleteQueryCondition<TTable>): Promise<DeleteResult[]> {
+    this.assertNonEmptyConditions(conditions);
     let query = this.db.deleteFrom(this.tableName);
     query = this.applyDeleteConditions(query, conditions);
 
@@ -332,6 +344,7 @@ export class Repository<TTable extends keyof Database> implements BaseRepository
     where: UpdateQueryCondition<TTable>;
     data: TableUpdate<TTable>;
   }): Promise<TableRow<TTable>[]> {
+    this.assertNonEmptyConditions(options.where);
     let query = (
       this.db.updateTable(this.tableName) as unknown as UpdateQueryBuilder<
         Database,

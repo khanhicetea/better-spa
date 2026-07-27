@@ -1,26 +1,23 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { orpc } from "@/lib/orpc";
 import type { Outputs } from "@better-spa/rpc/types";
+import { invalidateTodos } from "./queries";
 
 type TodoItem = Outputs["todo"]["list"][number];
 
-interface TodoRowProps {
-  todo: TodoItem;
-  onRefetch: () => void;
-}
-
-export function TodoRow({ todo, onRefetch }: TodoRowProps) {
+export function TodoRow({ todo }: { todo: TodoItem }) {
+  const queryClient = useQueryClient();
   const [isEditingContent, setIsEditingContent] = useState(false);
   const [editingContent, setEditingContent] = useState(todo.content);
 
   const updateMutation = useMutation(
     orpc.todo.update.mutationOptions({
-      onSuccess: () => {
-        onRefetch();
+      onSuccess: async () => {
+        await invalidateTodos(queryClient);
         setIsEditingContent(false);
       },
     }),
@@ -28,7 +25,7 @@ export function TodoRow({ todo, onRefetch }: TodoRowProps) {
 
   const deleteMutation = useMutation(
     orpc.todo.delete.mutationOptions({
-      onSuccess: () => onRefetch(),
+      onSuccess: () => invalidateTodos(queryClient),
     }),
   );
 
@@ -56,7 +53,7 @@ export function TodoRow({ todo, onRefetch }: TodoRowProps) {
         onCheckedChange={() => {
           updateMutation.mutate({
             id: todo.id,
-            completedAt: isCompleted ? null : new Date(),
+            completedAt: isCompleted ? null : new Date().toISOString(),
           });
         }}
         disabled={isUpdating}

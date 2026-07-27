@@ -7,7 +7,7 @@ import type {
 } from "kysely";
 import { CamelCasePlugin, Kysely, PostgresDialect } from "kysely";
 import pg from "pg";
-import { logger } from "@better-spa/shared/logger";
+import { logger } from "@better-spa/observability";
 import type { Database } from "./schema";
 
 const { Pool } = pg;
@@ -27,14 +27,10 @@ export class QueryLoggingPlugin implements KyselyPlugin {
     const info = this.queryInfo.get(args.queryId);
 
     if (info) {
-      if (process.env.KYSELY_QUERY_DEBUG !== "true") {
-        return args.result;
-      }
-
       const duration = Date.now() - info.startTime;
-      logger.debug("Kysely query completed", {
+      logger.debug("Database operation completed", {
         operation: info.kind,
-        durationMs: duration,
+        dbDurationMs: duration,
       });
     }
 
@@ -49,12 +45,15 @@ declare global {
   var __db: Kysely<Database> | undefined;
 }
 
-const MAX_CONNECTIONS = parseInt(process.env.DATABASE_MAX_CONNECTIONS || "2", 10);
+const MAX_CONNECTIONS = Number.parseInt(process.env.DATABASE_MAX_CONNECTIONS || "2", 10);
 
 export const getDatabasePooling = (connectionString: string) => {
   const pool = new Pool({
     connectionString,
     max: MAX_CONNECTIONS,
+    connectionTimeoutMillis: 5_000,
+    idleTimeoutMillis: 30_000,
+    application_name: "better-spa",
   });
 
   return new Kysely<Database>({
@@ -80,3 +79,7 @@ export const getDatabase = (connectionString: string) => {
 };
 
 export type DB = ReturnType<typeof getDatabase>;
+
+export async function checkDatabaseReady(db: DB): Promise<void> {
+  await db.selectFrom("user").select("id").limit(0).execute();
+}

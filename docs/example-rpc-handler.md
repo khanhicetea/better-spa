@@ -1,65 +1,33 @@
 # Example RPC Handler
 
-A minimal handler showing the four things every domain handler must do: validate input with `zod`, use `context.repos`, enforce auth and ownership, and return a serializable shape.
+A new domain should validate input, declare serialized output, use repositories, and enforce
+ownership in the SQL write predicate.
 
-Adapt this for any new domain. Replace `blogPost` and the `repos.blogPost` call with your own table, and pick a base procedure that matches the access level.
-
-## Live RPC Files
-
-```text
-src/server/rpc/
-  base.ts              # baseProcedure / authedProcedure / adminProcedure
-  router.ts            # exports rpcRouter and any aliases
-  handlers/<domain>.ts # one file per domain
-```
-
-## Skeleton
+Live RPC files are under `packages/rpc/src/`. Adapt this sketch only after adding a focused
+repository method such as `updateOwned`/`deleteOwned`.
 
 ```ts
-// src/server/rpc/handlers/blog.ts
-import { pickBy } from "lodash-es";
-import { z } from "zod";
-import { generateUUID } from "@/lib/helpers/data";
+// packages/rpc/src/handlers/blog.ts
+import * as z from "zod";
 import { authedProcedure } from "../base";
 
-export const list = authedProcedure.handler(async ({ context }) => {
-  const { repos } = context;
-  return repos.blogPost.find({
-    where: { userId: context.user.id },
-    modify: (qb) => qb.orderBy("createdAt", "desc"),
-  });
+const blogSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  body: z.string(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 });
 
-export const get = authedProcedure
-  .input(z.object({ id: z.string() }))
-  .handler(async ({ input, context, errors }) => {
-    const { repos } = context;
-    const post = await repos.blogPost.findById(input.id);
-    if (!post || post.userId !== context.user.id) {
-      throw errors.NOT_FOUND();
-    }
-    return post;
-  });
-
-export const create = authedProcedure
-  .input(
-    z.object({
-      title: z.string().min(1).max(200),
-      body: z.string().min(1),
-    }),
-  )
-  .handler(async ({ input, context }) => {
-    const { repos } = context;
-    const created = await repos.blogPost.insertReturn({
-      id: generateUUID(),
-      userId: context.user.id,
-      title: input.title,
-      body: input.body,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    return created ?? null;
-  });
+function toBlog(row: BlogPost) {
+  return {
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
 
 export const update = authedProcedure
   .input(
@@ -69,65 +37,51 @@ export const update = authedProcedure
       body: z.string().min(1).optional(),
     }),
   )
+  .output(blogSchema)
   .handler(async ({ input, context, errors }) => {
-    const { repos } = context;
-    const { id, ...patch } = input;
+    const patch: { title?: string; body?: string; updatedAt: Date } = {
+      updatedAt: new Date(),
+    };
+    if (input.title !== undefined) patch.title = input.title;
+    if (input.body !== undefined) patch.body = input.body;
 
-    const existing = await repos.blogPost.findById(id);
-    if (!existing || existing.userId !== context.user.id) {
-      throw errors.NOT_FOUND();
-    }
-
-    const updated = await repos.blogPost.updateById({
-      id,
-      data: {
-        ...pickBy(patch, (v) => v !== undefined),
-        updatedAt: new Date(),
-      },
+    const post = await context.repos.blogPost.updateOwned({
+      id: input.id,
+      userId: context.user.id,
+      data: patch,
     });
-    return updated ?? null;
+    if (!post) throw errors.NOT_FOUND();
+    return toBlog(post);
   });
 
 export const remove = authedProcedure
   .input(z.object({ id: z.string() }))
+  .output(z.object({ success: z.literal(true) }))
   .handler(async ({ input, context, errors }) => {
-    const { repos } = context;
-    const existing = await repos.blogPost.findById(input.id);
-    if (!existing || existing.userId !== context.user.id) {
-      throw errors.NOT_FOUND();
-    }
-    await repos.blogPost.deleteById(input.id);
+    const deleted = await context.repos.blogPost.deleteOwned({
+      id: input.id,
+      userId: context.user.id,
+    });
+    if (!deleted) throw errors.NOT_FOUND();
     return { success: true };
   });
 ```
 
-## Router Wiring
+Wire it in `packages/rpc/src/router.ts`:
 
 ```ts
-// src/server/rpc/router.ts
-import * as blog from "./handlers/blog";
-
-export const rpcRouter = {
-  // ...
-  blog: {
-    list: blog.list,
-    get: blog.get,
-    create: blog.create,
-    update: blog.update,
-    delete: blog.remove,
-  },
-};
+blog: {
+  update: blog.update,
+  delete: blog.remove,
+}
 ```
 
-The alias `delete: blog.remove` is the convention — `delete` is reserved in JS so the file exports `remove` and the router renames it on the way out.
+Checklist:
 
-## Checklist
-
-- [ ] Input is validated with `zod`.
-- [ ] Procedure base matches the access level (`baseProcedure`, `authedProcedure`, `adminProcedure`).
-- [ ] Reads and writes go through `context.repos`.
-- [ ] Ownership is checked in the handler before any update or delete.
-- [ ] `id` is generated with `generateUUID()`.
-- [ ] `createdAt` set on insert; `updatedAt` set on insert and update.
-- [ ] Return shape is serializable (no class instances, no `File`).
-- [ ] Router entry added in `src/server/rpc/router.ts`.
+- input and output use Zod
+- dates are ISO strings
+- only UI-required fields are exposed
+- auth level matches the action
+- update/delete ownership is part of the SQL predicate
+- writes use a repository
+- the result is serializable

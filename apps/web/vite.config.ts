@@ -10,6 +10,9 @@ export default defineConfig(({ command }) => ({
   resolve: {
     tsconfigPaths: true,
   },
+  ssr: {
+    external: ["pg"],
+  },
   plugins: [
     devtools(),
     tanstackStart({
@@ -29,12 +32,13 @@ export default defineConfig(({ command }) => ({
     }),
     // https://tanstack.com/start/latest/docs/framework/react/guide/hosting
     nitro({
-      preset: process.env.NITRO_PRESET || undefined,
+      preset: "node-server",
+      rollupConfig: {
+        external: ["pg"],
+      },
       ...(command === "build"
         ? {
-            scanDirs: ["src/nitro"],
             experimental: {
-              tasks: true,
               vite: {
                 serverReload: true,
               },

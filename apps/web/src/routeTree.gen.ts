@@ -21,8 +21,9 @@ import { Route as userSettingsRouteRouteImport } from './routes/(user)/settings/
 import { Route as userAppRouteRouteImport } from './routes/(user)/app/route'
 import { Route as userSettingsIndexRouteImport } from './routes/(user)/settings/index'
 import { Route as userAppIndexRouteImport } from './routes/(user)/app/index'
-import { Route as ApiUploadSplatRouteImport } from './routes/api/upload.$'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
+import { Route as ApiHealthReadyRouteImport } from './routes/api/health/ready'
+import { Route as ApiHealthLiveRouteImport } from './routes/api/health/live'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as userAppTodoRouteImport } from './routes/(user)/app/todo'
 
@@ -84,14 +85,19 @@ const userAppIndexRoute = userAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => userAppRouteRoute,
 } as any)
-const ApiUploadSplatRoute = ApiUploadSplatRouteImport.update({
-  id: '/api/upload/$',
-  path: '/api/upload/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
   path: '/api/rpc/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthReadyRoute = ApiHealthReadyRouteImport.update({
+  id: '/api/health/ready',
+  path: '/api/health/ready',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthLiveRoute = ApiHealthLiveRouteImport.update({
+  id: '/api/health/live',
+  path: '/api/health/live',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -116,8 +122,9 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/app/todo': typeof userAppTodoRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/health/live': typeof ApiHealthLiveRoute
+  '/api/health/ready': typeof ApiHealthReadyRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
-  '/api/upload/$': typeof ApiUploadSplatRoute
   '/app/': typeof userAppIndexRoute
   '/settings/': typeof userSettingsIndexRoute
 }
@@ -129,8 +136,9 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/app/todo': typeof userAppTodoRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/health/live': typeof ApiHealthLiveRoute
+  '/api/health/ready': typeof ApiHealthReadyRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
-  '/api/upload/$': typeof ApiUploadSplatRoute
   '/app': typeof userAppIndexRoute
   '/settings': typeof userSettingsIndexRoute
 }
@@ -148,8 +156,9 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/(user)/app/todo': typeof userAppTodoRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/health/live': typeof ApiHealthLiveRoute
+  '/api/health/ready': typeof ApiHealthReadyRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
-  '/api/upload/$': typeof ApiUploadSplatRoute
   '/(user)/app/': typeof userAppIndexRoute
   '/(user)/settings/': typeof userSettingsIndexRoute
 }
@@ -166,8 +175,9 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/todo'
     | '/api/auth/$'
+    | '/api/health/live'
+    | '/api/health/ready'
     | '/api/rpc/$'
-    | '/api/upload/$'
     | '/app/'
     | '/settings/'
   fileRoutesByTo: FileRoutesByTo
@@ -179,8 +189,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app/todo'
     | '/api/auth/$'
+    | '/api/health/live'
+    | '/api/health/ready'
     | '/api/rpc/$'
-    | '/api/upload/$'
     | '/app'
     | '/settings'
   id:
@@ -197,8 +208,9 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/(user)/app/todo'
     | '/api/auth/$'
+    | '/api/health/live'
+    | '/api/health/ready'
     | '/api/rpc/$'
-    | '/api/upload/$'
     | '/(user)/app/'
     | '/(user)/settings/'
   fileRoutesById: FileRoutesById
@@ -209,8 +221,9 @@ export interface RootRouteChildren {
   userRouteRoute: typeof userRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiHealthLiveRoute: typeof ApiHealthLiveRoute
+  ApiHealthReadyRoute: typeof ApiHealthReadyRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
-  ApiUploadSplatRoute: typeof ApiUploadSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -299,18 +312,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof userAppIndexRouteImport
       parentRoute: typeof userAppRouteRoute
     }
-    '/api/upload/$': {
-      id: '/api/upload/$'
-      path: '/api/upload/$'
-      fullPath: '/api/upload/$'
-      preLoaderRoute: typeof ApiUploadSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/rpc/$': {
       id: '/api/rpc/$'
       path: '/api/rpc/$'
       fullPath: '/api/rpc/$'
       preLoaderRoute: typeof ApiRpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health/ready': {
+      id: '/api/health/ready'
+      path: '/api/health/ready'
+      fullPath: '/api/health/ready'
+      preLoaderRoute: typeof ApiHealthReadyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health/live': {
+      id: '/api/health/live'
+      path: '/api/health/live'
+      fullPath: '/api/health/live'
+      preLoaderRoute: typeof ApiHealthLiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -403,8 +423,9 @@ const rootRouteChildren: RootRouteChildren = {
   userRouteRoute: userRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiHealthLiveRoute: ApiHealthLiveRoute,
+  ApiHealthReadyRoute: ApiHealthReadyRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
-  ApiUploadSplatRoute: ApiUploadSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

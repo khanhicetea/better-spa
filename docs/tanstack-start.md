@@ -1,84 +1,55 @@
 # TanStack Start Routing Guide
 
-Routing reference for this repo.
-
-## Live Route Shape
+## Live route shape
 
 ```text
-src/routes/
+apps/web/src/routes/
   __root.tsx
   index.tsx
   (auth)/
-    route.tsx
-    login.tsx
-    signup.tsx
-    -auth/*
   (user)/
-    route.tsx
     app/
-      route.tsx
-      index.tsx
-      todo.tsx
     settings/
-      route.tsx
-      index.tsx
-      -settings/*
   admin/
-    route.tsx
-    index.tsx
-    users.tsx
-    -users/*
   api/
     auth.$.ts
     rpc.$.ts
-    upload.$.ts
+    health/
+      live.ts
+      ready.ts
 ```
 
-## Route Groups
+Parenthesized route groups do not affect URLs. For example,
+`apps/web/src/routes/(user)/app/todo.tsx` maps to `/app/todo`.
 
-- Parentheses do not affect the URL.
-- `(auth)` groups public auth pages.
-- `(user)` groups authenticated pages.
+## Layout and guards
 
-Easy mapping:
+- The root owns global providers and the canonical bootstrap loader.
+- Use `route.tsx` for layouts, guards, and shared preload work.
+- The `(auth)` boundary redirects an existing session away from auth pages.
+- The `(user)` boundary requires `bootstrap.user`.
+- The admin boundary additionally requires `bootstrap.user.role === "admin"`.
+- `/app/*` and `/admin/*` use `ssr: "data-only"` for shell-SPA behavior.
 
-- `src/routes/(auth)/login.tsx` -> `/login`
-- `src/routes/(user)/app/todo.tsx` -> `/app/todo`
+Do not introduce a separate session query. Guards reuse
+`bootstrapQueryOptions()` from `apps/web/src/lib/queries.ts`.
 
-## Layout Rules
+## Data loading
 
-- `src/routes/__root.tsx` owns app-wide providers and the HTML shell.
-- Use `route.tsx` for layout, guards, and shared preloading.
-- Keep page files focused on feature UI.
+1. validate search parameters
+2. derive `loaderDeps` when they affect the request
+3. `await queryClient.ensureQueryData(...)` for data needed by suspense UI
+4. use the identical options in `useSuspenseQuery(...)`
+5. invalidate through the feature-owned query helper after writes
 
-## SPA Opt-In
+Use `prefetchQuery` only for best-effort data that is not required before rendering.
 
-- Put `ssr: "data-only"` on the layout that should behave as an SPA branch.
-- Preload shell and auth data at that same boundary.
-- Current SPA branches:
-  - `src/routes/(user)/app/route.tsx` -> `/app/*`
-  - `src/routes/admin/route.tsx` -> `/admin/*`
+## API routes
 
-## Protected Layouts
+- `/api/auth/$`: Better Auth HTTP lifecycle
+- `/api/rpc/$`: oRPC
+- `/api/health/live`: liveness
+- `/api/health/ready`: database readiness
 
-- `src/routes/(user)/route.tsx` enforces login
-- `src/routes/admin/route.tsx` enforces login and admin role
-
-Both return the resolved user so child routes get non-null typing.
-
-## Data Loading Pattern
-
-1. validate search params in the route
-2. derive `loaderDeps` when search params affect the fetch
-3. preload with `context.queryClient.ensureQueryData(...)` or `prefetchQuery(...)`
-4. read the same query in the component with `useSuspenseQuery(...)`
-
-## API Routes
-
-Current API routes:
-
-- `src/routes/api/auth.$.ts`
-- `src/routes/api/rpc.$.ts`
-- `src/routes/api/upload.$.ts`
-
-Do not add server endpoints outside the route tree unless the runtime requires it.
+Private upload intents are RPC procedures; there is no upload HTTP router. Do not add
+runtime endpoints outside the route tree unless a runtime adapter specifically requires it.

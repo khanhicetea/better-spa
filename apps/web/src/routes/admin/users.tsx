@@ -8,10 +8,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useState } from "react";
-import { toast } from "sonner";
 import * as z from "zod";
-import { PagePending } from "@/components/common/page-pending";
-import { PageTitle } from "@/components/common/page-title";
+import { PagePending } from "@/components/shell/page-pending";
+import { PageTitle } from "@/components/shell/page-title";
 import { DataTablePagination } from "@/components/data-table/pagination";
 import {
   Table,
@@ -35,7 +34,7 @@ export const Route = createFileRoute("/admin/users")({
   }),
   loaderDeps: ({ search }) => ({ page: search.page }),
   loader: async ({ deps, context }) => {
-    context.queryClient.prefetchQuery(
+    await context.queryClient.ensureQueryData(
       orpc.user.list.queryOptions({
         input: { page: deps.page },
       }),
@@ -54,7 +53,6 @@ function UsersPage() {
 
   const {
     data: { users, pageCount, pageSize, totalCount },
-    refetch: refetchUsers,
   } = useSuspenseQuery(
     orpc.user.list.queryOptions({
       input: { page },
@@ -70,10 +68,6 @@ function UsersPage() {
           user={row.original}
           onBan={setUserToBan}
           onChangePassword={setUserToChangePassword}
-          onUpdated={(message) => {
-            refetchUsers();
-            toast.success(message);
-          }}
         />
       ),
     },
@@ -92,12 +86,7 @@ function UsersPage() {
     <div className="space-y-4 py-4">
       <div className="flex items-center justify-between">
         <PageTitle title="Users" description="Manage user accounts" />
-        <CreateUserSheet
-          onSuccess={() => {
-            refetchUsers();
-            toast.success("User created");
-          }}
-        />
+        <CreateUserSheet />
       </div>
 
       <div className="space-y-4">
@@ -156,10 +145,6 @@ function UsersPage() {
               setUserToBan(null);
             }
           }}
-          onSuccess={() => {
-            refetchUsers();
-            toast.success(`User ${userToBan.email} has been banned`);
-          }}
         />
       )}
 
@@ -171,9 +156,6 @@ function UsersPage() {
             if (!open) {
               setUserToChangePassword(null);
             }
-          }}
-          onSuccess={() => {
-            toast.success(`Password for ${userToChangePassword.email} has been changed`);
           }}
         />
       )}

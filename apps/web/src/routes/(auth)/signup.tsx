@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import authClient from "@/lib/auth-client";
-import { QUERY_KEYS } from "@/lib/queries";
+import { invalidateBootstrap } from "@/lib/queries";
 import { AuthShell } from "./-auth/auth-shell";
 import { AuthSocialButtons } from "./-auth/social-buttons";
 
@@ -30,8 +30,8 @@ function SignupForm() {
           onError: ({ error }) => {
             toast.error(error.message || "Unable to sign up.");
           },
-          onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth });
+          onSuccess: async () => {
+            await invalidateBootstrap(queryClient);
             navigate({ to: redirectUrl });
           },
         },

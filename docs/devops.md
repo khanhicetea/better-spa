@@ -1,48 +1,64 @@
-# DevOps and Deployment
+# Node Deployment
 
-Deployment baseline for this Node-first app.
-
-## Default Runtime
-
-Node.js `>=24` is the default target.
+Node.js 24 is the default production runtime.
 
 ```bash
-pnpm build
+pnpm install --frozen-lockfile
+pnpm db:migrate
+pnpm build:node
 pnpm start
 ```
 
-## Optional Runtime
+`pnpm preview` is the local equivalent and loads the repository `.env`.
 
-Cloudflare Workers support is not live. Read `docs/cloudflare.md` before runtime-specific changes.
+## Runtime design
 
-## Request Context
+`apps/web/src/server/node-server.ts` owns one process-level database, Better Auth,
+repository, storage, and rate-limit set. Each request receives a runtime-neutral context
+from `packages/rpc/src/context.ts`.
 
-`src/server/node-server.ts` creates one DB/auth/repo set at startup, then stores per-request state in `src/server/context.ts`.
+The adapter:
 
-Use:
+- creates or propagates request state and returns `x-request-id`
+- emits structured JSON request/RPC/DB logs
+- applies a configurable 1 MiB API body limit
+- applies a configurable 30-second request deadline
+- parses forwarded addresses only when `TRUST_PROXY` is configured
+- uses per-user buckets where a session exists, with stricter admin/upload policies
+- unreferences cleanup/deadline timers
+- drains lightweight post-response work and destroys resources on graceful shutdown
 
-- `getRequestContext()` for request state
-- `requestStorage.run(...)` only in a server entry
+Set `TRUST_PROXY=true` to trust the first forwarded address, or an integer hop count for a
+known proxy chain. Leave it unset/false when the app is directly reachable.
 
-The context shape is `headers`, `auth`, `session`, `db`, `repos`, and `waitUntil`.
+## Configuration
 
-## Required Environment
-
-Minimum server env:
+Required:
 
 - `DATABASE_URL`
 - `BETTER_AUTH_SECRET`
 - `VITE_BASE_URL`
 
-Optional, depending on features:
+Optional:
 
-- `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
-- `CRON_SECRET`
-- S3 env from `docs/file-storage.md`
+- `HOST`
+- `DATABASE_MAX_CONNECTIONS`
+- `TRUST_PROXY`
+- `API_BODY_LIMIT_BYTES`
+- `REQUEST_DEADLINE_MS`
+- `LOG_LEVEL`
+- OAuth credentials
+- private S3-compatible credentials from `docs/file-storage.md`
 
-## Production Shape
+Never log or expose cookies, authorization, passwords, OAuth tokens, database URLs, or
+storage credentials.
 
-- The app builds a single server output in `.output/server/`.
-- There is no separate worker build or worker start script in the live repo.
-- If you add one, document the exact process here and in `docs/commands.md`.
+## Health
+
+- `GET /api/health/live` verifies the server is handling requests.
+- `GET /api/health/ready` verifies PostgreSQL and the expected schema are reachable.
+
+Both return runtime and request ID data. Use readiness for load-balancer admission and
+liveness for process restart decisions.
+
+Cloudflare deployment is a separate build and entry; see `docs/cloudflare.md`.

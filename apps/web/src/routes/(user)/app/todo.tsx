@@ -1,45 +1,32 @@
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { ListTodo, Plus } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
-import { PagePending } from "@/components/common/page-pending";
+import { PagePending } from "@/components/shell/page-pending";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { orpc } from "@/lib/orpc";
 import { TodoRow } from "./-todo/todo-row";
 import { TodoSummary } from "./-todo/todo-summary";
+import { invalidateTodos } from "./-todo/queries";
 
 export const Route = createFileRoute("/(user)/app/todo")({
   component: TodoPage,
   pendingComponent: PagePending,
+  loader: ({ context }) => context.queryClient.ensureQueryData(orpc.todo.list.queryOptions()),
 });
 
 function TodoPage() {
   const [newTodoContent, setNewTodoContent] = useState("");
+  const queryClient = useQueryClient();
 
-  const { data: todos, refetch: refetchTodos } = useSuspenseQuery(orpc.todo.list.queryOptions());
+  const { data: todos } = useSuspenseQuery(orpc.todo.list.queryOptions());
 
   const createTodoMutation = useMutation(
     orpc.todo.create.mutationOptions({
-      onSuccess: () => {
-        refetchTodos();
+      onSuccess: async () => {
+        await invalidateTodos(queryClient);
         setNewTodoContent("");
-      },
-    }),
-  );
-
-  const exportMutation = useMutation(
-    orpc.todo.export.mutationOptions({
-      onSuccess: (result) => {
-        toast.success("Export completed", {
-          description: `Exported ${result.total} todos.`,
-        });
-      },
-      onError: (error) => {
-        toast.error("Unable to export todos", {
-          description: error.message,
-        });
       },
     }),
   );
@@ -62,10 +49,6 @@ function TodoPage() {
           totalTodos={totalTodos}
           completedTodos={completedTodos}
           progressPercentage={progressPercentage}
-          isExporting={false}
-          exportingProgress={0}
-          isExportPending={exportMutation.isPending}
-          onExport={() => exportMutation.mutate({})}
         />
       </div>
 
@@ -100,7 +83,7 @@ function TodoPage() {
             No tasks yet. Add one to get started.
           </div>
         ) : (
-          todos.map((todo) => <TodoRow key={todo.id} todo={todo} onRefetch={refetchTodos} />)
+          todos.map((todo) => <TodoRow key={todo.id} todo={todo} />)
         )}
       </div>
     </div>

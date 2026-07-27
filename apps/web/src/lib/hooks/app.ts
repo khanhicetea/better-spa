@@ -1,12 +1,7 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { authQueryOptions, shellQueryOptions } from "../queries";
-
-export function useShellData() {
-  const { data } = useSuspenseQuery(shellQueryOptions());
-  return data;
-}
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { bootstrapQueryOptions } from "../queries";
 
 export function useSessionUser() {
-  const { data, isLoading } = useQuery(authQueryOptions());
-  return { user: data, isLoading };
+  const { data } = useSuspenseQuery(bootstrapQueryOptions());
+  return { user: data.user, isLoading: false };
 }

@@ -1,225 +1,188 @@
 # Better SPA
 
-A minimal starter that implements the **Better SPA** pattern: SSR a thin shell for auth and app settings, then hand off to a SPA for everything else.
+A production-minded shell-SPA starter. TanStack Start server-renders one small bootstrap
+payload and shell, then TanStack Router, TanStack Query, and oRPC drive the application as
+an SPA.
 
-## Philosophy
+The repository targets Node.js 24 and Cloudflare Workers without changing the application
+or RPC contracts.
 
-> The good balance between SSR and SPA is the best stack for UX and DX. Only SSR a shell for the SPA — server rendering should check auth and populate app + user settings, then pass them into the shell. Everything else, the user can wait for first-load.
+## Stack
 
-## What gets SSR'd
+- React 19 with React Compiler
+- TanStack Start, Router, and Query
+- oRPC with explicit serialized DTOs
+- Better Auth with email/password and optional GitHub or Google OAuth
+- PostgreSQL 16, Kysely, and handwritten schema types
+- Base UI primitives, Tailwind CSS v4, and lucide-react
+- Nitro for the Node adapter and the Cloudflare Vite plugin for Workers
 
-- **Authentication**: user session validation
-- **App settings**: configuration, feature flags, environment info
-- **User preferences**: theme, language, layout
-- **Shell UI**: minimal HTML structure plus critical data and CSS
+## Architecture
 
-## What runs as SPA
+`app.bootstrap` is the canonical root query. It returns:
 
-- **Routing & navigation**: all client-side
-- **Data fetching**: oRPC via TanStack Query
-- **State**: TanStack Query for server state, `useState` for local UI state
-- **Rendering**: every interactive component
+- application name, package version, environment, and runtime
+- the signed-in user's safe profile summary or `null`
+- theme and timezone preferences
+- enabled OAuth providers and upload availability
 
-## Tech stack
+The root loader hydrates that query once. Auth guards, navigation, theme setup, and
+capability-driven UI all read the same cache entry. Auth, profile, account, and
+impersonation transitions invalidate it.
 
-### Core
+Application writes go through oRPC. Better Auth's ordinary sign-in, sign-up, sign-out,
+session, and account lifecycle continue to use its HTTP client. Admin identity writes use
+admin-only oRPC mutations so authorization, errors, cookies, logging, and invalidation share
+one boundary.
 
-- **TanStack Start** — full-stack React framework
-- **TanStack Router** — type-safe routing
-- **TanStack Query** — server state
-- **React 19** with the React Compiler
-- **oRPC** — type-safe RPC (mobile/native ready)
+Uploads are private. Authenticated clients request short-lived, content-type-bound S3 `PUT`
+URLs from `file.createUploadIntents`; reads use `file.createReadUrl`. Object keys are scoped
+to `users/{userId}/`, and no durable public URL is returned.
 
-### Auth
+See [the architecture guide](docs/better-spa-architecture.md),
+[RPC guide](docs/rpc-architecture.md), and [storage guide](docs/file-storage.md).
 
-- **Better Auth** — email/password, OAuth (GitHub, Google), cookie sessions
+## Workspace
 
-### Database
-
-- **Kysely** with handwritten schema types (no codegen)
-- **PostgreSQL** for both dev and prod (a `docker-compose.yml` is included for local Postgres)
-
-### UI
-
-- **shadcn/ui** components
-- **Base UI** (`@base-ui/react`) primitives — use the `render` prop, never `asChild`
-- **Tailwind CSS v4** with theme tokens (`bg-primary`, `bg-muted`, `text-muted-foreground`, `border-border`)
-- **lucide-react** icons
-
-## Project structure
-
-```
-shell-spa/
-├── src/
-│   ├── components/             # Reusable UI components
-│   ├── env/                    # Validated client + server env (t3-env)
-│   ├── hooks/                  # Custom React hooks
-│   ├── lib/                    # Auth, oRPC client, helpers
-│   ├── nitro/                  # Nitro tasks (cron, etc.)
-│   ├── routes/                 # File-based routing
-│   │   ├── (auth)/             # Public auth pages
-│   │   ├── (user)/             # Protected user routes
-│   │   ├── admin/              # Admin routes
-│   │   ├── api/                # API endpoints (auth, rpc, upload)
-│   │   └── __root.tsx          # Shell implementation
-│   └── server/                 # Server-only code
-│       ├── context.ts          # Request context + AsyncLocalStorage
-│       ├── db/
-│       │   ├── client.ts
-│       │   ├── migrate.ts
-│       │   ├── migrations/     # Kysely migrations
-│       │   ├── repositories/   # Type-safe repos over Kysely
-│       │   └── schema/         # Handwritten table types
-│       └── rpc/
-│           ├── base.ts         # baseProcedure / authedProcedure / adminProcedure
-│           ├── handlers/       # One file per domain
-│           └── router.ts
-├── docs/                       # Agent-oriented architecture docs
-├── public/                     # Static assets
-├── docker-compose.yml          # Local Postgres
-└── AGENTS.md                   # Read first if you're an agent
+```text
+apps/web/                    TanStack Start web application and runtime adapters
+packages/auth/               Better Auth factory and CLI-only configuration
+packages/db/                 Kysely client, migrations, schema, repositories
+packages/observability/      Server-only structured request and DB logging
+packages/rpc/                Context, DTOs, storage signer, handlers, router
+packages/shared/             Browser-safe shared utilities
+docs/                        Architecture and operations reference
+scripts/                     Workspace validation and setup
 ```
 
-## Getting started
+UI code is split between upstream-style primitives in
+`apps/web/src/components/ui/`, shell components in `apps/web/src/components/shell/`, and
+route-owned features beside their routes.
 
-### Prerequisites
+## Setup
 
-- Node.js 24+ (see `.nvmrc`)
-- pnpm
-- PostgreSQL 16 (or use the included `docker-compose.yml`)
+Prerequisites:
 
-### Install
+- Node.js 24
+- pnpm 11.1.3
+- Docker with Compose, or a compatible PostgreSQL database
+
+For a new checkout:
 
 ```bash
-git clone <your-repo-url>
-cd shell-spa
-
-pnpm install
-cp .env.example .env
-
-# Generate auth secret
-pnpm auth:secret
-```
-
-### Start Postgres
-
-```bash
-docker compose up -d
-```
-
-### Migrate the database
-
-```bash
-pnpm build:migrate
-pnpm migrate:db
-```
-
-### Run the dev server
-
-```bash
+pnpm install --frozen-lockfile
+pnpm setup
 pnpm dev
 ```
 
-The app starts on `http://localhost:3000`.
+`pnpm setup` checks Node and pnpm, creates `.env` only when absent, generates a missing
+`BETTER_AUTH_SECRET` without printing it, validates the configuration, starts PostgreSQL,
+runs migrations, and prints the local URL.
 
-## Key features
-
-### 1. Shell pattern
-
-The root route at `src/routes/__root.tsx` loads shell data via RPC and caches it with TanStack Query:
-
-```ts
-beforeLoad: async ({ context }) => {
-  const shell = await context.queryClient.ensureQueryData(shellQueryOptions());
-  context.queryClient.setQueryData(authQueryOptions().queryKey, shell.user);
-  return { shell };
-};
-```
-
-The handler in `src/server/rpc/handlers/app.ts` returns the shell payload (app metadata + theme cookie). Auth state is loaded separately via `authQueryOptions()` and enforced in route-group `beforeLoad` hooks.
-
-### 2. Protected routes
-
-```ts
-// src/routes/(user)/route.tsx
-beforeLoad: async ({ context }) => {
-  const user = await context.queryClient.ensureQueryData({
-    ...authQueryOptions(),
-    revalidateIfStale: true,
-  });
-  if (!user) throw redirect({ to: "/login" });
-  return { user };
-};
-```
-
-### 3. RPC layer
-
-All app writes go through oRPC handlers in `src/server/rpc/handlers/`. Handlers validate input with `zod`, read/write through `context.repos`, and enforce ownership in the handler — never the UI.
-
-See `docs/example-rpc-handler.md` for a copyable handler template, and `docs/example-route-with-loader.md` for the loader + `useSuspenseQuery` pattern.
-
-## Common commands
+For manual setup, copy `.env.example` to `.env`, configure the required values, then run:
 
 ```bash
-pnpm dev                # start the dev server
-pnpm build              # production build
-pnpm preview            # run the built server with .env loaded
-pnpm start              # run the built server
-
-pnpm format             # prettier --write
-pnpm lint               # oxlint --fix
-pnpm check              # read-only: format:check + lint:check + check-types
-
-pnpm build:migrate      # bundle migrations
-pnpm migrate:db         # apply migrations
-pnpm kysely             # raw kysely-ctl
-pnpm db:snapshot        # regenerate docs/db-schema.md from the live DB
-
-pnpm auth:secret        # generate BETTER_AUTH_SECRET
-pnpm auth:generate      # regenerate Better Auth schema
-pnpm ui add <component> # add a shadcn/ui component
+pnpm db:up
+pnpm db:migrate
+pnpm dev
 ```
 
-See `docs/commands.md` for the full list.
+The local app is available at `http://localhost:3000`.
+
+## Commands
+
+```bash
+pnpm dev
+pnpm build              # Node production build
+pnpm build:node
+pnpm build:worker
+pnpm preview            # Node output with the root .env
+pnpm start
+
+pnpm check              # read-only format, lint, workspace, and type checks
+pnpm check:build
+pnpm check:full         # builds, Knip, Worker type drift, Worker dry-run
+pnpm knip
+
+pnpm db:up
+pnpm db:down
+pnpm db:migrate
+pnpm db:snapshot
+
+pnpm auth:secret
+pnpm auth:generate
+pnpm ui add <component>
+
+pnpm worker:types
+pnpm worker:preview
+pnpm worker:deploy
+```
+
+See [docs/commands.md](docs/commands.md) for exact behavior.
 
 ## Deployment
 
-- **Node** (default): build with `pnpm build`, run `pnpm start`. See `docs/devops.md`.
-- **Cloudflare Workers**: set `NITRO_PRESET=cloudflare-module`. See `docs/cloudflare.md`.
-- **Vercel**: set `NITRO_PRESET=vercel`.
+Node:
 
-The Nitro preset is selected at build time via the `NITRO_PRESET` env var (see `vite.config.ts`). The same source builds for any supported target — there are no per-target Vite configs.
+```bash
+pnpm build:node
+pnpm start
+```
 
-## Environment variables
+The Node server keeps one process-level database/auth/repository set, limits API bodies to
+1 MiB by default, applies 30-second request deadlines, supports explicit trusted-proxy
+parsing, and shuts resources down gracefully. See [docs/devops.md](docs/devops.md).
 
-See `.env.example` for the full list, grouped by required / optional / OAuth / S3. The minimum to start:
+Cloudflare Workers:
 
-- `VITE_BASE_URL` — public origin (default `http://localhost:3000`)
-- `DATABASE_URL` — Postgres connection string
-- `BETTER_AUTH_SECRET` — generated with `pnpm auth:secret`
+```bash
+pnpm worker:types
+pnpm build:worker
+pnpm worker:dry-run
+pnpm worker:deploy
+```
 
-Both client (`VITE_*`) and server env are validated with `@t3-oss/env-core` in `src/env/`.
+Workers use a required Hyperdrive binding and create request-scoped PostgreSQL resources.
+Configure real binding IDs and secrets before deployment. See
+[docs/cloudflare.md](docs/cloudflare.md).
 
-## Conventions
+Both runtimes expose:
 
-This project is opinionated — see `AGENTS.md` for the rules every change should follow, and `docs/` for architecture deep-dives. Notable rules:
+- `/api/health/live`: process/isolate liveness
+- `/api/health/ready`: database-backed readiness
 
-- React Compiler is enabled. Do **not** add `useMemo`, `useCallback`, or `memo`.
-- Use `@base-ui/react` primitives via the `render` prop. No Radix.
-- All app writes go through the RPC layer.
-- In RPC handlers, prefer `context.repos` over raw Kysely.
-- No optimistic updates. Refetch or use a concurrency-safe pattern.
-- After every migration, regenerate `docs/db-schema.md` with `pnpm db:snapshot`.
-- End every task with `pnpm check`.
+Every response carries `x-request-id`; server and DB events use structured JSON logs with
+sensitive values redacted.
 
-## Mobile/native ready
+## Environment
 
-The oRPC router in `src/server/rpc/router.ts` is a plain object with typed handlers. Any HTTP client (React Native, native desktop, another framework) can call it via `/api/rpc/*` and get the same end-to-end types.
+The minimum Node configuration is:
 
-## Learning resources
+- `VITE_BASE_URL`
+- `DATABASE_URL`
+- `BETTER_AUTH_SECRET`
 
-- [TanStack Start](https://tanstack.com/start/latest)
-- [oRPC](https://orpc.dev/)
-- [Better Auth](https://www.better-auth.com/)
-- [Kysely](https://kysely.dev/)
-- [Base UI](https://base-ui.com/)
+OAuth and private storage are enabled only when their complete credential sets are present.
+See [.env.example](.env.example), [docs/file-storage.md](docs/file-storage.md), and the
+runtime deployment guides.
+
+## Project rules
+
+- oRPC, not tRPC
+- Base UI's `render` prop, never Radix `asChild`
+- no `useMemo`, `useCallback`, or `memo`; React Compiler is enabled
+- TanStack Query for server state; local React state only for local UI state
+- no optimistic writes
+- repositories over raw Kysely in handlers
+- ISO date strings across RPC boundaries
+- no Kysely code generation
+- regenerate `docs/db-schema.md` after every migration
+- finish every task with `pnpm check`
+
+Read [AGENTS.md](AGENTS.md) before changing the repository.
+
+## Native capability
+
+The HTTP oRPC surface and serialized DTOs can support a future native client. This starter
+is native-capable, not native-ready: it does not include a native application, generated
+client package, or separate contracts package.

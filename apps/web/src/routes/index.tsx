@@ -3,12 +3,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, ListTodo, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { authQueryOptions } from "@/lib/queries";
+import { bootstrapQueryOptions } from "@/lib/queries";
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(authQueryOptions());
+    await context.queryClient.ensureQueryData(bootstrapQueryOptions());
   },
   component: HomePage,
 });
@@ -107,16 +106,8 @@ function HomePage() {
 }
 
 function HeaderActions() {
-  const { data: user, isLoading } = useQuery(authQueryOptions());
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-wrap gap-3">
-        <Skeleton className="h-11 w-32 rounded-md" />
-        <Skeleton className="h-11 w-24 rounded-md" />
-      </div>
-    );
-  }
+  const { data } = useQuery(bootstrapQueryOptions());
+  const user = data?.user;
 
   if (user) {
     return (

@@ -1,22 +1,25 @@
 import { ORPCError, onError, ValidationError } from "@orpc/server";
 import { CompressionPlugin, RPCHandler } from "@orpc/server/fetch";
-import { BatchHandlerPlugin } from "@orpc/server/plugins";
+import { BatchHandlerPlugin, ResponseHeadersPlugin } from "@orpc/server/plugins";
 import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
 import { getRequestContext } from "@better-spa/rpc/context";
 import { rpcRouter } from "@better-spa/rpc/router";
-import { logger } from "@better-spa/shared/logger";
+import { logger } from "@better-spa/observability";
 
 const plugins = [
   process.env.RPC_COMPRESSION !== undefined ? new CompressionPlugin() : undefined,
   new BatchHandlerPlugin(),
+  new ResponseHeadersPlugin(),
 ];
 
 const handler = new RPCHandler(rpcRouter, {
   plugins: plugins.filter((x) => x !== undefined),
   interceptors: [
     onError((error) => {
-      logger.error("Unhandled RPC server error", { error });
+      const expected = error instanceof ORPCError && error.status < 500;
+      const log = expected ? logger.warn : logger.error;
+      log(expected ? "Expected RPC client error" : "Unhandled RPC server error", { error });
     }),
   ],
   clientInterceptors: [
@@ -29,7 +32,7 @@ const handler = new RPCHandler(rpcRouter, {
         // If you only use Zod you can safely cast to ZodIssue[]
         const zodError = new z.ZodError(error.cause.issues as z.core.$ZodIssue[]);
 
-        throw new ORPCError("INPUT_VALIDATION_FAILED", {
+        throw new ORPCError("VALIDATION_FAILED", {
           status: 422,
           message: z.prettifyError(zodError),
           data: z.flattenError(zodError),

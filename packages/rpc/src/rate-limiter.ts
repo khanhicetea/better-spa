@@ -25,6 +25,7 @@ export class RateLimiter {
         }
       }
     }, 60000);
+    this.cleanupInterval.unref?.();
   }
 
   /**
@@ -94,7 +95,28 @@ export class RateLimiter {
   }
 }
 
-// Default rate limiters for different scenarios
-export const authRateLimiter = new RateLimiter(5, 60000); // 5 requests per minute for auth
-export const apiRateLimiter = new RateLimiter(100, 60000); // 100 requests per minute for API
-export const strictRateLimiter = new RateLimiter(10, 60000); // 10 requests per minute for sensitive operations
+export class InMemoryRateLimitService {
+  private limiters = {
+    api: new RateLimiter(100, 60_000),
+    admin: new RateLimiter(10, 60_000),
+    upload: new RateLimiter(20, 60_000),
+  };
+
+  check(policy: keyof typeof this.limiters, identifier: string) {
+    const result = this.limiters[policy].check(`${policy}:${identifier}`);
+    return {
+      allowed: result.allowed,
+      retryAfter: Math.max(1, Math.ceil((result.resetAt - Date.now()) / 1000)),
+    };
+  }
+
+  destroy(): void {
+    Object.values(this.limiters).forEach((limiter) => limiter.destroy());
+  }
+}
+
+export const ingressRateLimitService = {
+  check() {
+    return { allowed: true, retryAfter: 0 };
+  },
+};

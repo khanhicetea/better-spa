@@ -1,10 +1,8 @@
 import type { ReactNode } from "react";
-import { SignInSocialButton } from "@/components/spa/sign-in-social-button";
-import {
-  enabledSocialProviders,
-  isSocialProviderEnabled,
-  type SocialProvider,
-} from "@/lib/auth-client";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { SignInSocialButton } from "@/components/shell/sign-in-social-button";
+import type { SocialProvider } from "@/lib/auth-client";
+import { bootstrapQueryOptions } from "@/lib/queries";
 
 const providerIcons: Record<SocialProvider, ReactNode> = {
   github: (
@@ -33,7 +31,10 @@ interface AuthSocialButtonsProps {
 }
 
 export function AuthSocialButtons({ callbackURL, isPending }: AuthSocialButtonsProps) {
-  const providers = Object.keys(enabledSocialProviders) as SocialProvider[];
+  const { data: bootstrap } = useSuspenseQuery(bootstrapQueryOptions());
+  const providers = bootstrap.capabilities.oauthProviders;
+
+  if (providers.length === 0) return null;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -42,7 +43,7 @@ export function AuthSocialButtons({ callbackURL, isPending }: AuthSocialButtonsP
           key={provider}
           provider={provider}
           callbackURL={callbackURL}
-          disabled={isPending || !isSocialProviderEnabled(provider)}
+          disabled={isPending}
           icon={providerIcons[provider]}
         />
       ))}

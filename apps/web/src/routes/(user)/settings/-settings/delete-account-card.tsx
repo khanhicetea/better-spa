@@ -25,8 +25,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { authQueryOptions } from "@/lib/queries";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { bootstrapQueryOptions, invalidateBootstrap } from "@/lib/queries";
 
 const deleteSchema = z.object({
   password: z.string().min(1, "Password is required"),
@@ -37,8 +37,10 @@ type DeleteFormValues = z.infer<typeof deleteSchema>;
 export function DeleteAccountCard() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
 
-  const { data: user } = useSuspenseQuery(authQueryOptions());
+  const { data: bootstrap } = useSuspenseQuery(bootstrapQueryOptions());
+  const user = bootstrap.user;
 
   const form = useForm<DeleteFormValues>({
     resolver: zodResolver(deleteSchema),
@@ -54,7 +56,9 @@ export function DeleteAccountCard() {
         fetchOptions: { throw: true },
       });
 
+      await invalidateBootstrap(queryClient);
       toast.success("Account deleted successfully");
+      window.location.assign("/");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete account");
       setIsDeleting(false);

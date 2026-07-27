@@ -1,81 +1,62 @@
 # Database and Repository Pattern
 
-Rules for DB work in this repo.
+## Rules
 
-## Non-Negotiables
-
-- Do not use Kysely codegen for app schema types.
-- Handwrite schema types in `src/server/db/schema/`.
+- Handwrite schema types in `packages/db/src/schema/`; do not use Kysely codegen.
 - Prefer `context.repos` in RPC handlers.
-- Use raw `context.db` only when the generic repository is a poor fit.
+- Use raw `context.db` only when a focused repository method would be less clear.
+- Generic bulk update/delete requires a non-empty condition.
+- After every migration, regenerate `docs/db-schema.md` with `pnpm db:snapshot`.
 
-## Live Structure
+## Live structure
 
 ```text
-src/server/db/
-  client.ts
-  index.ts
-  migrate.ts
-  tsup.migrate.config.ts
-  migrations/
-  schema/
+packages/db/
+  src/client.ts
+  src/migrate.ts
+  src/migrations/
+  src/schema/
     auth.ts
     todo.ts
     index.ts
-  repositories/
+  src/repositories/
     index.ts
     repository.ts
+    todo.ts
+    user.ts
     types.ts
 ```
 
-`src/server/db/schema/job.ts` still exists as legacy code, but the latest migration drops the `job` table. Do not use it for new work unless you reintroduce the table and update this doc set.
+Current repositories from `createRepos()`:
 
-## Schema Rules
+- `repos.user`, including the shared-filter `listAdminPage`
+- `repos.todoItem`, including ownership-scoped `updateOwned` and `deleteOwned`
 
-- Each schema file exports `<Name>Table`, `<Name>`, `<Name>Insert`, and `<Name>Update`.
+The deployed migration history may mention `job`, but no job table/type/repository exists
+in the current application. Do not build on it without a new migration and real worker
+design.
+
+## Schema conventions
+
+- Each schema file exports table row, insert, and update types.
 - SQL tables are singular: `user`, `session`, `account`, `verification`, `todo_item`.
-- Kysely table keys are camelCase where needed: `todoItem`.
-- Use `snake_case` in SQL and `camelCase` in TypeScript.
+- Database identifiers use `snake_case`; TypeScript fields use `camelCase`.
+- RPC DTOs are separate from database rows.
 
-## Repositories
+## Migration flow
 
-Current live repos from `createRepos()`:
-
-- `repos.user`
-- `repos.todoItem`
-
-Use built-in methods before adding custom repository code:
-
-- `find`, `findSelect`, `findAll`
-- `findById`, `findByIdOrFail`
-- `findOne`, `findOneOrFail`
-- `findPaginated`
-- `count`, `exists`, `existsBy`
-- `insertReturn`, `insertMany`, `upsert`
-- `updateById`, `updateMany`
-- `deleteById`, `deleteMany`
-
-Add a custom repository only for reusable complex logic such as search, cross-table workflows, or transaction helpers.
-
-## Migration Flow
-
-1. add a migration in `src/server/db/migrations/`
-2. update `src/server/db/schema/*`
-3. update `src/server/db/schema/index.ts`
-4. wire `src/server/db/repositories/index.ts` if a new repo is needed
-5. update `docs/db-schema.md`
-
-Build and run migrations with:
+1. add a migration in `packages/db/src/migrations/`
+2. update `packages/db/src/schema/*`
+3. update `packages/db/src/schema/index.ts`
+4. add or update focused repositories
+5. wire `packages/db/src/repositories/index.ts`
+6. run the migration and snapshot
 
 ```bash
-pnpm build:migrate
-pnpm migrate:db
+pnpm db:migrate
+pnpm db:snapshot
+pnpm check
 ```
 
-## Handler Shape
-
-1. validate input
-2. load via `context.repos`
-3. enforce auth or ownership
-4. write changes
-5. return serialized data
+`db:snapshot` reads the live database and is the only supported way to update
+`docs/db-schema.md`.

@@ -1,10 +1,25 @@
 minimumReleaseAge: 5000
+minimumReleaseAgeExclude:
+  - "@cloudflare/vite-plugin"
+  - miniflare
+  - wrangler
 packages:
   - "apps/*"
   - "packages/*"
 
+catalog:
+  "@orpc/client": 1.14.2
+  "@orpc/server": 1.14.2
+  "@orpc/tanstack-query": 1.14.2
+  "@types/node": 25.6.2
+  better-auth: 1.6.9
+  kysely: 0.28.17
+  typescript: 6.0.3
+  zod: 4.4.3
+
 allowBuilds:
-  '0': esbuild
-  '1': sharp
-  '2': workerd
+  "@prisma/client": false
+  better-sqlite3: false
   esbuild: true
+  sharp: true
+  workerd: true

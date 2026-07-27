@@ -7,9 +7,8 @@ import { orpc } from "@/lib/orpc";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminOverviewPage,
-  loader: async ({ context }) => {
-    context.queryClient.prefetchQuery(orpc.user.list.queryOptions({ input: { page: 1 } }));
-  },
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(orpc.user.list.queryOptions({ input: { page: 1 } })),
 });
 
 function AdminOverviewPage() {

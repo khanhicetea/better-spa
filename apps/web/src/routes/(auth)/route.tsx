@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { DefaultCatchBoundary } from "@/components/spa/default-catch-boundary";
-import { authQueryOptions } from "@/lib/queries";
+import { DefaultCatchBoundary } from "@/components/shell/default-catch-boundary";
+import { bootstrapQueryOptions } from "@/lib/queries";
 
 export const Route = createFileRoute("/(auth)")({
   component: RouteComponent,
@@ -8,8 +8,8 @@ export const Route = createFileRoute("/(auth)")({
   beforeLoad: async ({ context }) => {
     const REDIRECT_URL = "/app/todo";
 
-    const user = await context.queryClient.ensureQueryData(authQueryOptions());
-    if (user) {
+    const bootstrap = await context.queryClient.ensureQueryData(bootstrapQueryOptions());
+    if (bootstrap.user) {
       throw redirect({
         to: "/app/todo",
       });

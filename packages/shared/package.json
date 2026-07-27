@@ -4,24 +4,19 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./logger": "./src/logger.ts",
     "./helpers/data": "./src/helpers/data.ts",
     "./helpers/date": "./src/helpers/date.ts",
-    "./helpers/paginations": "./src/helpers/paginations.ts",
-    "./schemas/s3": "./src/schemas/s3.ts",
-    "./auth/rbac": "./src/auth/rbac.ts"
+    "./helpers/paginations": "./src/helpers/paginations.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "better-auth": "^1.6.9",
     "date-fns": "^4.1.0",
-    "date-fns-tz": "^3.2.0",
-    "zod": "^4.4.3"
+    "date-fns-tz": "^3.2.0"
   },
   "devDependencies": {
-    "@types/node": "^25.6.2",
-    "typescript": "^6.0.3"
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
   }
 }

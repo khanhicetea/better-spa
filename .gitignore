@@ -16,6 +16,17 @@ yarn.lock
 .vercel
 .output
 .wrangler
+.pnpm-store
+.expo
+Pods
+ios/build
+android/build
+apps/mobile
+apps/*/.output
+apps/*/dist
+apps/*/node_modules
+packages/*/dist
+worker-configuration.d.ts.tmp
 .netlify
 
 .tanstack

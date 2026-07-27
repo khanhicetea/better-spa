@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U user -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: "true"
+      DATABASE_URL: postgresql://user:password@localhost:5432/postgres
+      BETTER_AUTH_SECRET: ci-only-secret-that-is-at-least-thirty-two-characters
+      VITE_BASE_URL: http://127.0.0.1:3000
+      CLOUDFLARE_INCLUDE_PROCESS_ENV: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.3
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm validate:workspace
+      - run: pnpm worker:types:check
+      - run: pnpm check
+      - run: pnpm knip
+      - run: pnpm build:node
+      - run: pnpm build:worker
+      - run: pnpm --filter @better-spa/web worker:dry-run
+      - run: pnpm db:migrate
+      - run: pnpm db:snapshot
+      - run: git diff --exit-code -- docs/db-schema.md
+      - name: Node health smoke
+        run: |
+          pnpm start > /tmp/better-spa-node.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..30}; do
+            curl --fail --silent http://127.0.0.1:3000/api/health/live &&
+              curl --fail --silent http://127.0.0.1:3000/api/health/ready &&
+              exit 0
+            sleep 1
+          done
+          cat /tmp/better-spa-node.log
+          exit 1
+      - name: Worker health smoke
+        run: |
+          pnpm worker:preview > /tmp/better-spa-worker.log 2>&1 &
+          worker_pid=$!
+          trap 'kill "$worker_pid"' EXIT
+          for attempt in {1..45}; do
+            curl --fail --silent http://127.0.0.1:4173/api/health/live &&
+              curl --fail --silent http://127.0.0.1:4173/api/health/ready &&
+              exit 0
+            sleep 1
+          done
+          cat /tmp/better-spa-worker.log
+          exit 1

@@ -2,7 +2,8 @@ import { readdirSync } from "node:fs";
 import path from "node:path";
 import { defineConfig } from "tsup";
 
-const migrationDir = "src/migrations";
+const packageDirectory = import.meta.dirname;
+const migrationDir = path.join(packageDirectory, "src/migrations");
 const migrationEntries = Object.fromEntries(
   readdirSync(migrationDir)
     .filter((file) => file.endsWith(".ts"))
@@ -14,7 +15,7 @@ const migrationEntries = Object.fromEntries(
 
 export default defineConfig({
   entry: {
-    index: "src/migrate.ts",
+    index: path.join(packageDirectory, "src/migrate.ts"),
     ...migrationEntries,
   },
   format: ["esm"],

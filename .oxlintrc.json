@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {
+    "no-console": "off",
+    "no-shadow": "off",
+    "no-underscore-dangle": "off"
+  },
+  "ignorePatterns": [
+    "**/.output/**",
+    "**/.wrangler/**",
+    "**/dist/**",
+    "**/routeTree.gen.ts",
+    "**/worker-configuration.d.ts"
+  ]
+}
