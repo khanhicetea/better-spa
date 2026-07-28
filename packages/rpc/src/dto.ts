@@ -1,7 +1,7 @@
 import * as z from "zod";
 
-export const isoDateSchema = z.iso.datetime();
-export const roleSchema = z.enum(["admin", "user"]);
+const isoDateSchema = z.iso.datetime();
+const roleSchema = z.enum(["admin", "user"]);
 
 export const selfUserSchema = z.object({
   id: z.string(),

@@ -66,7 +66,7 @@ route-owned features beside their routes.
 Prerequisites:
 
 - Node.js 24
-- pnpm 11.1.3
+- pnpm 11.17.0
 - Docker with Compose, or a compatible PostgreSQL database
 
 For a new checkout:

@@ -9,21 +9,21 @@
     "./client": "./src/client.ts"
   },
   "scripts": {
-    "auth:secret": "node --env-file-if-exists=../../.env node_modules/@better-auth/cli/dist/index.mjs secret",
-    "auth:generate": "node --env-file-if-exists=../../.env node_modules/@better-auth/cli/dist/index.mjs generate --config auth.config.ts",
+    "auth:secret": "node ../../scripts/auth-cli.mjs secret",
+    "auth:generate": "node ../../scripts/auth-cli.mjs generate --config auth.config.ts",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-auth/core": "1.6.9",
-    "@better-auth/expo": "1.6.9",
-    "@better-auth/utils": "0.4.0",
+    "@better-auth/core": "1.6.18",
+    "@better-auth/expo": "1.6.18",
+    "@better-auth/utils": "0.4.1",
+    "@better-fetch/fetch": "1.3.0",
     "@better-spa/db": "workspace:*",
     "better-auth": "catalog:",
-    "better-call": "1.3.5",
+    "better-call": "1.3.6",
     "kysely": "catalog:"
   },
   "devDependencies": {
-    "@better-auth/cli": "1.4.21",
     "@types/node": "catalog:",
     "typescript": "catalog:"
   }

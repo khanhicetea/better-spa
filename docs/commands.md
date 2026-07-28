@@ -1,6 +1,6 @@
 # Commands Reference
 
-The repository requires Node 24 and pnpm 11.1.3. End every task with `pnpm check`.
+The repository requires Node 24 and pnpm 11.17.0. End every task with `pnpm check`.
 
 ## Development and production
 

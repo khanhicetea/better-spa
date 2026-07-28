@@ -9,41 +9,61 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AdminRouteRouteImport } from './routes/admin/route'
-import { Route as userRouteRouteImport } from './routes/(user)/route'
-import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as authRouteRouteImport } from './routes/(auth)/route'
+import { Route as userRouteRouteImport } from './routes/(user)/route'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as authLoginRouteImport } from './routes/(auth)/login'
+import { Route as authSignupRouteImport } from './routes/(auth)/signup'
+import { Route as userAppRouteRouteImport } from './routes/(user)/app/route'
+import { Route as userSettingsRouteRouteImport } from './routes/(user)/settings/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
-import { Route as authSignupRouteImport } from './routes/(auth)/signup'
-import { Route as authLoginRouteImport } from './routes/(auth)/login'
-import { Route as userSettingsRouteRouteImport } from './routes/(user)/settings/route'
-import { Route as userAppRouteRouteImport } from './routes/(user)/app/route'
-import { Route as userSettingsIndexRouteImport } from './routes/(user)/settings/index'
 import { Route as userAppIndexRouteImport } from './routes/(user)/app/index'
-import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
-import { Route as ApiHealthReadyRouteImport } from './routes/api/health/ready'
-import { Route as ApiHealthLiveRouteImport } from './routes/api/health/live'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as userAppTodoRouteImport } from './routes/(user)/app/todo'
+import { Route as userSettingsIndexRouteImport } from './routes/(user)/settings/index'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
+import { Route as ApiHealthLiveRouteImport } from './routes/api/health/live'
+import { Route as ApiHealthReadyRouteImport } from './routes/api/health/ready'
+import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
 
-const AdminRouteRoute = AdminRouteRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const userRouteRoute = userRouteRouteImport.update({
-  id: '/(user)',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const userRouteRoute = userRouteRouteImport.update({
+  id: '/(user)',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authLoginRoute = authLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => authRouteRoute,
+} as any)
+const authSignupRoute = authSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => authRouteRoute,
+} as any)
+const userAppRouteRoute = userAppRouteRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => userRouteRoute,
+} as any)
+const userSettingsRouteRoute = userSettingsRouteRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => userRouteRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -55,44 +75,24 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const authSignupRoute = authSignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => authRouteRoute,
+const userAppIndexRoute = userAppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => userAppRouteRoute,
 } as any)
-const authLoginRoute = authLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => authRouteRoute,
-} as any)
-const userSettingsRouteRoute = userSettingsRouteRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => userRouteRoute,
-} as any)
-const userAppRouteRoute = userAppRouteRouteImport.update({
-  id: '/app',
-  path: '/app',
-  getParentRoute: () => userRouteRoute,
+const userAppTodoRoute = userAppTodoRouteImport.update({
+  id: '/todo',
+  path: '/todo',
+  getParentRoute: () => userAppRouteRoute,
 } as any)
 const userSettingsIndexRoute = userSettingsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => userSettingsRouteRoute,
 } as any)
-const userAppIndexRoute = userAppIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => userAppRouteRoute,
-} as any)
-const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
-  id: '/api/rpc/$',
-  path: '/api/rpc/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiHealthReadyRoute = ApiHealthReadyRouteImport.update({
-  id: '/api/health/ready',
-  path: '/api/health/ready',
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiHealthLiveRoute = ApiHealthLiveRouteImport.update({
@@ -100,15 +100,15 @@ const ApiHealthLiveRoute = ApiHealthLiveRouteImport.update({
   path: '/api/health/live',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
+const ApiHealthReadyRoute = ApiHealthReadyRouteImport.update({
+  id: '/api/health/ready',
+  path: '/api/health/ready',
   getParentRoute: () => rootRouteImport,
 } as any)
-const userAppTodoRoute = userAppTodoRouteImport.update({
-  id: '/todo',
-  path: '/todo',
-  getParentRoute: () => userAppRouteRoute,
+const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
+  id: '/api/rpc/$',
+  path: '/api/rpc/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -228,18 +228,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(user)': {
-      id: '/(user)'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof userRouteRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)': {
@@ -249,12 +242,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/(user)': {
+      id: '/(user)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof userRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/login': {
+      id: '/(auth)/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof authLoginRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/(auth)/signup': {
+      id: '/(auth)/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof authSignupRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/(user)/app': {
+      id: '/(user)/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof userAppRouteRouteImport
+      parentRoute: typeof userRouteRoute
+    }
+    '/(user)/settings': {
+      id: '/(user)/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof userSettingsRouteRouteImport
+      parentRoute: typeof userRouteRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -270,33 +298,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/(auth)/signup': {
-      id: '/(auth)/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof authSignupRouteImport
-      parentRoute: typeof authRouteRoute
+    '/(user)/app/': {
+      id: '/(user)/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof userAppIndexRouteImport
+      parentRoute: typeof userAppRouteRoute
     }
-    '/(auth)/login': {
-      id: '/(auth)/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof authLoginRouteImport
-      parentRoute: typeof authRouteRoute
-    }
-    '/(user)/settings': {
-      id: '/(user)/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof userSettingsRouteRouteImport
-      parentRoute: typeof userRouteRoute
-    }
-    '/(user)/app': {
-      id: '/(user)/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof userAppRouteRouteImport
-      parentRoute: typeof userRouteRoute
+    '/(user)/app/todo': {
+      id: '/(user)/app/todo'
+      path: '/todo'
+      fullPath: '/app/todo'
+      preLoaderRoute: typeof userAppTodoRouteImport
+      parentRoute: typeof userAppRouteRoute
     }
     '/(user)/settings/': {
       id: '/(user)/settings/'
@@ -305,25 +319,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof userSettingsIndexRouteImport
       parentRoute: typeof userSettingsRouteRoute
     }
-    '/(user)/app/': {
-      id: '/(user)/app/'
-      path: '/'
-      fullPath: '/app/'
-      preLoaderRoute: typeof userAppIndexRouteImport
-      parentRoute: typeof userAppRouteRoute
-    }
-    '/api/rpc/$': {
-      id: '/api/rpc/$'
-      path: '/api/rpc/$'
-      fullPath: '/api/rpc/$'
-      preLoaderRoute: typeof ApiRpcSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/health/ready': {
-      id: '/api/health/ready'
-      path: '/api/health/ready'
-      fullPath: '/api/health/ready'
-      preLoaderRoute: typeof ApiHealthReadyRouteImport
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/health/live': {
@@ -333,19 +333,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthLiveRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
+    '/api/health/ready': {
+      id: '/api/health/ready'
+      path: '/api/health/ready'
+      fullPath: '/api/health/ready'
+      preLoaderRoute: typeof ApiHealthReadyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(user)/app/todo': {
-      id: '/(user)/app/todo'
-      path: '/todo'
-      fullPath: '/app/todo'
-      preLoaderRoute: typeof userAppTodoRouteImport
-      parentRoute: typeof userAppRouteRoute
+    '/api/rpc/$': {
+      id: '/api/rpc/$'
+      path: '/api/rpc/$'
+      fullPath: '/api/rpc/$'
+      preLoaderRoute: typeof ApiRpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }

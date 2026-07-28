@@ -6,7 +6,7 @@ import { randomBytes } from "node:crypto";
 
 const root = path.resolve(import.meta.dirname, "..");
 const requiredNodeMajor = 24;
-const requiredPnpm = "11.1.3";
+const requiredPnpm = "11.17.0";
 
 if (Number(process.versions.node.split(".")[0]) !== requiredNodeMajor) {
   throw new Error(`Node ${requiredNodeMajor} is required; found ${process.version}`);
