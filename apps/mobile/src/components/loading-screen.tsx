@@ -1,4 +1,5 @@
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { Spinner } from "heroui-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useAppColors } from "@/theme/colors";
 
 export function LoadingScreen({ label = "Loading…" }: { label?: string }) {
@@ -6,7 +7,7 @@ export function LoadingScreen({ label = "Loading…" }: { label?: string }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ActivityIndicator color={colors.primary} size="large" />
+      <Spinner color={colors.primary} size="lg" />
       <Text style={[styles.label, { color: colors.textMuted }]}>{label}</Text>
     </View>
   );

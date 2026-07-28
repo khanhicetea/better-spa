@@ -1,0 +1,49 @@
+@import "tailwindcss";
+@import "uniwind";
+@import "heroui-native/styles";
+
+@source "./node_modules/heroui-native/lib";
+
+@layer theme {
+  @variant light {
+    --background: #f6f7fb;
+    --foreground: #17203a;
+    --surface: #ffffff;
+    --surface-foreground: #17203a;
+    --surface-secondary: #eef1f7;
+    --surface-secondary-foreground: #17203a;
+    --muted: #667085;
+    --accent: #3157d5;
+    --accent-foreground: #ffffff;
+    --danger: #c9364f;
+    --danger-foreground: #ffffff;
+    --success: #18845b;
+    --border: #dfe4ee;
+    --separator: #dfe4ee;
+    --field-background: #ffffff;
+    --field-foreground: #17203a;
+    --field-placeholder: #667085;
+    --field-border: #dfe4ee;
+  }
+
+  @variant dark {
+    --background: #0c1020;
+    --foreground: #f5f7ff;
+    --surface: #151b2f;
+    --surface-foreground: #f5f7ff;
+    --surface-secondary: #20283e;
+    --surface-secondary-foreground: #f5f7ff;
+    --muted: #a8b0c5;
+    --accent: #7894ff;
+    --accent-foreground: #10162b;
+    --danger: #ff7a91;
+    --danger-foreground: #10162b;
+    --success: #55d5a0;
+    --border: #2c3650;
+    --separator: #2c3650;
+    --field-background: #11172a;
+    --field-foreground: #f5f7ff;
+    --field-placeholder: #a8b0c5;
+    --field-border: #2c3650;
+  }
+}

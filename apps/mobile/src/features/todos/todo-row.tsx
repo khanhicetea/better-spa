@@ -1,6 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Button, Card, Checkbox, Spinner } from "heroui-native";
+import { StyleSheet, Text, View } from "react-native";
 import type { Outputs } from "@better-spa/rpc/types";
 import { errorMessage } from "@/lib/errors";
 import { orpc } from "@/lib/orpc";
@@ -28,28 +29,19 @@ export function TodoRow({ todo }: { todo: Todo }) {
   const mutationError = updateTodo.error ?? deleteTodo.error;
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+    <Card className="gap-2 rounded-2xl" style={styles.card}>
       <View style={styles.row}>
-        <Pressable
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: completed, disabled: isPending }}
+        <Checkbox
           accessibilityLabel={`Mark ${todo.content} as ${completed ? "not completed" : "completed"}`}
-          disabled={isPending}
-          hitSlop={8}
-          onPress={() =>
+          isDisabled={isPending}
+          isSelected={completed}
+          onSelectedChange={() =>
             updateTodo.mutate({
               id: todo.id,
               completedAt: completed ? null : new Date().toISOString(),
             })
           }
-          style={({ pressed }) => [styles.check, { opacity: pressed ? 0.6 : 1 }]}
-        >
-          <Ionicons
-            name={completed ? "checkmark-circle" : "ellipse-outline"}
-            color={completed ? colors.success : colors.textMuted}
-            size={26}
-          />
-        </Pressable>
+        />
         <Text
           style={[
             styles.content,
@@ -59,27 +51,27 @@ export function TodoRow({ todo }: { todo: Todo }) {
         >
           {todo.content}
         </Text>
-        <Pressable
-          accessibilityRole="button"
+        <Button
           accessibilityLabel={`Delete ${todo.content}`}
-          disabled={isPending}
-          hitSlop={8}
+          isDisabled={isPending}
+          isIconOnly
           onPress={() => deleteTodo.mutate({ id: todo.id })}
-          style={({ pressed }) => [styles.deleteButton, { opacity: pressed ? 0.55 : 1 }]}
+          size="sm"
+          variant="danger-soft"
         >
           {deleteTodo.isPending ? (
-            <ActivityIndicator color={colors.danger} size="small" />
+            <Spinner color={colors.danger} size="sm" />
           ) : (
-            <Ionicons name="trash-outline" color={colors.danger} size={20} />
+            <Ionicons name="trash-outline" color={colors.danger} size={18} />
           )}
-        </Pressable>
+        </Button>
       </View>
       {mutationError ? (
         <Text accessibilityRole="alert" style={[styles.error, { color: colors.danger }]}>
           {errorMessage(mutationError, "Unable to update this task.")}
         </Text>
       ) : null}
-    </View>
+    </Card>
   );
 }
 
@@ -96,10 +88,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 11,
   },
-  check: {
-    width: 28,
-    alignItems: "center",
-  },
   content: {
     flex: 1,
     fontSize: 16,
@@ -107,12 +95,6 @@ const styles = StyleSheet.create({
   },
   completed: {
     textDecorationLine: "line-through",
-  },
-  deleteButton: {
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
   },
   error: {
     marginLeft: 39,

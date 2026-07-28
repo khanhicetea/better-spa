@@ -1,16 +1,14 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Card, Chip, Input, Spinner } from "heroui-native";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { errorMessage } from "@/lib/errors";
@@ -44,7 +42,7 @@ export default function TodosScreen() {
   if (todos.isPending) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator color={colors.primary} size="large" />
+        <Spinner color={colors.primary} size="lg" />
       </View>
     );
   }
@@ -57,13 +55,9 @@ export default function TodosScreen() {
         <Text style={[styles.errorBody, { color: colors.textMuted }]}>
           {errorMessage(todos.error, "Check your connection and try again.")}
         </Text>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => todos.refetch()}
-          style={[styles.retryButton, { backgroundColor: colors.primary }]}
-        >
-          <Text style={[styles.retryLabel, { color: colors.onPrimary }]}>Try again</Text>
-        </Pressable>
+        <Button className="mt-2" onPress={() => todos.refetch()} size="sm">
+          Try again
+        </Button>
       </View>
     );
   }
@@ -94,11 +88,9 @@ export default function TodosScreen() {
                 <Text style={[styles.eyebrow, { color: colors.primary }]}>YOUR WORKSPACE</Text>
                 <Text style={[styles.title, { color: colors.text }]}>Stay on track</Text>
               </View>
-              <View style={[styles.countPill, { backgroundColor: colors.surfaceMuted }]}>
-                <Text style={[styles.countText, { color: colors.textMuted }]}>
-                  {completedCount}/{todos.data.length} done
-                </Text>
-              </View>
+              <Chip color="default" size="sm" variant="soft">
+                {completedCount}/{todos.data.length} done
+              </Chip>
             </View>
 
             <View
@@ -107,36 +99,28 @@ export default function TodosScreen() {
                 { backgroundColor: colors.surface, borderColor: colors.border },
               ]}
             >
-              <TextInput
+              <Input
                 accessibilityLabel="New task"
+                className="flex-1 border-0 bg-transparent px-0 shadow-none"
                 value={content}
                 onChangeText={setContent}
                 onSubmitEditing={submitTodo}
                 placeholder="What needs to be done?"
-                placeholderTextColor={colors.textMuted}
-                selectionColor={colors.primary}
                 returnKeyType="done"
-                style={[styles.input, { color: colors.text }]}
               />
-              <Pressable
-                accessibilityRole="button"
+              <Button
                 accessibilityLabel="Add task"
-                disabled={!canSubmit}
+                isDisabled={!canSubmit}
+                isIconOnly
                 onPress={submitTodo}
-                style={({ pressed }) => [
-                  styles.addButton,
-                  {
-                    backgroundColor: colors.primary,
-                    opacity: !canSubmit ? 0.45 : pressed ? 0.75 : 1,
-                  },
-                ]}
+                size="md"
               >
                 {createTodo.isPending ? (
-                  <ActivityIndicator color={colors.onPrimary} size="small" />
+                  <Spinner color={colors.onPrimary} size="sm" />
                 ) : (
                   <Ionicons name="add" color={colors.onPrimary} size={24} />
                 )}
-              </Pressable>
+              </Button>
             </View>
             {createTodo.error ? (
               <Text
@@ -149,13 +133,13 @@ export default function TodosScreen() {
           </View>
         }
         ListEmptyComponent={
-          <View style={[styles.empty, { borderColor: colors.border }]}>
+          <Card className="items-center gap-2 rounded-3xl px-6 py-8" variant="secondary">
             <Ionicons name="sparkles-outline" color={colors.primary} size={30} />
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>A clear slate</Text>
-            <Text style={[styles.emptyBody, { color: colors.textMuted }]}>
+            <Card.Title className="mt-1 text-lg font-bold">A clear slate</Card.Title>
+            <Card.Description className="max-w-72 text-center">
               Add your first task above. It will stay in sync with the web app.
-            </Text>
-          </View>
+            </Card.Description>
+          </Card>
         }
         renderItem={({ item }) => <TodoRow todo={item} />}
       />
@@ -184,13 +168,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  retryButton: {
-    marginTop: 8,
-    borderRadius: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 11,
-  },
-  retryLabel: { fontWeight: "700" },
   listContent: {
     paddingHorizontal: 18,
     paddingTop: 22,
@@ -220,15 +197,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.5,
   },
-  countPill: {
-    borderRadius: 999,
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-  },
-  countText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
   composer: {
     minHeight: 58,
     borderWidth: 1,
@@ -239,41 +207,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: 12,
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   createError: {
     marginTop: -8,
     marginHorizontal: 4,
     fontSize: 13,
-  },
-  empty: {
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderRadius: 20,
-    paddingHorizontal: 24,
-    paddingVertical: 34,
-    alignItems: "center",
-    gap: 8,
-  },
-  emptyTitle: {
-    marginTop: 3,
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  emptyBody: {
-    maxWidth: 290,
-    textAlign: "center",
-    fontSize: 14,
-    lineHeight: 20,
   },
 });

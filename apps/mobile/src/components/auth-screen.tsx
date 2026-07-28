@@ -1,3 +1,4 @@
+import { Card } from "heroui-native";
 import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -34,11 +35,7 @@ export function AuthScreen({
             <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
             <Text style={[styles.subtitle, { color: colors.textMuted }]}>{subtitle}</Text>
           </View>
-          <View
-            style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          >
-            {children}
-          </View>
+          <Card className="gap-4 rounded-3xl p-5">{children}</Card>
           {footer}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -77,11 +74,5 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     lineHeight: 23,
-  },
-  card: {
-    borderWidth: 1,
-    borderRadius: 22,
-    padding: 20,
-    gap: 16,
   },
 });

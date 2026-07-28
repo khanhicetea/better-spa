@@ -1,5 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
-import { useAppColors } from "@/theme/colors";
+import { Button, Spinner, useThemeColor } from "heroui-native";
 
 export function PrimaryButton({
   label,
@@ -14,46 +13,31 @@ export function PrimaryButton({
   pending?: boolean;
   variant?: "primary" | "secondary" | "danger";
 }) {
-  const colors = useAppColors();
-  const isDisabled = disabled || pending;
-  const backgroundColor =
-    variant === "primary"
-      ? colors.primary
-      : variant === "danger"
-        ? colors.danger
-        : colors.surfaceMuted;
+  const [accentForeground, dangerForeground, defaultForeground] = useThemeColor([
+    "accent-foreground",
+    "danger-foreground",
+    "default-foreground",
+  ]);
   const foregroundColor =
-    variant === "primary" ? colors.onPrimary : variant === "danger" ? "#ffffff" : colors.text;
+    variant === "primary"
+      ? accentForeground
+      : variant === "danger"
+        ? dangerForeground
+        : defaultForeground;
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      disabled={isDisabled}
+    <Button
+      className="min-h-12 w-full rounded-2xl"
+      isDisabled={disabled || pending}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.button,
-        { backgroundColor, opacity: isDisabled ? 0.55 : pressed ? 0.78 : 1 },
-      ]}
+      size="lg"
+      variant={variant}
     >
       {pending ? (
-        <ActivityIndicator color={foregroundColor} />
+        <Spinner color={foregroundColor} size="sm" />
       ) : (
-        <Text style={[styles.label, { color: foregroundColor }]}>{label}</Text>
+        <Button.Label>{label}</Button.Label>
       )}
-    </Pressable>
+    </Button>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    minHeight: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 15,
-    paddingHorizontal: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-});

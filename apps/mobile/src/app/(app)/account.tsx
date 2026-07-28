@@ -1,5 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Alert, Avatar, Card } from "heroui-native";
 import { useRouter } from "expo-router";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { PrimaryButton } from "@/components/primary-button";
@@ -47,9 +48,9 @@ export default function AccountScreen() {
       }
     >
       <View style={styles.hero}>
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.initials, { color: colors.onPrimary }]}>{initials || "U"}</Text>
-        </View>
+        <Avatar color="accent" size="lg">
+          <Avatar.Fallback>{initials || "U"}</Avatar.Fallback>
+        </Avatar>
         <View style={styles.identity}>
           <Text style={[styles.name, { color: colors.text }]}>
             {user?.name ?? session?.user.name ?? "Your account"}
@@ -60,15 +61,21 @@ export default function AccountScreen() {
         </View>
       </View>
 
-      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <Card className="gap-3 rounded-3xl" style={styles.card}>
         <View style={styles.cardHeading}>
           <Ionicons name="git-network-outline" color={colors.primary} size={21} />
           <Text style={[styles.cardTitle, { color: colors.text }]}>Backend connection</Text>
         </View>
         {bootstrap.isError ? (
-          <Text accessibilityRole="alert" style={[styles.error, { color: colors.danger }]}>
-            {errorMessage(bootstrap.error, "Unable to reach the API.")}
-          </Text>
+          <Alert status="danger">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>Connection unavailable</Alert.Title>
+              <Alert.Description>
+                {errorMessage(bootstrap.error, "Unable to reach the API.")}
+              </Alert.Description>
+            </Alert.Content>
+          </Alert>
         ) : (
           <>
             <InfoRow
@@ -81,9 +88,9 @@ export default function AccountScreen() {
             <InfoRow label="Environment" value={bootstrap.data?.app.environment ?? "—"} />
           </>
         )}
-      </View>
+      </Card>
 
-      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <Card className="gap-3 rounded-3xl" style={styles.card}>
         <View style={styles.cardHeading}>
           <Ionicons name="shield-checkmark-outline" color={colors.primary} size={21} />
           <Text style={[styles.cardTitle, { color: colors.text }]}>Session</Text>
@@ -92,7 +99,7 @@ export default function AccountScreen() {
           Better Auth stores your session securely on this device and sends it with authenticated
           oRPC requests.
         </Text>
-      </View>
+      </Card>
 
       {signOut.error ? (
         <Text accessibilityRole="alert" style={[styles.signOutError, { color: colors.danger }]}>
@@ -142,17 +149,6 @@ const styles = StyleSheet.create({
     gap: 15,
     marginBottom: 4,
   },
-  avatar: {
-    width: 58,
-    height: 58,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  initials: {
-    fontSize: 21,
-    fontWeight: "800",
-  },
   identity: {
     flex: 1,
     gap: 3,
@@ -193,10 +189,6 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 14,
     lineHeight: 21,
-  },
-  error: {
-    fontSize: 14,
-    lineHeight: 20,
   },
   signOutError: {
     textAlign: "center",
