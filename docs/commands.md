@@ -6,7 +6,10 @@ The repository requires Node 24 and pnpm 11.1.3. End every task with `pnpm check
 
 ```bash
 pnpm setup
-pnpm dev
+pnpm dev               # web app
+pnpm dev:mobile        # Expo development server
+pnpm mobile:ios
+pnpm mobile:android
 pnpm build             # alias of build:node
 pnpm build:node
 pnpm build:worker
@@ -15,7 +18,8 @@ pnpm start
 ```
 
 `setup` is safe for an existing `.env`: it only creates the file when absent and only
-fills a missing auth secret.
+fills a missing auth secret. Mobile API URL setup is documented in
+`apps/mobile/README.md`.
 
 ## Quality
 

@@ -10,6 +10,7 @@ or RPC contracts.
 ## Stack
 
 - React 19 with React Compiler
+- Expo SDK 57 and Expo Router for iOS and Android
 - TanStack Start, Router, and Query
 - oRPC with explicit serialized DTOs
 - Better Auth with email/password and optional GitHub or Google OAuth
@@ -46,6 +47,7 @@ See [the architecture guide](docs/better-spa-architecture.md),
 
 ```text
 apps/web/                    TanStack Start web application and runtime adapters
+apps/mobile/                 Expo app using Better Auth and the shared oRPC surface
 packages/auth/               Better Auth factory and CLI-only configuration
 packages/db/                 Kysely client, migrations, schema, repositories
 packages/observability/      Server-only structured request and DB logging
@@ -87,12 +89,17 @@ pnpm db:migrate
 pnpm dev
 ```
 
-The local app is available at `http://localhost:3000`.
+The local web app is available at `http://localhost:3000`. Run `pnpm dev:mobile` in a
+second terminal for Expo; see [apps/mobile/README.md](apps/mobile/README.md) for device URL
+configuration.
 
 ## Commands
 
 ```bash
 pnpm dev
+pnpm dev:mobile         # Expo development server
+pnpm mobile:ios
+pnpm mobile:android
 pnpm build              # Node production build
 pnpm build:node
 pnpm build:worker
@@ -181,8 +188,10 @@ runtime deployment guides.
 
 Read [AGENTS.md](AGENTS.md) before changing the repository.
 
-## Native capability
+## Mobile app
 
-The HTTP oRPC surface and serialized DTOs can support a future native client. This starter
-is native-capable, not native-ready: it does not include a native application, generated
-client package, or separate contracts package.
+`apps/mobile` is an Expo SDK 57 app with email/password sign-in and sign-up through Better
+Auth. Session cookies are kept in Expo SecureStore and attached to authenticated oRPC
+requests. Its task screen uses the same `todo.*` procedures as the web app, and the account
+screen verifies the shared `app.bootstrap` connection. See
+[apps/mobile/README.md](apps/mobile/README.md).

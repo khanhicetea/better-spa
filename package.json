@@ -9,6 +9,9 @@
   "packageManager": "pnpm@11.1.3",
   "scripts": {
     "dev": "pnpm --filter @better-spa/web dev",
+    "dev:mobile": "pnpm --filter @better-spa/mobile start",
+    "mobile:android": "pnpm --filter @better-spa/mobile android",
+    "mobile:ios": "pnpm --filter @better-spa/mobile ios",
     "build": "pnpm build:node",
     "build:node": "pnpm --filter @better-spa/web build:node",
     "build:worker": "pnpm --filter @better-spa/web build:worker",

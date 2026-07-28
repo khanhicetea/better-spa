@@ -8,7 +8,6 @@ node_modules
 Pods
 ios/build
 android/build
-apps/mobile
 apps/*/.output
 apps/*/dist
 packages/*/dist

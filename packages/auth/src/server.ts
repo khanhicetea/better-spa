@@ -1,3 +1,4 @@
+import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
@@ -28,7 +29,12 @@ export const getAuthConfig = (options: AuthOptions) =>
       type: "postgres",
       casing: "camel",
     },
-    plugins: [admin(getAdminPluginConfig()), tanstackStartCookies()],
+    plugins: [admin(getAdminPluginConfig()), expo(), tanstackStartCookies()],
+    trustedOrigins: [
+      "better-spa://",
+      "better-spa://*",
+      ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**"] : []),
+    ],
     session: {
       cookieCache: {
         enabled: true,

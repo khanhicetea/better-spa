@@ -7,8 +7,13 @@
     "apps/web": {
       "entry": ["src/router.tsx", "src/server.ts", "src/routes/**/*.tsx"]
     },
+    "apps/mobile": {
+      "entry": ["src/app/**/*.tsx"],
+      "ignoreDependencies": ["expo-updates", "react-native-worklets"]
+    },
     "packages/auth": {
-      "entry": ["src/**/*.ts", "auth.config.ts"]
+      "entry": ["src/**/*.ts", "auth.config.ts"],
+      "ignoreDependencies": ["@better-auth/utils", "better-call"]
     },
     "packages/db": {
       "entry": ["src/**/*.ts", "kysely.config.ts"]
@@ -17,6 +22,5 @@
       "entry": ["src/**/*.ts"]
     }
   },
-  "ignore": ["apps/web/src/components/ui/**"],
-  "ignoreDependencies": ["pg"]
+  "ignore": ["apps/web/src/components/ui/**"]
 }

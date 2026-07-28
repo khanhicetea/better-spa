@@ -52,4 +52,8 @@ export default defineConfig(({ command }) => ({
     react(),
     tailwindcss(),
   ],
+  server: {
+    host: process.env.HOST,
+    allowedHosts: [],
+  },
 }));

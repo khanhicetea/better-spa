@@ -21,7 +21,6 @@ yarn.lock
 Pods
 ios/build
 android/build
-apps/mobile
 apps/*/.output
 apps/*/dist
 apps/*/node_modules
