@@ -10,7 +10,7 @@ if (existsSync(envPath)) {
   loadEnvFile(envPath);
 }
 
-const result = spawnSync("pnpm", ["dlx", "@better-auth/cli@1.4.21", ...process.argv.slice(2)], {
+const result = spawnSync("pnpm", ["dlx", "auth@1.7.0-rc.2", ...process.argv.slice(2)], {
   cwd: path.join(root, "packages/auth"),
   env: process.env,
   stdio: "inherit",

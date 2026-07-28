@@ -1,191 +1,125 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Kysely, PostgresDialect, sql } from "kysely";
 import pg from "pg";
 
 const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error("DATABASE_URL is required");
+const pool = new pg.Pool({ connectionString, max: 2 });
 
-if (!connectionString) {
-  throw new Error("DATABASE_URL is required");
-}
-
-const db = new Kysely<any>({
-  dialect: new PostgresDialect({
-    pool: new pg.Pool({ connectionString, max: 2 }),
-  }),
-});
-
-interface ColumnRow {
-  column_name: string;
-  data_type: string;
-  is_nullable: string;
-  column_default: string | null;
-}
-
-interface IndexRow {
-  indexname: string;
-  indexdef: string;
-}
-
-interface ForeignKeyRow {
+type ColumnRow = { column_name: string };
+type IndexRow = { indexname: string; indexdef: string };
+type ForeignKeyRow = {
   table_name: string;
   column_name: string;
   foreign_table_name: string;
   foreign_column_name: string;
+};
+const MIGRATION_TABLES = new Set(["kysely_migration", "kysely_migration_lock"]);
+
+async function getTables() {
+  const result = await pool.query<{ tablename: string }>(
+    "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = $1 ORDER BY tablename",
+    ["public"],
+  );
+  return result.rows.map((row) => row.tablename).filter((table) => !MIGRATION_TABLES.has(table));
 }
 
-const KYSELY_INTERNAL = new Set(["kysely_migration", "kysely_migration_lock"]);
-
-async function getTables(): Promise<string[]> {
-  const result = await sql<{ tablename: string }>`
-    SELECT tablename FROM pg_catalog.pg_tables
-    WHERE schemaname = 'public'
-    ORDER BY tablename
-  `.execute(db);
-
-  return result.rows.map((r) => r.tablename);
+async function getColumns(table: string) {
+  return (
+    await pool.query<ColumnRow>(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_schema = $1 AND table_name = $2 ORDER BY ordinal_position`,
+      ["public", table],
+    )
+  ).rows;
 }
 
-async function getColumns(table: string): Promise<ColumnRow[]> {
-  const result = await sql<ColumnRow>`
-    SELECT column_name, data_type, is_nullable, column_default
-    FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = ${table}
-    ORDER BY ordinal_position
-  `.execute(db);
-
-  return result.rows;
+async function getIndexes(table: string) {
+  return (
+    await pool.query<IndexRow>(
+      `SELECT indexname, indexdef FROM pg_indexes
+       WHERE schemaname = $1 AND tablename = $2 ORDER BY indexname`,
+      ["public", table],
+    )
+  ).rows;
 }
 
-async function getIndexes(table: string): Promise<IndexRow[]> {
-  const result = await sql<IndexRow>`
-    SELECT indexname, indexdef
-    FROM pg_indexes
-    WHERE schemaname = 'public' AND tablename = ${table}
-    ORDER BY indexname
-  `.execute(db);
-
-  return result.rows;
+async function getForeignKeys() {
+  return (
+    await pool.query<ForeignKeyRow>(
+      `SELECT tc.table_name, kcu.column_name, ccu.table_name AS foreign_table_name,
+         ccu.column_name AS foreign_column_name
+       FROM information_schema.table_constraints tc
+       JOIN information_schema.key_column_usage kcu
+         ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+       JOIN information_schema.constraint_column_usage ccu
+         ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
+       WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1
+       ORDER BY tc.table_name, kcu.column_name`,
+      ["public"],
+    )
+  ).rows;
 }
 
-async function getForeignKeys(): Promise<ForeignKeyRow[]> {
-  const result = await sql<ForeignKeyRow>`
-    SELECT
-      tc.table_name,
-      kcu.column_name,
-      ccu.table_name AS foreign_table_name,
-      ccu.column_name AS foreign_column_name
-    FROM information_schema.table_constraints tc
-    JOIN information_schema.key_column_usage kcu
-      ON tc.constraint_name = kcu.constraint_name
-      AND tc.table_schema = kcu.table_schema
-    JOIN information_schema.constraint_column_usage ccu
-      ON ccu.constraint_name = tc.constraint_name
-      AND ccu.table_schema = tc.table_schema
-    WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = 'public'
-    ORDER BY tc.table_name, kcu.column_name
-  `.execute(db);
-
-  return result.rows;
+function formatIndex(indexRow: IndexRow, primaryKeys: Set<string>) {
+  if (primaryKeys.has(indexRow.indexname)) return null;
+  const columns = indexRow.indexdef.match(/\(([^)]+)\)/)?.[1]?.trim() ?? "";
+  return `- ${/CREATE UNIQUE INDEX/i.test(indexRow.indexdef) ? "unique " : ""}\`${indexRow.indexname}\` on \`${columns}\``;
 }
 
-function formatIndex(idx: IndexRow, primaryKeys: Set<string>): string | null {
-  if (primaryKeys.has(idx.indexname)) return null;
+async function buildMarkdown() {
+  const lines = [
+    "# Database Schema",
+    "",
+    "Generated by `pnpm db:snapshot`. Do not edit by hand.",
+    "",
+    "## Global Rules",
+    "",
+    "- SQL tables are singular.",
+    "- SQL columns use `snake_case`.",
+    "- TypeScript schema properties use `camelCase`.",
+    '- Quote `"user"` in raw SQL because `user` is reserved in PostgreSQL.',
+    "- Store JSON arrays under an object key, for example `{ files: [...] }`.",
+    "",
+    "## Tables",
+    "",
+  ];
 
-  const isUnique = /CREATE UNIQUE INDEX/i.test(idx.indexdef);
-  const match = idx.indexdef.match(/\(([^)]+)\)/);
-  const cols = match?.[1]?.trim() ?? "";
-
-  const prefix = isUnique ? "unique " : "";
-  return `- ${prefix}\`${idx.indexname}\` on \`${cols}\``;
-}
-
-async function buildMarkdown(): Promise<string> {
-  const lines: string[] = [];
-
-  lines.push("# Database Schema");
-  lines.push("");
-  lines.push("Generated by `pnpm db:snapshot`. Do not edit by hand.");
-  lines.push("");
-  lines.push("## Global Rules");
-  lines.push("");
-  lines.push("- SQL tables are singular.");
-  lines.push("- SQL columns use `snake_case`.");
-  lines.push("- TypeScript schema properties use `camelCase`.");
-  lines.push('- Quote `"user"` in raw SQL because `user` is reserved in PostgreSQL.');
-  lines.push("- Store JSON arrays under an object key, for example `{ files: [...] }`.");
-  lines.push("");
-  lines.push("## Tables");
-  lines.push("");
-
-  const tables = await getTables();
-  const userTables = tables.filter((t) => !KYSELY_INTERNAL.has(t));
-  const fks = await getForeignKeys();
-
-  for (const table of userTables) {
+  for (const table of await getTables()) {
     const columns = await getColumns(table);
     const indexes = await getIndexes(table);
     const primaryKeys = new Set(
-      indexes.filter((i) => i.indexname.endsWith("_pkey")).map((i) => i.indexname),
+      indexes.filter((row) => row.indexname.endsWith("_pkey")).map((row) => row.indexname),
     );
-
-    lines.push(`### \`${table}\``);
+    lines.push(`### \`${table}\``, "", "Columns:", "");
+    for (const column of columns) lines.push(`- \`${column.column_name}\``);
     lines.push("");
-    lines.push("Columns:");
-    lines.push("");
-    for (const col of columns) {
-      lines.push(`- \`${col.column_name}\``);
-    }
-    lines.push("");
-
     const indexLines = indexes
-      .map((i) => formatIndex(i, primaryKeys))
-      .filter((l): l is string => l !== null);
-
-    if (indexLines.length > 0) {
-      lines.push("Indexes:");
-      lines.push("");
-      for (const line of indexLines) {
-        lines.push(line);
-      }
-      lines.push("");
-    }
+      .map((row) => formatIndex(row, primaryKeys))
+      .filter((line): line is string => line !== null);
+    if (indexLines.length) lines.push("Indexes:", "", ...indexLines, "");
   }
 
-  if (KYSELY_INTERNAL.size > 0 && tables.some((t) => KYSELY_INTERNAL.has(t))) {
-    lines.push("### Kysely Internal Tables");
-    lines.push("");
-    for (const t of tables.filter((t) => KYSELY_INTERNAL.has(t))) {
-      lines.push(`- \`${t}\``);
-    }
-    lines.push("");
-  }
-
-  lines.push("## Relationships");
-  lines.push("");
-  if (fks.length === 0) {
-    lines.push("_No foreign keys defined._");
-  } else {
-    for (const fk of fks) {
-      lines.push(
-        `- \`${fk.table_name}.${fk.column_name}\` -> \`${fk.foreign_table_name}.${fk.foreign_column_name}\``,
-      );
-    }
+  lines.push("## Relationships", "");
+  const foreignKeys = await getForeignKeys();
+  if (!foreignKeys.length) lines.push("_No foreign keys defined._");
+  for (const foreignKey of foreignKeys) {
+    lines.push(
+      `- \`${foreignKey.table_name}.${foreignKey.column_name}\` -> \`${foreignKey.foreign_table_name}.${foreignKey.foreign_column_name}\``,
+    );
   }
   lines.push("");
-
   return lines.join("\n");
 }
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const outputPath = path.resolve(__dirname, "../../../docs/db-schema.md");
-
+const outputPath = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../../../docs/db-schema.md",
+);
 try {
-  const markdown = await buildMarkdown();
-  await writeFile(outputPath, markdown, "utf-8");
+  await writeFile(outputPath, await buildMarkdown(), "utf8");
   console.log(`Wrote ${outputPath}`);
 } finally {
-  await db.destroy();
+  await pool.end();
 }

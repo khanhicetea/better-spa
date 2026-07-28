@@ -13,14 +13,15 @@ Useful references:
 - admin feature: `apps/web/src/routes/admin/users.tsx`
 - RPC handlers: `packages/rpc/src/handlers/todo.ts`,
   `packages/rpc/src/handlers/user.ts`
-- repository base: `packages/db/src/repositories/repository.ts`
+- focused repositories: `packages/db/src/repositories/todo.ts`,
+  `packages/db/src/repositories/user.ts`
 
 ## Standard feature order
 
 Use only the applicable steps:
 
-1. migration
-2. handwritten schema types
+1. Drizzle table definition and generated SQL migration
+2. inferred schema types
 3. focused repository and factory wiring
 4. explicit RPC input/output and handler
 5. router entry

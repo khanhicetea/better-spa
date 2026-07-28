@@ -14,7 +14,7 @@ or RPC contracts.
 - TanStack Start, Router, and Query
 - oRPC with explicit serialized DTOs
 - Better Auth with email/password and optional GitHub or Google OAuth
-- PostgreSQL 16, Kysely, and handwritten schema types
+- PostgreSQL 16 and Drizzle ORM with generated SQL migrations
 - Base UI primitives, Tailwind CSS v4, and lucide-react
 - Nitro for the Node adapter and the Cloudflare Vite plugin for Workers
 
@@ -49,7 +49,7 @@ See [the architecture guide](docs/better-spa-architecture.md),
 apps/web/                    TanStack Start web application and runtime adapters
 apps/mobile/                 Expo app using Better Auth and the shared oRPC surface
 packages/auth/               Better Auth factory and CLI-only configuration
-packages/db/                 Kysely client, migrations, schema, repositories
+packages/db/                 Drizzle resources, schema, SQL migrations, repositories
 packages/observability/      Server-only structured request and DB logging
 packages/rpc/                Context, DTOs, storage signer, handlers, router
 packages/shared/             Browser-safe shared utilities
@@ -113,7 +113,9 @@ pnpm knip
 
 pnpm db:up
 pnpm db:down
+pnpm db:generate --name=<change>
 pnpm db:migrate
+pnpm db:check
 pnpm db:snapshot
 
 pnpm auth:secret
@@ -180,9 +182,9 @@ runtime deployment guides.
 - no `useMemo`, `useCallback`, or `memo`; React Compiler is enabled
 - TanStack Query for server state; local React state only for local UI state
 - no optimistic writes
-- repositories over raw Kysely in handlers
+- focused repositories over raw Drizzle queries in handlers
 - ISO date strings across RPC boundaries
-- no Kysely code generation
+- Drizzle table definitions are the schema source of truth
 - regenerate `docs/db-schema.md` after every migration
 - finish every task with `pnpm check`
 

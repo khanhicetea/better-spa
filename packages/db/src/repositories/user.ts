@@ -1,47 +1,46 @@
-import { sql } from "kysely";
+import { count, desc, eq } from "drizzle-orm";
 import type { DB } from "../client";
-import { Repository } from "./repository";
+import { user, type UserUpdate } from "../schema/auth";
 
-export type AdminUserListFilter = {
-  page: number;
-  pageSize: number;
-};
+export type AdminUserListFilter = { page: number; pageSize: number };
 
-export class UserRepository extends Repository<"user"> {
-  constructor(db: DB) {
-    super(db, "user");
+export class UserRepository {
+  constructor(private db: DB) {}
+
+  async findById(id: string) {
+    const [found] = await this.db.select().from(user).where(eq(user.id, id)).limit(1);
+    return found;
+  }
+
+  async updateById(id: string, data: UserUpdate) {
+    const [updated] = await this.db.update(user).set(data).where(eq(user.id, id)).returning();
+    return updated;
   }
 
   async listAdminPage({ page, pageSize }: AdminUserListFilter) {
-    const baseQuery = () => this.db.selectFrom("user");
-    const offset = (page - 1) * pageSize;
-
-    const [items, countRow] = await Promise.all([
-      baseQuery()
-        .select([
-          "id",
-          "name",
-          "email",
-          "emailVerified",
-          "image",
-          "role",
-          "banned",
-          "banReason",
-          "banExpires",
-          "createdAt",
-          "updatedAt",
-        ])
-        .orderBy("createdAt", "desc")
+    const [items, countRows] = await Promise.all([
+      this.db
+        .select({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          emailVerified: user.emailVerified,
+          image: user.image,
+          role: user.role,
+          banned: user.banned,
+          banReason: user.banReason,
+          banExpires: user.banExpires,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        })
+        .from(user)
+        .orderBy(desc(user.createdAt))
         .limit(pageSize)
-        .offset(offset)
-        .execute(),
-      baseQuery()
-        .select(sql<number>`count(*)`.as("count"))
-        .executeTakeFirstOrThrow(),
+        .offset((page - 1) * pageSize),
+      this.db.select({ count: count() }).from(user),
     ]);
-
-    const count = Number(countRow.count);
-    const totalCount = Number.isFinite(count) ? count : 0;
+    const value = Number(countRows[0]?.count ?? 0);
+    const totalCount = Number.isFinite(value) ? value : 0;
     return {
       items,
       totalCount,

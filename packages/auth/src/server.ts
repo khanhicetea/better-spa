@@ -1,9 +1,10 @@
+import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
-import { CamelCasePlugin } from "kysely";
 import type { DB } from "@better-spa/db/client";
+import { schema } from "@better-spa/db/schema";
 import { getAdminPluginConfig } from "./rbac";
 
 export type AuthSocialProviderConfig = {
@@ -24,11 +25,7 @@ export const getAuthConfig = (options: AuthOptions) =>
   betterAuth({
     baseURL: options.baseURL,
     telemetry: { enabled: false },
-    database: {
-      db: options.db.withoutPlugins().withPlugin(new CamelCasePlugin()),
-      type: "postgres",
-      casing: "camel",
-    },
+    database: drizzleAdapter(options.db, { provider: "pg", schema }),
     plugins: [admin(getAdminPluginConfig()), expo(), tanstackStartCookies()],
     trustedOrigins: [
       "better-spa://",

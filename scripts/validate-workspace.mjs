@@ -43,7 +43,9 @@ for (const script of [
   "start",
   "db:up",
   "db:down",
+  "db:generate",
   "db:migrate",
+  "db:check",
   "db:snapshot",
   "auth:secret",
   "auth:generate",
@@ -66,7 +68,7 @@ const browserRoots = [
 const forbidden = [
   "node:",
   "pg",
-  "kysely",
+  "drizzle-orm",
   "@better-spa/db",
   "@better-spa/observability",
   "@better-spa/auth/server",

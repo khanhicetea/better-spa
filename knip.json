@@ -15,7 +15,7 @@
       "entry": ["src/**/*.ts", "auth.config.ts"]
     },
     "packages/db": {
-      "entry": ["src/**/*.ts", "kysely.config.ts"]
+      "entry": ["src/**/*.ts"]
     }
   },
   "ignore": ["apps/web/src/components/ui/**"]

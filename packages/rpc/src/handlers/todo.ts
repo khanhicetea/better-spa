@@ -5,10 +5,7 @@ import { todoSchema, toTodo } from "../dto";
 
 export const list = authedProcedure.output(z.array(todoSchema)).handler(async ({ context }) => {
   const { repos } = context;
-  const todos = await repos.todoItem.find({
-    where: { userId: context.user.id },
-    modify: (qb) => qb.orderBy("createdAt", "desc"),
-  });
+  const todos = await repos.todoItem.listOwned(context.user.id);
   return todos.map(toTodo);
 });
 
@@ -21,7 +18,7 @@ export const create = authedProcedure
   .output(todoSchema)
   .handler(async ({ input, context }) => {
     const { repos } = context;
-    const newTodo = await repos.todoItem.insertReturn({
+    const newTodo = await repos.todoItem.create({
       id: generateUUID(),
       userId: context.user.id,
       content: input.content,

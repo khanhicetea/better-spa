@@ -16,7 +16,7 @@ export default defineConfig({
         behavior: { dev: "error", build: "error" },
         client: {
           files: ["**/src/server/**"],
-          specifiers: ["pg", "kysely", "better-auth/node"],
+          specifiers: ["pg", "drizzle-orm", "better-auth/node"],
         },
       },
     }),

@@ -45,12 +45,15 @@ validation, and package-local `tsc --noEmit`. `check:build` adds both production
 ```bash
 pnpm db:up
 pnpm db:down
+pnpm db:generate --name=<change>
 pnpm db:migrate
+pnpm db:check
 pnpm db:snapshot
 ```
 
-Migrations and handwritten schema types live in `packages/db/src/`. `db:snapshot`
-regenerates `docs/db-schema.md` from the live database.
+Drizzle table definitions live in `packages/db/src/schema/`; `db:generate` writes reviewed
+SQL migrations under `packages/db/drizzle/`. `db:migrate` uses direct `DATABASE_URL`, and
+`db:snapshot` regenerates `docs/db-schema.md` from the live database.
 
 ## Auth and UI
 

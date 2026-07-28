@@ -1,29 +1,37 @@
-import type { TodoItemUpdate } from "../schema/todo";
+import { and, desc, eq } from "drizzle-orm";
 import type { DB } from "../client";
-import { Repository } from "./repository";
+import { todoItem, type TodoItemInsert, type TodoItemUpdate } from "../schema/todo";
 
-export class TodoRepository extends Repository<"todoItem"> {
-  constructor(db: DB) {
-    super(db, "todoItem");
-  }
+export class TodoRepository {
+  constructor(private db: DB) {}
 
-  updateOwned(userId: string, id: string, data: TodoItemUpdate) {
+  listOwned(userId: string) {
     return this.db
-      .updateTable("todoItem")
-      .set(data)
-      .where("id", "=", id)
-      .where("userId", "=", userId)
-      .returningAll()
-      .executeTakeFirst();
+      .select()
+      .from(todoItem)
+      .where(eq(todoItem.userId, userId))
+      .orderBy(desc(todoItem.createdAt));
   }
 
-  async deleteOwned(userId: string, id: string): Promise<boolean> {
-    const result = await this.db
-      .deleteFrom("todoItem")
-      .where("id", "=", id)
-      .where("userId", "=", userId)
-      .executeTakeFirst();
+  async create(data: TodoItemInsert) {
+    const [created] = await this.db.insert(todoItem).values(data).returning();
+    return created;
+  }
 
-    return result.numDeletedRows > 0n;
+  async updateOwned(userId: string, id: string, data: TodoItemUpdate) {
+    const [updated] = await this.db
+      .update(todoItem)
+      .set(data)
+      .where(and(eq(todoItem.id, id), eq(todoItem.userId, userId)))
+      .returning();
+    return updated;
+  }
+
+  async deleteOwned(userId: string, id: string): Promise<string | undefined> {
+    const [deleted] = await this.db
+      .delete(todoItem)
+      .where(and(eq(todoItem.id, id), eq(todoItem.userId, userId)))
+      .returning({ id: todoItem.id });
+    return deleted?.id;
   }
 }

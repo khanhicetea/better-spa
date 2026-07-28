@@ -14,7 +14,7 @@ you need.
 - End every task with `pnpm check`.
 - Do not add tests unless the user asks.
 - Do not add seed files.
-- Do not use Kysely codegen. Schema types are handwritten in `packages/db/src/schema/`.
+- Drizzle table definitions in `packages/db/src/schema/` are the schema source of truth.
 - Do not customize `apps/web/src/components/ui/*` for app-specific behavior. Copy
   upstream code into an app-level component.
 - Do not use optimistic updates. Invalidate/refetch or use another concurrency-safe
@@ -22,8 +22,9 @@ you need.
 - All application writes go through oRPC.
 - Better Auth HTTP remains the boundary for ordinary sign-in, sign-up, sign-out, session,
   and account lifecycle operations.
-- In RPC handlers, prefer `context.repos` over raw Kysely.
+- In RPC handlers, prefer `context.repos` over raw Drizzle queries.
 - Dates crossing RPC use ISO strings and public handlers declare output schemas.
+- Generate and review Drizzle SQL migrations; do not use `drizzle-kit push`.
 - After every migration, run `pnpm db:snapshot`; never hand-edit `docs/db-schema.md`.
 
 ## Start order

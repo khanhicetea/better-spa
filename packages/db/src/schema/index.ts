@@ -1,10 +1,7 @@
-import type { UserTable, SessionTable, AccountTable, VerificationTable } from "./auth";
-import type { TodoItemTable } from "./todo";
+export * from "./auth";
+export * from "./todo";
 
-export interface Database {
-  user: UserTable;
-  session: SessionTable;
-  account: AccountTable;
-  verification: VerificationTable;
-  todoItem: TodoItemTable;
-}
+import { account, session, user, verification } from "./auth";
+import { todoItem } from "./todo";
+
+export const schema = { user, session, account, verification, todoItem };

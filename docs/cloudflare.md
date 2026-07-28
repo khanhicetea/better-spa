@@ -18,9 +18,9 @@ assets, Smart Placement, Worker logs, and sampled traces.
 `HYPERDRIVE` is required. Replace the placeholder ID in `apps/web/wrangler.jsonc` with a
 real Hyperdrive configuration before deployment.
 
-Each request builds Kysely/`pg`, auth, and repositories from
-`env.HYPERDRIVE.connectionString`, then destroys the database client in `finally`. Never
-cache request-bound Hyperdrive clients globally.
+Each request creates and connects a `pg.Client` from
+`env.HYPERDRIVE.connectionString`, initializes Drizzle, auth, and repositories, then closes
+the client in `finally`. Never cache request-bound clients or Drizzle instances globally.
 
 The Worker passes background promises with `ctx.waitUntil(promise)` without destructuring
 the method. Request-scoped logging continues to use `AsyncLocalStorage`, supported through

@@ -26,7 +26,7 @@ export default defineConfig(({ command }) => ({
           // Block the entire server directory from ever reaching the client bundle
           files: ["**/src/server/**"],
           // Block server-only npm packages from leaking into the client
-          specifiers: ["pg", "kysely", "better-auth/node"],
+          specifiers: ["pg", "drizzle-orm", "better-auth/node"],
         },
       },
     }),

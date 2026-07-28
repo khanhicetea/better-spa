@@ -1,53 +1,20 @@
-import type {
-  KyselyPlugin,
-  PluginTransformQueryArgs,
-  PluginTransformResultArgs,
-  QueryResult,
-  RootOperationNode,
-} from "kysely";
-import { CamelCasePlugin, Kysely, PostgresDialect } from "kysely";
+import { drizzle } from "drizzle-orm/node-postgres";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import { logger } from "@better-spa/observability";
-import type { Database } from "./schema";
+import { user } from "./schema";
 
-const { Pool } = pg;
+const { Client, Pool } = pg;
+const MAX_CONNECTIONS = Number.parseInt(process.env.DATABASE_MAX_CONNECTIONS || "2", 10);
 
-export class QueryLoggingPlugin implements KyselyPlugin {
-  private queryInfo = new WeakMap<object, { startTime: number; kind: string }>();
-
-  transformQuery(args: PluginTransformQueryArgs): RootOperationNode {
-    this.queryInfo.set(args.queryId, {
-      startTime: Date.now(),
-      kind: args.node.kind,
-    });
-    return args.node;
-  }
-
-  async transformResult(args: PluginTransformResultArgs): Promise<QueryResult<any>> {
-    const info = this.queryInfo.get(args.queryId);
-
-    if (info) {
-      const duration = Date.now() - info.startTime;
-      logger.debug("Database operation completed", {
-        operation: info.kind,
-        dbDurationMs: duration,
-      });
-    }
-
-    return args.result;
-  }
-}
-
-export const createQueryLoggingPlugin = () => new QueryLoggingPlugin();
+export type DB = NodePgDatabase;
+export type DatabaseResource = { db: DB; close: () => Promise<void> };
 
 declare global {
   // eslint-disable-next-line no-var
-  var __db: Kysely<Database> | undefined;
+  var __databaseResource: DatabaseResource | undefined;
 }
 
-const MAX_CONNECTIONS = Number.parseInt(process.env.DATABASE_MAX_CONNECTIONS || "2", 10);
-
-export const getDatabasePooling = (connectionString: string) => {
+export function createNodeDatabaseResource(connectionString: string): DatabaseResource {
   const pool = new Pool({
     connectionString,
     max: MAX_CONNECTIONS,
@@ -55,31 +22,24 @@ export const getDatabasePooling = (connectionString: string) => {
     idleTimeoutMillis: 30_000,
     application_name: "better-spa",
   });
+  return { db: drizzle({ client: pool }), close: () => pool.end() };
+}
 
-  return new Kysely<Database>({
-    dialect: new PostgresDialect({ pool }),
-    plugins: [
-      new CamelCasePlugin({
-        maintainNestedObjectKeys: true,
-      }),
-      createQueryLoggingPlugin(),
-    ],
-  });
-};
-
-export const getDatabase = (connectionString: string) => {
-  if (globalThis.__db) {
-    return globalThis.__db;
+export function getNodeDatabaseResource(connectionString: string): DatabaseResource {
+  if (!globalThis.__databaseResource) {
+    globalThis.__databaseResource = createNodeDatabaseResource(connectionString);
   }
+  return globalThis.__databaseResource;
+}
 
-  const db = getDatabasePooling(connectionString);
-  globalThis.__db = db;
-
-  return db;
-};
-
-export type DB = ReturnType<typeof getDatabase>;
+export async function createWorkerDatabaseResource(
+  connectionString: string,
+): Promise<DatabaseResource> {
+  const client = new Client({ connectionString });
+  await client.connect();
+  return { db: drizzle({ client }), close: () => client.end() };
+}
 
 export async function checkDatabaseReady(db: DB): Promise<void> {
-  await db.selectFrom("user").select("id").limit(0).execute();
+  await db.select({ id: user.id }).from(user).limit(0);
 }

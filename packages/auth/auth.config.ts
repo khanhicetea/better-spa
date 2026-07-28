@@ -1,14 +1,10 @@
-import { getDatabasePooling } from "@better-spa/db/client";
+import { createNodeDatabaseResource } from "@better-spa/db/client";
 import { getAuthConfig } from "./src/server";
 
 const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required to run Better Auth CLI commands");
-}
+if (!databaseUrl) throw new Error("DATABASE_URL is required to run Better Auth CLI commands");
 
-const auth = getAuthConfig({
-  db: getDatabasePooling(databaseUrl),
-  baseURL: process.env.VITE_BASE_URL,
-});
+const database = createNodeDatabaseResource(databaseUrl);
+process.once("beforeExit", () => void database.close());
 
-export default auth;
+export default getAuthConfig({ db: database.db, baseURL: process.env.VITE_BASE_URL });

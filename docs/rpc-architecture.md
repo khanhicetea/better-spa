@@ -58,7 +58,7 @@ state.
 - Validate input and declare public output with Zod.
 - Dates cross the boundary as ISO strings.
 - Expose only fields the UI consumes.
-- Prefer `context.repos` over raw Kysely.
+- Prefer `context.repos` over raw Drizzle queries.
 - Put ownership into SQL mutation predicates, not a pre-check followed by a broad write.
 - Return serialized values only.
 

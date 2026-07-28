@@ -1,12 +1,11 @@
-// DB client, types, and repository factory
+// Drizzle database resources, schema types, and focused repository factory
 export {
-  getDatabase,
-  getDatabasePooling,
   checkDatabaseReady,
-  QueryLoggingPlugin,
-  createQueryLoggingPlugin,
+  createNodeDatabaseResource,
+  createWorkerDatabaseResource,
+  getNodeDatabaseResource,
 } from "./client";
-export type { DB } from "./client";
+export type { DB, DatabaseResource } from "./client";
 export { createRepos } from "./repositories";
 export type { Repositories } from "./repositories";
 export { TodoRepository } from "./repositories/todo";

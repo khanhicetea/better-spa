@@ -1,5 +1,5 @@
 import handler from "@tanstack/react-start/server-entry";
-import { getDatabasePooling } from "@better-spa/db/client";
+import { createWorkerDatabaseResource } from "@better-spa/db/client";
 import { createRepos } from "@better-spa/db/repositories";
 import { getAuthConfig } from "@better-spa/auth/server";
 import { createRequestContext, requestStorage } from "@better-spa/rpc/context";
@@ -20,7 +20,8 @@ export default {
 
     return runWithLogContext({ requestId, runtime: "cloudflare", path }, async () => {
       const startedAt = Date.now();
-      const db = getDatabasePooling(env.HYPERDRIVE.connectionString);
+      const database = await createWorkerDatabaseResource(env.HYPERDRIVE.connectionString);
+      const { db } = database;
       const repos = createRepos(db);
       const oauthProviders: Array<"github" | "google"> = [];
       const githubId = optionalSecret("GITHUB_CLIENT_ID");
@@ -103,7 +104,7 @@ export default {
           headers: { "x-request-id": requestId },
         });
       } finally {
-        await db.destroy();
+        await database.close();
       }
     });
   },

@@ -79,7 +79,7 @@ export const updateProfile = authedProcedure
     if (input.timezone !== undefined) data.timezone = input.timezone;
 
     try {
-      const user = await context.repos.user.updateById({ id: context.user.id, data });
+      const user = await context.repos.user.updateById(context.user.id, data);
       if (!user) throw errors.NOT_FOUND();
       return toSelfUser(user);
     } catch (error) {

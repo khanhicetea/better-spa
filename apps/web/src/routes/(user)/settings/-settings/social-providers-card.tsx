@@ -50,9 +50,9 @@ export function SocialProvidersCard() {
   });
 
   const unlinkMutation = useMutation({
-    mutationFn: async (providerId: string) => {
+    mutationFn: async (accountId: string) => {
       await authClient.unlinkAccount({
-        providerId,
+        accountId,
         fetchOptions: { throw: true },
       });
     },
@@ -94,6 +94,9 @@ export function SocialProvidersCard() {
                 </Card>
               ))
             : providers.map((provider) => {
+                const linkedAccount = accounts?.find(
+                  (account) => account.providerId === provider.id,
+                );
                 const isLinked = linkedProviderIds.includes(provider.id);
 
                 return (
@@ -107,8 +110,8 @@ export function SocialProvidersCard() {
                       variant={isLinked ? "outline" : "default"}
                       disabled={isLinked ? unlinkMutation.isPending : linkMutation.isPending}
                       onClick={
-                        isLinked
-                          ? () => unlinkMutation.mutate(provider.id)
+                        linkedAccount
+                          ? () => unlinkMutation.mutate(linkedAccount.id)
                           : () => linkMutation.mutate(provider.id)
                       }
                       className="ms-auto shrink-0"

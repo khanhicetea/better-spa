@@ -13,8 +13,8 @@ pnpm start
 
 ## Runtime design
 
-`apps/web/src/server/node-server.ts` owns one process-level database, Better Auth,
-repository, storage, and rate-limit set. Each request receives a runtime-neutral context
+`apps/web/src/server/node-server.ts` owns one process-level `pg.Pool`/Drizzle resource,
+Better Auth, repository, storage, and rate-limit set. Each request receives a runtime-neutral context
 from `packages/rpc/src/context.ts`.
 
 The adapter:
@@ -26,7 +26,7 @@ The adapter:
 - parses forwarded addresses only when `TRUST_PROXY` is configured
 - uses per-user buckets where a session exists, with stricter admin/upload policies
 - unreferences cleanup/deadline timers
-- drains lightweight post-response work and destroys resources on graceful shutdown
+- drains lightweight post-response work and closes the PostgreSQL pool on graceful shutdown
 
 Set `TRUST_PROXY=true` to trust the first forwarded address, or an integer hop count for a
 known proxy chain. Leave it unset/false when the app is directly reachable.

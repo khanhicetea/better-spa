@@ -10,22 +10,21 @@
     "./repositories": "./src/repositories/index.ts"
   },
   "scripts": {
-    "kysely": "kysely",
-    "build:migrate": "tsup --config ./tsup.migrate.config.ts",
-    "migrate:db": "node --env-file-if-exists=../../.env dist/migrate/index.mjs",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:check": "drizzle-kit check",
     "db:snapshot": "node --env-file-if-exists=../../.env src/snapshot.ts",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@better-spa/observability": "workspace:*",
-    "kysely": "catalog:",
+    "drizzle-orm": "catalog:",
     "pg": "^8.22.0"
   },
   "devDependencies": {
     "@types/node": "^25.6.2",
     "@types/pg": "^8.20.0",
-    "kysely-ctl": "^0.21.0",
-    "tsup": "^8.5.1",
+    "drizzle-kit": "catalog:",
     "typescript": "catalog:"
   }
 }

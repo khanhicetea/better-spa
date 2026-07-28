@@ -1,6 +1,6 @@
 import type { RequestOptions } from "@tanstack/react-start/server";
 import type { ServerEntry } from "@tanstack/react-start/server-entry";
-import { getDatabase } from "@better-spa/db/client";
+import { getNodeDatabaseResource } from "@better-spa/db/client";
 import { createRepos } from "@better-spa/db/repositories";
 import { getAuthConfig } from "@better-spa/auth/server";
 import { createRequestContext, requestStorage, type RequestContext } from "@better-spa/rpc/context";
@@ -10,7 +10,8 @@ import { logger, runWithLogContext } from "@better-spa/observability";
 import webPackage from "../../package.json";
 import { env } from "@/env/server";
 
-const db = getDatabase(env.DATABASE_URL);
+const database = getNodeDatabaseResource(env.DATABASE_URL);
+const { db } = database;
 const repos = createRepos(db);
 const rateLimit = new InMemoryRateLimitService();
 const oauthProviders: Array<"github" | "google"> = [];
@@ -59,7 +60,7 @@ async function shutdown(signal: string) {
   shuttingDown = true;
   logger.info("Graceful shutdown started", { signal });
   rateLimit.destroy();
-  await db.destroy();
+  await database.close();
 }
 
 process.once("SIGTERM", () => void shutdown("SIGTERM"));
