@@ -1,139 +1,241 @@
 # AGENTS.md
 
-Agent reference for this repository. Read this first, then open only the task-specific docs
-you need.
+Repository operating guide for coding agents. Read this file before making changes, then
+open only the documentation relevant to the task.
 
-## Core rules
+## Mission
 
-- RPC is oRPC, not tRPC.
-- UI primitives are `@base-ui/react`, not Radix. Use `render`, never `asChild`.
-- React Compiler is enabled. Do not add `useMemo`, `useCallback`, or `memo`.
-- Tailwind is v4. Prefer theme tokens such as `bg-primary`, `bg-muted`,
-  `text-muted-foreground`, and `border-border`.
-- Oxlint owns linting. Prettier owns formatting.
-- End every task with `pnpm check`.
-- Do not add tests unless the user asks.
+Make the smallest complete change that follows the repository's existing architecture.
+Prefer live patterns over speculative abstractions, preserve unrelated work, and leave the
+workspace passing its quality gates.
+
+## Working protocol
+
+### Before editing
+
+1. Identify the requested outcome and affected package(s).
+2. Read the relevant document from the [documentation map](#documentation-map).
+3. Inspect at least one live implementation of the same kind of change.
+4. Check `git status` and do not overwrite unrelated or user-authored changes.
+5. Plan changes across all required layers before implementing.
+
+If instructions, documentation, and live code appear inconsistent, do not guess. Follow the
+explicit user request and this file, use the safest established live pattern, and call out any
+remaining ambiguity.
+
+### While editing
+
+- Keep the diff focused; do not perform drive-by refactors or formatting churn.
+- Reuse existing utilities, schemas, components, and dependencies before adding new ones.
+- Preserve package boundaries and public contracts unless the task requires changing them.
+- Update documentation when behavior, commands, architecture, or setup changes.
+- Do not add tests unless the user asks for them. Always keep existing tests and checks
+  working.
 - Do not add seed files.
-- Drizzle table definitions in `packages/db/src/schema/` are the schema source of truth.
-- Do not customize `apps/web/src/components/ui/*` for app-specific behavior. Copy
-  upstream code into an app-level component.
-- Do not use optimistic updates. Invalidate/refetch or use another concurrency-safe
-  pattern.
+- Never discard changes with destructive Git commands.
+
+### Before finishing
+
+1. Review the diff for accidental edits, security issues, and incomplete wiring.
+2. Run focused validation during development when useful.
+3. Run `pnpm check` from the repository root as the final required gate.
+4. Run relevant builds for runtime-sensitive changes:
+   - Node runtime: `pnpm build:node`
+   - Cloudflare runtime: `pnpm build:worker`
+   - Both runtimes or shared server code: run both, or `pnpm check:build`
+5. Report what changed, which validations ran, and any remaining risk or follow-up.
+
+Do not claim a command passed unless it was actually run. If validation cannot run, state the
+exact reason.
+
+## Non-negotiable project rules
+
+### Application and data boundaries
+
+- RPC is **oRPC**, not tRPC.
 - All application writes go through oRPC.
-- Better Auth HTTP remains the boundary for ordinary sign-in, sign-up, sign-out, session,
-  and account lifecycle operations.
+- Ordinary sign-in, sign-up, sign-out, session, and account lifecycle operations remain on
+  Better Auth HTTP APIs.
 - In RPC handlers, prefer `context.repos` over raw Drizzle queries.
-- Dates crossing RPC use ISO strings and public handlers declare output schemas.
-- Generate and review Drizzle SQL migrations; do not use `drizzle-kit push`.
-- After every migration, run `pnpm db:snapshot`; never hand-edit `docs/db-schema.md`.
+- Only serialized DTOs cross RPC boundaries. Dates cross as ISO strings.
+- Public RPC handlers declare explicit output schemas.
+- Enforce authentication, authorization, ownership, and input validation server-side.
+- Do not use optimistic updates. Invalidate/refetch or use another concurrency-safe pattern.
 
-## Start order
+### React and client state
 
-1. Read only the docs relevant to the task.
-2. Inspect at least one live file that matches the intended pattern.
-3. When applicable, build in this order:
-   migration -> schema types -> repository wiring -> RPC handler -> router entry -> route
-   loader/page -> UI -> navigation -> `pnpm check`.
+- React Compiler is enabled. Do not add `useMemo`, `useCallback`, or `memo`.
+- Use TanStack Query for server state and React state only for local UI state.
+- Client RPC access uses `orpc.<domain>.<action>.queryOptions()` and
+  `.mutationOptions()`.
+- Loaders and components should share the same query-options definition.
+- Feature-owned query modules own invalidation; do not thread `refetch` callbacks through
+  component trees.
+- Route-adjacent support code belongs in a sibling `-folder`.
 
-## Current baseline
+### UI
 
-- User feature: `/app/todo`
-- Admin feature: `/admin/users`
-- API routes: `/api/auth/$`, `/api/rpc/$`, `/api/health/live`,
-  `/api/health/ready`
-- RPC domains: `app`, `file`, `todo`, `user`
-- Repositories: `repos.user`, `repos.todoItem`
-- Runtime targets: Node 24 and Cloudflare Workers
-- There is no job table or dedicated background-worker system in the live schema
+- UI primitives come from `@base-ui/react`, not Radix.
+- Use Base UI's `render` prop; never use `asChild`.
+- Treat `apps/web/src/components/ui/*` as upstream-style primitives. Put app-specific
+  behavior in an app-level or route-owned component instead of customizing a primitive.
+- Tailwind is v4. Prefer semantic tokens such as `bg-background`, `bg-primary`, `bg-muted`,
+  `text-muted-foreground`, `border-border`, and `text-destructive`.
+- Use `lucide-react` icons.
+- Every form field needs a label and nearby validation feedback.
+- Keep list and table actions in the last column.
+- When practical, each list item owns its mutation state.
+- Surface choice:
+  - 1–3 fields: `Dialog`
+  - 4–5 fields: `Sheet`
+  - 6+ fields or multi-step flow: dedicated route
+  - destructive confirmation: `AlertDialog`
 
-## Architecture
+### Database and migrations
+
+- Drizzle table definitions under `packages/db/src/schema/` are the schema source of truth.
+- Keep repositories focused; do not introduce generic repository abstractions without a
+  demonstrated need.
+- Generate and review SQL migrations. Never use `drizzle-kit push`.
+- Do not hand-edit generated migration metadata.
+- After every migration, run `pnpm db:snapshot`.
+- Never hand-edit `docs/db-schema.md`; it is generated by the snapshot command.
+
+Migration flow:
+
+```bash
+pnpm db:generate --name=<change>
+# Review generated SQL and metadata.
+pnpm db:migrate
+pnpm db:snapshot
+pnpm check
+```
+
+### Runtime and security
+
+- The application targets Node.js 24 and Cloudflare Workers. Shared code must remain
+  runtime-neutral unless it lives in an adapter-specific module.
+- `packages/rpc/src/context.ts` owns the runtime-neutral request context.
+- Node owns process-level DB/auth/repository/storage/rate-limit resources and closes them
+  during graceful shutdown.
+- Workers create request-scoped PostgreSQL resources through `HYPERDRIVE`; never cache a
+  request-bound database client globally.
+- Workers rely on Cloudflare ingress rate-limit rules.
+- Use `context.waitUntil` only for lightweight post-response work. The repository has no
+  durable background-job system by default.
+- Upload buckets remain private. Issue upload intents only for the authenticated user's
+  `users/{userId}/` prefix.
+- Never log cookies, authorization headers, passwords, OAuth tokens, database URLs, storage
+  credentials, or other secrets.
+- Do not expose server-only modules or secret environment values to browser/mobile bundles.
+
+## Architecture invariants
 
 - The root loader in `apps/web/src/routes/__root.tsx` loads
   `bootstrapQueryOptions()` for the canonical `app.bootstrap` payload.
-- Auth, admin guards, navigation, theme initialization, OAuth controls, and upload
-  availability all derive from bootstrap.
-- Invalidate bootstrap after any auth/session/profile/account/impersonation transition.
-- Current shell-SPA branches:
-  - `/app/*` via `apps/web/src/routes/(user)/app/route.tsx`
-  - `/admin/*` via `apps/web/src/routes/admin/route.tsx`
-- Client data access uses `orpc.<domain>.<action>.queryOptions()` or
-  `.mutationOptions()`.
-- Prefer TanStack Query for server state. Use `useState` only for local UI state.
-- Only serialized DTOs cross the RPC boundary.
-- Route-adjacent support code belongs in a sibling `-folder`.
-- Feature-owned query modules own invalidation; do not thread `refetch` callbacks through
-  component trees.
-- Use `context.waitUntil` only for lightweight post-response work. No durable background
-  worker is implied.
+- Auth guards, admin guards, navigation, theme initialization, OAuth controls, and upload
+  availability derive from bootstrap.
+- Invalidate bootstrap after auth, session, profile, account, or impersonation transitions.
+- Web shell branches:
+  - `/app/*`: `apps/web/src/routes/(user)/app/route.tsx`
+  - `/admin/*`: `apps/web/src/routes/admin/route.tsx`
+- The mobile app shares Better Auth and the oRPC surface; device sessions are stored through
+  its existing secure-session implementation.
 
-## Runtime and security
+## Implementation order
 
-- `packages/rpc/src/context.ts` owns the runtime-neutral request context.
-- Node keeps process-level DB/auth/repository/storage/rate-limit resources and destroys
-  them during graceful shutdown.
-- Workers create and destroy request-scoped PostgreSQL resources using `HYPERDRIVE`.
-- Do not cache Worker request-bound DB clients globally.
-- Workers rely on Cloudflare ingress rate-limit rules.
-- Upload buckets must remain private. Only issue intents for the authenticated user's
-  `users/{userId}/` prefix.
-- Never log cookies, authorization, passwords, OAuth tokens, database URLs, or storage
-  credentials.
+For a full-stack feature, use only the applicable steps and keep contracts aligned:
 
-## UI
+1. Drizzle schema and generated SQL migration
+2. inferred schema types
+3. focused repository and repository-factory wiring
+4. RPC input/output schemas and handler
+5. router entry
+6. route loader and query-options module
+7. page and route-owned UI
+8. navigation and bootstrap implications
+9. generated database snapshot, if applicable
+10. validation
 
-- 1–3 fields: `Dialog`
-- 4–5 fields: `Sheet`
-- 6+ fields or multi-step flows: dedicated route
-- Destructive confirmation: `AlertDialog`
-- Each list item should own its mutation state when practical.
-- Keep list/table actions in the last column.
-- Use `lucide-react` icons.
+For identity/profile/account changes, explicitly check bootstrap invalidation. For a
+user-visible route, explicitly check navigation. For ownership-sensitive mutations, prefer
+ownership-scoped repository predicates rather than check-then-write logic.
 
-## Key files
+## Workspace map
 
-- Root shell: `apps/web/src/routes/__root.tsx`
-- Shell components: `apps/web/src/components/shell/`
-- User auth boundary: `apps/web/src/routes/(user)/route.tsx`
-- Admin auth boundary: `apps/web/src/routes/admin/route.tsx`
+```text
+apps/web/                 TanStack Start web app and Node/Worker adapters
+apps/mobile/              Expo mobile app
+packages/auth/            Better Auth factory and CLI configuration
+packages/db/              Drizzle schema, migrations, clients, repositories
+packages/observability/   Server-only structured logging
+packages/rpc/             Context, DTOs, handlers, router, storage signing
+packages/shared/          Browser-safe shared utilities
+docs/                     Architecture and operations documentation
+scripts/                  Workspace validation and setup
+```
+
+## Live reference implementations
+
+Inspect these before creating parallel code:
+
+- User feature: `apps/web/src/routes/(user)/app/todo.tsx`
+- Admin feature: `apps/web/src/routes/admin/users.tsx`
+- User/admin navigation: `apps/web/src/components/shell/`
+- RPC handlers: `packages/rpc/src/handlers/todo.ts`,
+  `packages/rpc/src/handlers/user.ts`
+- Repositories: `packages/db/src/repositories/todo.ts`,
+  `packages/db/src/repositories/user.ts`
 - RPC client: `apps/web/src/lib/orpc.ts`
 - Bootstrap query: `apps/web/src/lib/queries.ts`
 - RPC base/router: `packages/rpc/src/base.ts`, `packages/rpc/src/router.ts`
-- Request context: `packages/rpc/src/context.ts`
-- DTOs: `packages/rpc/src/dto.ts`
-- DB schema/repositories: `packages/db/src/schema/`,
-  `packages/db/src/repositories/`
-- Node/Worker adapters: `apps/web/src/server/node-server.ts`,
+- Runtime adapters: `apps/web/src/server/node-server.ts`,
   `apps/web/src/server/cloudflare-worker.ts`
-- User/admin references: `apps/web/src/routes/(user)/app/todo.tsx`,
-  `apps/web/src/routes/admin/users.tsx`
 
-## Docs map
+Reference files show patterns, not copy-paste requirements. Confirm names and APIs against
+current code before using them.
 
-- `docs/better-spa-architecture.md`: shell, bootstrap, auth boundaries
-- `docs/rpc-architecture.md`: oRPC context, DTOs, errors, write boundaries
-- `docs/database-repository.md`: schema, repositories, migrations
-- `docs/tanstack-start.md`: route groups, loaders, API routes
-- `docs/react-conventions.md`: React Compiler-safe patterns
-- `docs/ui-guidelines.md`: Base UI, CRUD surfaces, forms, navigation
-- `docs/development-guides.md`: feature checklist and order
-- `docs/example-crud-blog.md`: compact CRUD template
-- `docs/file-storage.md`: private S3/R2 upload intents
-- `docs/db-schema.md`: generated database snapshot
-- `docs/commands.md`: root scripts and quality gates
-- `docs/devops.md`: Node deployment and health checks
-- `docs/cloudflare.md`: Worker build, bindings, and deployment
+## Documentation map
+
+Read only what the task needs:
+
+| Area                               | Document                          |
+| ---------------------------------- | --------------------------------- |
+| Shell, bootstrap, auth boundaries  | `docs/better-spa-architecture.md` |
+| oRPC context, DTOs, errors, writes | `docs/rpc-architecture.md`        |
+| Schema, repositories, migrations   | `docs/database-repository.md`     |
+| Route groups, loaders, API routes  | `docs/tanstack-start.md`          |
+| React Compiler and state patterns  | `docs/react-conventions.md`       |
+| Base UI, forms, CRUD surfaces      | `docs/ui-guidelines.md`           |
+| Feature workflow and checklist     | `docs/development-guides.md`      |
+| Compact CRUD example               | `docs/example-crud-blog.md`       |
+| Private S3/R2 storage              | `docs/file-storage.md`            |
+| Generated database snapshot        | `docs/db-schema.md`               |
+| Commands and quality gates         | `docs/commands.md`                |
+| Node deployment and health checks  | `docs/devops.md`                  |
+| Cloudflare bindings and deployment | `docs/cloudflare.md`              |
+| Mobile local setup                 | `apps/mobile/README.md`           |
 
 ## Common commands
 
+Run commands from the repository root unless a document says otherwise.
+
 ```bash
 pnpm dev
+pnpm dev:mobile
 pnpm build:node
 pnpm build:worker
+pnpm db:up
+pnpm db:generate --name=<change>
 pnpm db:migrate
 pnpm db:snapshot
 pnpm auth:secret
 pnpm auth:generate
 pnpm ui add <component>
 pnpm check
+pnpm check:build
 pnpm check:full
 ```
+
+Tool ownership: Oxlint lints, Prettier formats, and `pnpm check` is read-only. Use the pinned
+Node and pnpm versions declared by the repository.
