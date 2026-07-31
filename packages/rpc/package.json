@@ -19,6 +19,7 @@
     "@better-spa/observability": "workspace:*",
     "@better-spa/shared": "workspace:*",
     "@orpc/server": "catalog:",
+    "evlog": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

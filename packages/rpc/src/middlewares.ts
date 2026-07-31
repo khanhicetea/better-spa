@@ -1,6 +1,5 @@
 import { ORPCError, os } from "@orpc/server";
 import type { ServerAuthSession } from "@better-spa/auth/server";
-import { logger, updateLogContext } from "@better-spa/observability";
 import type { RateLimitPolicy, RequestContext } from "./context";
 
 export const authMiddleware = os
@@ -37,8 +36,6 @@ export const rateLimitMiddleware = os
   .$context<RequestContext>()
   .middleware(async ({ context, next, path }) => {
     const procedure = path.join(".");
-    updateLogContext({ procedure });
-    const startedAt = Date.now();
     const policy: RateLimitPolicy =
       procedure.startsWith("user.") && procedure !== "user.updateProfile" ? "admin" : "api";
     const identifier = context.session?.user?.id ?? context.clientIp;
@@ -53,13 +50,7 @@ export const rateLimitMiddleware = os
     }
 
     try {
-      const result = await next();
-      logger.info("RPC procedure completed", {
-        procedure,
-        durationMs: Date.now() - startedAt,
-        resultClass: "success",
-      });
-      return result;
+      return await next();
     } catch (error) {
       if (
         typeof error === "object" &&
@@ -72,14 +63,6 @@ export const rateLimitMiddleware = os
           cause: error,
         });
       }
-      const expected = error instanceof ORPCError && error.status < 500;
-      const log = expected ? logger.warn : logger.error;
-      log(expected ? "RPC client error" : "RPC procedure failed", {
-        error,
-        procedure,
-        durationMs: Date.now() - startedAt,
-        resultClass: expected ? "client_error" : "server_error",
-      });
       throw error;
     }
   });

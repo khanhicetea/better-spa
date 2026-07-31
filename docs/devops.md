@@ -20,7 +20,7 @@ from `packages/rpc/src/context.ts`.
 The adapter:
 
 - creates or propagates request state and returns `x-request-id`
-- emits structured JSON request/RPC/DB logs
+- emits evlog wide events for web and RPC requests plus structured infrastructure/DB logs
 - applies a configurable 1 MiB API body limit
 - applies a configurable 30-second request deadline
 - parses forwarded addresses only when `TRUST_PROXY` is configured
@@ -52,6 +52,10 @@ Optional:
 
 Never log or expose cookies, authorization, passwords, OAuth tokens, database URLs, or
 storage credentials.
+
+Evlog uses built-in PII redaction plus explicit sensitive-key paths. `LOG_LEVEL` continues
+to control the existing infrastructure logger; evlog request-event volume should be managed
+through its sampling configuration when a production drain is added.
 
 ## Health
 

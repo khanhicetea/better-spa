@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import type { RedactConfig } from "evlog";
 
 export type RuntimeName = "node" | "cloudflare";
 
@@ -16,6 +17,29 @@ const REDACTED = "[REDACTED]";
 const SENSITIVE_KEY =
   /authorization|cookie|password|secret|token|database.?url|connection.?string|access.?key|client.?secret|oauth|s3.?credential/i;
 const logStorage = new AsyncLocalStorage<LogContext>();
+
+export const evlogRedactConfig = {
+  paths: [
+    "**.authorization",
+    "**.cookie",
+    "**.password",
+    "**.secret",
+    "**.token",
+    "**.*Token",
+    "**.databaseUrl",
+    "**.connectionString",
+    "**.accessKey",
+    "**.accessKeyId",
+    "**.secretAccessKey",
+    "**.clientSecret",
+    "**.apiKey",
+    "**.apiSecret",
+    "**.credential",
+    "**.credentials",
+    "**.oauth",
+    "**.s3Credentials",
+  ],
+} satisfies RedactConfig;
 
 function redactString(value: string): string {
   return value

@@ -35,6 +35,12 @@ Web integration:
 The context contains request ID, request/response headers, auth/session, DB/repositories,
 storage, rate limiter, runtime metadata, client address, and `waitUntil`.
 
+`baseProcedure` applies `evlog()` before the application middleware chain. The web RPC
+handler is wrapped with `withEvlog()`, producing one redacted wide event per RPC HTTP request
+and adding the procedure path as `operation`. The event uses service `better-spa-rpc`, the
+canonical request ID, and the active runtime. Use `context.log` when it is already in scope,
+or `useLogger()` from `evlog/orpc` deeper in the call stack, to add safe domain context.
+
 ## Live RPC surface
 
 - `app.bootstrap`

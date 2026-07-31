@@ -53,3 +53,15 @@ Use `prefetchQuery` only for best-effort data that is not required before render
 
 Private upload intents are RPC procedures; there is no upload HTTP router. Do not add
 runtime endpoints outside the route tree unless a runtime adapter specifically requires it.
+
+## Request observability
+
+The Node build registers `evlog/nitro/v3` in `apps/web/vite.config.ts`, with Nitro async
+context enabled. The root route installs `evlogErrorHandler` so structured evlog errors keep
+their `why`, `fix`, and `link` fields in server responses. Nitro emits one wide event for web
+requests; `/api/rpc` and its subpaths are excluded because the oRPC integration owns that
+event.
+
+The Cloudflare adapter uses `evlog/workers` for the equivalent web-request event and also
+leaves `/api/rpc` and its subpaths to the oRPC integration. Both adapters propagate the generated
+`x-request-id` into the framework request so events and responses share the same ID.

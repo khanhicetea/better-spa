@@ -5,6 +5,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { createMiddleware } from "@tanstack/react-start";
+import { evlogErrorHandler } from "evlog/nitro/v3";
 import type React from "react";
 import { ThemeProvider } from "@/components/shell/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -17,6 +19,9 @@ export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
   rpcClient: RPCClient;
 }>()({
+  server: {
+    middleware: [createMiddleware().server(evlogErrorHandler)],
+  },
   loader: ({ context }) => context.queryClient.ensureQueryData(bootstrapQueryOptions()),
   head: () => ({
     meta: [

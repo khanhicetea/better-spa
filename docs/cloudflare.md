@@ -23,7 +23,10 @@ Each request creates and connects a `pg.Client` from
 the client in `finally`. Never cache request-bound clients or Drizzle instances globally.
 
 The Worker passes background promises with `ctx.waitUntil(promise)` without destructuring
-the method. Request-scoped logging continues to use `AsyncLocalStorage`, supported through
+the method. It initializes `evlog/workers` once at module scope, creates request loggers per
+request, and supplies the execution context so future asynchronous drains use `waitUntil`.
+The oRPC wrapper reads the request-scoped `waitUntil` callback for the same reason.
+Request-scoped context continues to use `AsyncLocalStorage`, supported through
 `nodejs_compat`.
 
 ## Secrets and bindings

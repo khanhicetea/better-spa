@@ -3,8 +3,10 @@ import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import evlog from "evlog/nitro/v3";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
+import { evlogRedactConfig } from "@better-spa/observability";
 
 export default defineConfig(({ command }) => ({
   resolve: {
@@ -33,18 +35,26 @@ export default defineConfig(({ command }) => ({
     // https://tanstack.com/start/latest/docs/framework/react/guide/hosting
     nitro({
       preset: "node-server",
+      modules: [
+        evlog({
+          env: { service: "better-spa-web" },
+          exclude: ["/api/rpc", "/api/rpc/**"],
+          redact: evlogRedactConfig,
+        }),
+      ],
       rollupConfig: {
         external: ["pg"],
       },
-      ...(command === "build"
-        ? {
-            experimental: {
+      experimental: {
+        asyncContext: true,
+        ...(command === "build"
+          ? {
               vite: {
                 serverReload: true,
               },
-            },
-          }
-        : {}),
+            }
+          : {}),
+      },
     }),
     babel({
       presets: [reactCompilerPreset()],

@@ -111,13 +111,13 @@ function apiBodyTooLarge(request: Request): boolean {
 
 function rebuildRequest(
   request: Request,
-  options: { body?: BodyInit | null; signal?: AbortSignal } = {},
+  options: { body?: BodyInit | null; headers?: HeadersInit; signal?: AbortSignal } = {},
 ): Request {
   const canHaveBody = request.method !== "GET" && request.method !== "HEAD";
   const body = canHaveBody ? (options.body ?? request.body) : undefined;
   const init: RequestInit & { duplex?: "half" } = {
     method: request.method,
-    headers: request.headers,
+    headers: options.headers ?? request.headers,
     body,
     signal: options.signal,
   };
@@ -188,7 +188,12 @@ export function createNodeHandler(serverEntry: ServerEntry) {
         const controller = new AbortController();
         const deadline = setTimeout(() => controller.abort(), env.REQUEST_DEADLINE_MS);
         deadline.unref();
-        const deadlineRequest = rebuildRequest(boundedRequest, { signal: controller.signal });
+        const instrumentedHeaders = new Headers(boundedRequest.headers);
+        instrumentedHeaders.set("x-request-id", requestId);
+        const deadlineRequest = rebuildRequest(boundedRequest, {
+          headers: instrumentedHeaders,
+          signal: controller.signal,
+        });
         const session = await auth.api.getSession({ headers: request.headers });
         const background = createWaitUntil();
         const context = createRequestContext({
@@ -216,11 +221,6 @@ export function createNodeHandler(serverEntry: ServerEntry) {
         return requestStorage.run(context, async () => {
           try {
             const response = await serverEntry.fetch(deadlineRequest, { context: undefined });
-            logger.info("HTTP request completed", {
-              method: request.method,
-              durationMs: Date.now() - startedAt,
-              resultClass: `${Math.floor(response.status / 100)}xx`,
-            });
             return applyResponseHeaders(response, context);
           } catch (error) {
             logger.error("Node server request failed", {

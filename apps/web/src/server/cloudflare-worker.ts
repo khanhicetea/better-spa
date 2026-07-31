@@ -5,8 +5,18 @@ import { getAuthConfig } from "@better-spa/auth/server";
 import { createRequestContext, requestStorage } from "@better-spa/rpc/context";
 import { ingressRateLimitService } from "@better-spa/rpc/rate-limiter";
 import { createS3StorageSigner } from "@better-spa/rpc/storage";
-import { logger, runWithLogContext } from "@better-spa/observability";
+import { evlogRedactConfig, runWithLogContext } from "@better-spa/observability";
+import { createWorkersLogger, initWorkersLogger } from "evlog/workers";
 import webPackage from "../../package.json";
+
+initWorkersLogger({
+  env: {
+    service: "better-spa-web",
+    environment: "production",
+    version: webPackage.version,
+  },
+  redact: evlogRedactConfig,
+});
 
 function optionalSecret(name: string): string | undefined {
   const value = process.env[name];
@@ -17,6 +27,9 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const requestId = crypto.randomUUID();
     const path = new URL(request.url).pathname;
+    const isRpcRequest = path === "/api/rpc" || path.startsWith("/api/rpc/");
+    const requestLog = createWorkersLogger(request, { executionCtx: ctx, requestId });
+    requestLog.set({ runtime: "cloudflare" });
 
     return runWithLogContext({ requestId, runtime: "cloudflare", path }, async () => {
       const startedAt = Date.now();
@@ -78,14 +91,13 @@ export default {
         });
 
         return await requestStorage.run(context, async () => {
-          const response = await handler.fetch(request, { context: undefined });
+          const instrumentedHeaders = new Headers(request.headers);
+          instrumentedHeaders.set("x-request-id", requestId);
+          const instrumentedRequest = new Request(request, { headers: instrumentedHeaders });
+          const response = await handler.fetch(instrumentedRequest, { context: undefined });
           const headers = new Headers(response.headers);
           headers.set("x-request-id", requestId);
-          logger.info("HTTP request completed", {
-            method: request.method,
-            durationMs: Date.now() - startedAt,
-            resultClass: `${Math.floor(response.status / 100)}xx`,
-          });
+          if (!isRpcRequest) requestLog.emit({ status: response.status });
           return new Response(response.body, {
             status: response.status,
             statusText: response.statusText,
@@ -93,12 +105,8 @@ export default {
           });
         });
       } catch (error) {
-        logger.error("Worker request failed", {
-          error,
-          method: request.method,
-          durationMs: Date.now() - startedAt,
-          resultClass: "5xx",
-        });
+        requestLog.error(error instanceof Error ? error : String(error));
+        requestLog.emit({ status: 500, duration: Date.now() - startedAt });
         return new Response("Internal Server Error", {
           status: 500,
           headers: { "x-request-id": requestId },

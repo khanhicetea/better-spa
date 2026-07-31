@@ -1,10 +1,11 @@
 import { os } from "@orpc/server";
+import { evlog, type EvlogOrpcContext } from "evlog/orpc";
 import * as z from "zod";
 import type { RequestContext } from "./context";
 import { adminMiddleware, authMiddleware, rateLimitMiddleware } from "./middlewares";
 
 export const baseProcedure = os
-  .$context<RequestContext>()
+  .$context<RequestContext & Partial<EvlogOrpcContext>>()
   .errors({
     RATE_LIMITED: {
       message: "Too many requests",
@@ -31,6 +32,7 @@ export const baseProcedure = os
       message: "Service unavailable",
     },
   })
+  .use(evlog())
   .use(rateLimitMiddleware);
 export const authedProcedure = baseProcedure.use(authMiddleware);
 export const adminProcedure = baseProcedure.use(adminMiddleware);
