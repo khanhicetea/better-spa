@@ -1,7 +1,7 @@
 "use client";
 
+import type { Account } from "@better-spa/auth/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Account } from "better-auth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

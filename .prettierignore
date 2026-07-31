@@ -15,4 +15,6 @@ packages/*/dist
 dist
 routeTree.gen.ts
 worker-configuration.d.ts
+expo-env.d.ts
+uniwind-types.d.ts
 *.generated.js

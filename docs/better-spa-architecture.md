@@ -60,5 +60,8 @@ Node initializes process-level resources in `apps/web/src/server/node-server.ts`
 initialize request-scoped DB/auth/repository resources in
 `apps/web/src/server/cloudflare-worker.ts`.
 
+Better Auth runs through its minimal initializer and the Drizzle adapter. Kysely remains an
+upstream Better Auth dependency but is not used directly by application code.
+
 `context.waitUntil` is only for lightweight post-response work. The project has no job
 table, durable queue, or dedicated background-worker runtime.

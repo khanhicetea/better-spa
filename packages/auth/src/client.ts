@@ -2,6 +2,8 @@ import { adminClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import { getAdminPluginConfig } from "./rbac";
 
+export type { Account } from "@better-auth/core/db";
+
 export const SOCIAL_PROVIDER_LABELS = {
   github: "GitHub",
   google: "Google",

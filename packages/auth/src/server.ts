@@ -1,7 +1,7 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { expo } from "@better-auth/expo";
-import { betterAuth } from "better-auth";
-import { admin } from "better-auth/plugins";
+import { betterAuth } from "better-auth/minimal";
+import { admin } from "better-auth/plugins/admin";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import type { DB } from "@better-spa/db/client";
 import { schema } from "@better-spa/db/schema";

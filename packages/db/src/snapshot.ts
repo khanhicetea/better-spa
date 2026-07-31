@@ -15,14 +15,13 @@ type ForeignKeyRow = {
   foreign_table_name: string;
   foreign_column_name: string;
 };
-const MIGRATION_TABLES = new Set(["kysely_migration", "kysely_migration_lock"]);
 
 async function getTables() {
   const result = await pool.query<{ tablename: string }>(
     "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = $1 ORDER BY tablename",
     ["public"],
   );
-  return result.rows.map((row) => row.tablename).filter((table) => !MIGRATION_TABLES.has(table));
+  return result.rows.map((row) => row.tablename);
 }
 
 async function getColumns(table: string) {
