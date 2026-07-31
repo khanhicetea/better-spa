@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   type ColumnDef,
@@ -7,11 +7,21 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { BanIcon, FlagIcon, KeyIcon, UserSearchIcon } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import * as z from "zod";
+import {
+  BanUserDialog,
+  ChangePasswordDialog,
+  CreateUserSheet,
+} from "@/components/admin/users/dialogs";
+import { DataTablePagination } from "@/components/data-table/pagination";
 import { PagePending } from "@/components/shell/page-pending";
 import { PageTitle } from "@/components/shell/page-title";
-import { DataTablePagination } from "@/components/data-table/pagination";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -20,11 +30,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { type AdminUser, invalidateAdminUsers } from "@/lib/admin-users";
 import { orpc } from "@/lib/orpc";
-import { BanUserDialog, ChangePasswordDialog, CreateUserSheet } from "./-users/dialogs";
-import { userColumns } from "./-users/columns";
-import type { User } from "./-users/columns";
-import { UserActions } from "./-users/user-actions";
+import { invalidateBootstrap } from "@/lib/queries";
 
 export const Route = createFileRoute("/admin/users")({
   component: UsersPage,
@@ -48,8 +56,8 @@ function UsersPage() {
   const page = Route.useSearch({ select: (search) => search.page as number });
   const navigate = Route.useNavigate();
   const [rowSelection, setRowSelection] = useState({});
-  const [userToBan, setUserToBan] = useState<User | null>(null);
-  const [userToChangePassword, setUserToChangePassword] = useState<User | null>(null);
+  const [userToBan, setUserToBan] = useState<AdminUser | null>(null);
+  const [userToChangePassword, setUserToChangePassword] = useState<AdminUser | null>(null);
 
   const {
     data: { users, pageCount, pageSize, totalCount },
@@ -59,7 +67,7 @@ function UsersPage() {
     }),
   );
 
-  const columns: ColumnDef<User>[] = [
+  const columns: ColumnDef<AdminUser>[] = [
     ...userColumns,
     {
       id: "actions",
@@ -159,6 +167,107 @@ function UsersPage() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+const userColumns: ColumnDef<AdminUser>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        indeterminate={!table.getIsAllPageRowsSelected() && table.getIsSomePageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+  },
+  {
+    accessorKey: "name",
+    header: "Name",
+    cell: ({ row }) => <div className="capitalize">{row.getValue("name")}</div>,
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+  },
+  {
+    accessorKey: "role",
+    header: "Role",
+    cell: ({ row }) => (
+      <Badge className="capitalize" variant="outline">
+        {row.getValue("role")}
+      </Badge>
+    ),
+  },
+];
+
+interface UserActionsProps {
+  user: AdminUser;
+  onBan: (user: AdminUser) => void;
+  onChangePassword: (user: AdminUser) => void;
+}
+
+function UserActions({ user, onBan, onChangePassword }: UserActionsProps) {
+  const queryClient = useQueryClient();
+  const unban = useMutation(
+    orpc.user.unban.mutationOptions({
+      onSuccess: async () => {
+        await invalidateAdminUsers(queryClient);
+        toast.success(`User ${user.email} has been unbanned`);
+      },
+      onError: (error) => toast.error(error.message),
+    }),
+  );
+  const impersonate = useMutation(
+    orpc.user.impersonate.mutationOptions({
+      onSuccess: async () => {
+        await invalidateBootstrap(queryClient);
+        window.location.assign("/app");
+      },
+      onError: (error) => toast.error(error.message),
+    }),
+  );
+
+  return (
+    <div className="flex flex-row justify-end space-x-2">
+      {user.banned ? (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => unban.mutate({ userId: user.id })}
+          disabled={unban.isPending}
+        >
+          <FlagIcon />
+          Unban
+        </Button>
+      ) : (
+        <Button variant="outline" size="sm" onClick={() => onBan(user)}>
+          <BanIcon />
+          Ban
+        </Button>
+      )}
+      <Button variant="outline" size="sm" onClick={() => onChangePassword(user)}>
+        <KeyIcon />
+        Password
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => impersonate.mutate({ userId: user.id })}
+        disabled={impersonate.isPending}
+      >
+        <UserSearchIcon />
+      </Button>
     </div>
   );
 }

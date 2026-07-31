@@ -30,7 +30,22 @@ For server data required by suspense UI:
 Use `prefetchQuery` only for best-effort data. Do not pass `refetch` callbacks through the
 component tree or write optimistic cache state.
 
-Route-adjacent support code belongs in a sibling `-folder`, such as `-todo/queries.ts`.
+### Route module boundaries
+
+Keep `apps/web/src/routes/` focused on TanStack Router route modules and API endpoints rather
+than using it as a feature-support tree.
+
+- Define a React component in its route file when only that route uses it.
+- Extract a component only when multiple modules reuse it or its size makes the route file
+  unwieldy. Put extracted components in a feature directory under `apps/web/src/components/`.
+- Put reusable hooks under `apps/web/src/hooks/` and non-React helpers, query utilities, and
+  schemas under `apps/web/src/lib/`.
+- Do not create support-only sibling directories such as `-todo/` or `-users/` beneath the route
+  tree.
+
+For example, the todo page keeps its route-only rows and summary in `todo.tsx`, while shared
+auth UI lives under `components/auth/` and the larger settings cards live under
+`components/settings/`.
 
 ## API routes
 

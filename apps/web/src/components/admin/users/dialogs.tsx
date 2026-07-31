@@ -24,12 +24,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { type AdminUser, invalidateAdminUsers } from "@/lib/admin-users";
 import { orpc } from "@/lib/orpc";
-import type { User } from "./columns";
-import { invalidateAdminUsers } from "./queries";
 
 interface BanUserDialogProps {
-  user: User;
+  user: AdminUser;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -109,7 +108,7 @@ export function BanUserDialog({ user, open, onOpenChange }: BanUserDialogProps) 
 }
 
 interface ChangePasswordDialogProps {
-  user: User;
+  user: AdminUser;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

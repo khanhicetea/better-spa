@@ -71,7 +71,7 @@ exact reason.
 - Loaders and components should share the same query-options definition.
 - Feature-owned query modules own invalidation; do not thread `refetch` callbacks through
   component trees.
-- Route-adjacent support code belongs in a sibling `-folder`.
+- Keep one-off React components in their route module by default. Extract only for reuse or substantial size, then place components under `apps/web/src/components/`, hooks under `apps/web/src/hooks/`, and non-React support under `apps/web/src/lib/`; do not add support-only `-folders` beneath `routes/`.
 
 ### UI
 
