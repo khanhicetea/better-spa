@@ -204,11 +204,7 @@ Read only what the task needs:
 | Shell, bootstrap, auth boundaries  | `docs/better-spa-architecture.md` |
 | oRPC context, DTOs, errors, writes | `docs/rpc-architecture.md`        |
 | Schema, repositories, migrations   | `docs/database-repository.md`     |
-| Route groups, loaders, API routes  | `docs/tanstack-start.md`          |
-| React Compiler and state patterns  | `docs/react-conventions.md`       |
-| Base UI, forms, CRUD surfaces      | `docs/ui-guidelines.md`           |
-| Feature workflow and checklist     | `docs/development-guides.md`      |
-| Compact CRUD example               | `docs/example-crud-blog.md`       |
+| Routes, React, UI, utilities       | `docs/web-conventions.md`         |
 | Private S3/R2 storage              | `docs/file-storage.md`            |
 | Generated database snapshot        | `docs/db-schema.md`               |
 | Commands and quality gates         | `docs/commands.md`                |

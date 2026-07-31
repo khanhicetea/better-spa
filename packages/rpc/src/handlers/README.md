@@ -23,7 +23,6 @@ One file per domain. Each file exports short server actions: `list`, `get`, `cre
 
 ## Reference
 
-- Compact CRUD walkthrough: `docs/example-crud-blog.md`
-- Handler template: `docs/example-rpc-handler.md`
 - Architecture: `docs/rpc-architecture.md`
-- Live reference handler: `todo.ts`
+- Live user handler: `todo.ts`
+- Live admin handler: `user.ts`
