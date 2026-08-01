@@ -1,20 +1,21 @@
 import { count, desc, eq } from "drizzle-orm";
 import type { DB } from "../client";
-import { user, type UserUpdate } from "../schema/auth";
+import { user, type UserInsert, type UserUpdate } from "../schema/auth";
+import { BaseRepository } from "./base";
 
 export type AdminUserListFilter = { page: number; pageSize: number };
 
-export class UserRepository {
-  constructor(private db: DB) {}
-
-  async findById(id: string) {
-    const [found] = await this.db.select().from(user).where(eq(user.id, id)).limit(1);
-    return found;
+export class UserRepository extends BaseRepository<typeof user, UserInsert, UserUpdate> {
+  constructor(db: DB) {
+    super(db, user);
   }
 
-  async updateById(id: string, data: UserUpdate) {
-    const [updated] = await this.db.update(user).set(data).where(eq(user.id, id)).returning();
-    return updated;
+  findById(id: string) {
+    return this.findOne(eq(user.id, id));
+  }
+
+  updateById(id: string, data: UserUpdate) {
+    return this.updateOne(eq(user.id, id), data);
   }
 
   async listAdminPage({ page, pageSize }: AdminUserListFilter) {

@@ -1,9 +1,16 @@
 import { and, desc, eq } from "drizzle-orm";
 import type { DB } from "../client";
 import { todoItem, type TodoItemInsert, type TodoItemUpdate } from "../schema/todo";
+import { BaseRepository } from "./base";
 
-export class TodoRepository {
-  constructor(private db: DB) {}
+export class TodoRepository extends BaseRepository<
+  typeof todoItem,
+  TodoItemInsert,
+  TodoItemUpdate
+> {
+  constructor(db: DB) {
+    super(db, todoItem);
+  }
 
   listOwned(userId: string) {
     return this.db
@@ -13,25 +20,16 @@ export class TodoRepository {
       .orderBy(desc(todoItem.createdAt));
   }
 
-  async create(data: TodoItemInsert) {
-    const [created] = await this.db.insert(todoItem).values(data).returning();
-    return created;
+  create(data: TodoItemInsert) {
+    return this.insertOne(data);
   }
 
-  async updateOwned(userId: string, id: string, data: TodoItemUpdate) {
-    const [updated] = await this.db
-      .update(todoItem)
-      .set(data)
-      .where(and(eq(todoItem.id, id), eq(todoItem.userId, userId)))
-      .returning();
-    return updated;
+  updateOwned(userId: string, id: string, data: TodoItemUpdate) {
+    return this.updateOne(and(eq(todoItem.id, id), eq(todoItem.userId, userId)), data);
   }
 
   async deleteOwned(userId: string, id: string): Promise<string | undefined> {
-    const [deleted] = await this.db
-      .delete(todoItem)
-      .where(and(eq(todoItem.id, id), eq(todoItem.userId, userId)))
-      .returning({ id: todoItem.id });
+    const deleted = await this.deleteOne(and(eq(todoItem.id, id), eq(todoItem.userId, userId)));
     return deleted?.id;
   }
 }

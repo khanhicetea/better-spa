@@ -4,7 +4,8 @@
 
 - Drizzle table definitions in `packages/db/src/schema/` are the schema source of truth.
 - Prefer `context.repos` in RPC handlers; use raw `context.db` only when clearer.
-- Keep repositories focused rather than building generic CRUD abstractions.
+- Keep repository APIs focused rather than exposing generic CRUD operations.
+- Reuse the protected `BaseRepository` query helpers inside concrete repositories.
 - Never use `drizzle-kit push`; generate and review SQL migrations.
 - After every migration, regenerate `docs/db-schema.md` with `pnpm db:snapshot`.
 
@@ -20,15 +21,17 @@ packages/db/
   src/snapshot.ts
 ```
 
-`createRepos()` exposes `repos.user` and `repos.todoItem`. Todo update/delete predicates
-include both row ID and owner ID.
+`createRepos()` exposes `repos.user` and `repos.todoItem`. Both repositories extend the
+protected-helper-only `BaseRepository`; their public APIs remain domain-specific. Todo
+update/delete predicates include both row ID and owner ID.
 
 ## Schema conventions
 
 - SQL tables are singular and columns use `snake_case`.
 - TypeScript properties use `camelCase` through table-level casing.
 - Select and insert types are inferred from Drizzle table objects.
-- Mutation methods accept narrow update types.
+- Mutation methods accept narrow update types, passed explicitly to `BaseRepository`.
+- Base update/delete helpers require scoped predicates and are never public.
 - Database timestamps are timezone-aware `Date` values; RPC DTOs use ISO strings.
 - Better Auth uses its Drizzle 1.7 schema, including issuer-scoped provider account IDs.
 - Persist uploaded objects according to `docs/file-storage.md`: each logical file is one
