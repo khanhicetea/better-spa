@@ -60,10 +60,7 @@ function SignupForm() {
   };
 
   return (
-    <AuthShell
-      title="Create your Better SPA account"
-      subtitle="Start with the production baseline."
-    >
+    <AuthShell title="Create your KitKit account" subtitle="Start with the production baseline.">
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-6">
           <div className="grid gap-5">

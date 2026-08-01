@@ -105,7 +105,7 @@ Useful references include `apps/web/src/components/ui/empty.tsx` and the navigat
 ## Shared date helpers
 
 Prefer helpers from `packages/shared/src/helpers/date.ts`, exported through
-`@better-spa/shared/helpers/date`:
+`@kitkit/shared/helpers/date`:
 
 - `formatDate`, `formatTime`, `formatDateOnly`
 - `formatRelativeTime`, `formatSmart`

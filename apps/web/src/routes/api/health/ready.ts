@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { checkDatabaseReady } from "@better-spa/db/client";
-import { logger } from "@better-spa/observability";
-import { getRequestContext } from "@better-spa/rpc/context";
+import { checkDatabaseReady } from "@kitkit/db/client";
+import { logger } from "@kitkit/observability";
+import { getRequestContext } from "@kitkit/rpc/context";
 
 export const Route = createFileRoute("/api/health/ready")({
   server: {

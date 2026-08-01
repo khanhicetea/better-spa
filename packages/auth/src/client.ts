@@ -16,7 +16,7 @@ export type AuthClientOptions = {
   enabledSocialProviders?: Partial<Record<SocialProvider, boolean>>;
 };
 
-export function createBetterSpaAuthClient(options: AuthClientOptions = {}) {
+export function createKitKitAuthClient(options: AuthClientOptions = {}) {
   const client = createAuthClient({
     baseURL: options.baseURL,
     plugins: [adminClient(getAdminPluginConfig())],
@@ -36,4 +36,4 @@ export function createBetterSpaAuthClient(options: AuthClientOptions = {}) {
   };
 }
 
-export type BetterSpaAuthClient = ReturnType<typeof createBetterSpaAuthClient>["client"];
+export type KitKitAuthClient = ReturnType<typeof createKitKitAuthClient>["client"];

@@ -51,7 +51,7 @@ function LoginForm() {
   };
 
   return (
-    <AuthShell title="Sign in to Better SPA" subtitle="Access your workspace.">
+    <AuthShell title="Sign in to KitKit" subtitle="Access your workspace.">
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-6">
           <div className="grid gap-5">

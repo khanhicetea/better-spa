@@ -1,4 +1,4 @@
-import { createNodeDatabaseResource } from "@better-spa/db/client";
+import { createNodeDatabaseResource } from "@kitkit/db/client";
 import { getAuthConfig } from "./src/server";
 
 const databaseUrl = process.env.DATABASE_URL;

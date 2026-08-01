@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button, Card, Checkbox, Spinner } from "heroui-native";
 import { StyleSheet, Text, View } from "react-native";
-import type { Outputs } from "@better-spa/rpc/types";
+import type { Outputs } from "@kitkit/rpc/types";
 import { errorMessage } from "@/lib/errors";
 import { orpc } from "@/lib/orpc";
 import { useAppColors } from "@/theme/colors";

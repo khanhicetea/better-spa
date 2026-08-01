@@ -1,5 +1,5 @@
 {
-  "name": "@better-spa/mobile",
+  "name": "@kitkit/mobile",
   "version": "0.0.0",
   "private": true,
   "main": "expo-router/entry",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@better-auth/expo": "catalog:",
-    "@better-spa/rpc": "workspace:*",
+    "@kitkit/rpc": "workspace:*",
     "@expo/vector-icons": "^15.1.1",
     "@orpc/client": "catalog:",
     "@orpc/server": "catalog:",

@@ -4,9 +4,9 @@ import { BatchHandlerPlugin, ResponseHeadersPlugin } from "@orpc/server/plugins"
 import { createFileRoute } from "@tanstack/react-router";
 import { withEvlog } from "evlog/orpc";
 import * as z from "zod";
-import { getRequestContext } from "@better-spa/rpc/context";
-import { rpcRouter } from "@better-spa/rpc/router";
-import { evlogRedactConfig } from "@better-spa/observability";
+import { getRequestContext } from "@kitkit/rpc/context";
+import { rpcRouter } from "@kitkit/rpc/router";
+import { evlogRedactConfig } from "@kitkit/observability";
 
 const plugins = [
   process.env.RPC_COMPRESSION !== undefined ? new CompressionPlugin() : undefined,
@@ -50,8 +50,8 @@ const handler = withEvlog(
   {
     include: ["/api/rpc", "/api/rpc/**"],
     routes: {
-      "/api/rpc": { service: "better-spa-rpc" },
-      "/api/rpc/**": { service: "better-spa-rpc" },
+      "/api/rpc": { service: "kitkit-rpc" },
+      "/api/rpc/**": { service: "kitkit-rpc" },
     },
     redact: evlogRedactConfig,
     enrich: (event) => {

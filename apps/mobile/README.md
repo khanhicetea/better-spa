@@ -1,6 +1,6 @@
-# Better SPA Mobile
+# KitKit Mobile
 
-Expo SDK 57 client for the Better SPA backend. Better Auth owns email/password sessions in
+Expo SDK 57 client for the KitKit backend. Better Auth owns email/password sessions in
 Expo SecureStore, while authenticated application data uses the existing oRPC API.
 
 ## Run locally
@@ -48,7 +48,7 @@ a physical device because it refers to the phone itself.
 In a second terminal, restart Expo with a cleared cache so it loads the current environment:
 
 ```bash
-pnpm --filter @better-spa/mobile exec expo start --ios --clear
+pnpm --filter @kitkit/mobile exec expo start --ios --clear
 ```
 
 The simulator and backend terminals must remain running. On boot, the app requests
@@ -62,21 +62,21 @@ reachable.
 Connect the Mac and iPhone to the same Wi-Fi network, install Expo Go, and then run:
 
 ```bash
-pnpm --filter @better-spa/mobile exec expo start --lan --clear
+pnpm --filter @kitkit/mobile exec expo start --lan --clear
 ```
 
 Scan the QR code with the iPhone. Keep `EXPO_PUBLIC_API_URL` set to the Mac's local IP.
 Production builds must use a publicly reachable HTTPS backend URL.
 
-The app scheme is `better-spa`. The backend trusts this scheme for Better Auth redirects
+The app scheme is `kitkit`. The backend trusts this scheme for Better Auth redirects
 and trusts Expo's `exp://` origins only while `NODE_ENV=development`.
 
 ## Commands
 
 ```bash
-pnpm --filter @better-spa/mobile start
-pnpm --filter @better-spa/mobile ios
-pnpm --filter @better-spa/mobile android
-pnpm --filter @better-spa/mobile web
-pnpm --filter @better-spa/mobile check-types
+pnpm --filter @kitkit/mobile start
+pnpm --filter @kitkit/mobile ios
+pnpm --filter @kitkit/mobile android
+pnpm --filter @kitkit/mobile web
+pnpm --filter @kitkit/mobile check-types
 ```

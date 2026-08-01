@@ -1,6 +1,6 @@
 "use client";
 
-import type { Account } from "@better-spa/auth/client";
+import type { Account } from "@kitkit/auth/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";

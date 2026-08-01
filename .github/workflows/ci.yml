@@ -47,13 +47,13 @@ jobs:
       - run: pnpm knip
       - run: pnpm build:node
       - run: pnpm build:worker
-      - run: pnpm --filter @better-spa/web worker:dry-run
+      - run: pnpm --filter @kitkit/web worker:dry-run
       - run: pnpm db:migrate
       - run: pnpm db:snapshot
       - run: git diff --exit-code -- docs/db-schema.md
       - name: Node health smoke
         run: |
-          pnpm start > /tmp/better-spa-node.log 2>&1 &
+          pnpm start > /tmp/kitkit-node.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid"' EXIT
           for attempt in {1..30}; do
@@ -62,11 +62,11 @@ jobs:
               exit 0
             sleep 1
           done
-          cat /tmp/better-spa-node.log
+          cat /tmp/kitkit-node.log
           exit 1
       - name: Worker health smoke
         run: |
-          pnpm worker:preview > /tmp/better-spa-worker.log 2>&1 &
+          pnpm worker:preview > /tmp/kitkit-worker.log 2>&1 &
           worker_pid=$!
           trap 'kill "$worker_pid"' EXIT
           for attempt in {1..45}; do
@@ -75,5 +75,5 @@ jobs:
               exit 0
             sleep 1
           done
-          cat /tmp/better-spa-worker.log
+          cat /tmp/kitkit-worker.log
           exit 1

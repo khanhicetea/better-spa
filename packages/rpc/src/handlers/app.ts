@@ -23,7 +23,7 @@ export const bootstrap = baseProcedure.output(bootstrapSchema).handler(async ({ 
 
   return {
     app: {
-      name: "Better SPA",
+      name: "KitKit",
       version: context.appVersion,
       environment: context.environment,
       runtime: context.runtime,

@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Better SPA",
-    "slug": "better-spa-mobile",
+    "name": "KitKit",
+    "slug": "kitkit-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "better-spa",
+    "scheme": "kitkit",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.khanhicetea.betterspa",
+      "bundleIdentifier": "com.khanhicetea.kitkit",
       "icon": "./assets/expo.icon",
       "supportsTablet": true
     },

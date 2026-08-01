@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getRequestContext } from "@better-spa/rpc/context";
+import { getRequestContext } from "@kitkit/rpc/context";
 
 export const Route = createFileRoute("/api/auth/$")({
   server: {

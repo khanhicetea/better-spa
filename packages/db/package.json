@@ -1,5 +1,5 @@
 {
-  "name": "@better-spa/db",
+  "name": "@kitkit/db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-spa/observability": "workspace:*",
+    "@kitkit/observability": "workspace:*",
     "drizzle-orm": "catalog:",
     "pg": "^8.22.0"
   },

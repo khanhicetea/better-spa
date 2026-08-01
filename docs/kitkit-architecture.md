@@ -1,4 +1,4 @@
-# Better SPA Architecture
+# KitKit Architecture
 
 The application server-renders the HTML shell and one canonical bootstrap payload. Feature
 screens then behave as an SPA with TanStack Router and Query.

@@ -1,5 +1,5 @@
-import { createBetterSpaAuthClient } from "@better-spa/auth/client";
-const { client } = createBetterSpaAuthClient();
+import { createKitKitAuthClient } from "@kitkit/auth/client";
+const { client } = createKitKitAuthClient();
 
 export default client;
-export { SOCIAL_PROVIDER_LABELS, type SocialProvider } from "@better-spa/auth/client";
+export { SOCIAL_PROVIDER_LABELS, type SocialProvider } from "@kitkit/auth/client";

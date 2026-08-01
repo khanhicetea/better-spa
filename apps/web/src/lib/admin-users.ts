@@ -1,4 +1,4 @@
-import type { Outputs } from "@better-spa/rpc/types";
+import type { Outputs } from "@kitkit/rpc/types";
 import type { QueryClient } from "@tanstack/react-query";
 import { orpc } from "@/lib/orpc";
 

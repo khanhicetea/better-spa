@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { generateUUID } from "@better-spa/shared/helpers/data";
+import { generateUUID } from "@kitkit/shared/helpers/data";
 import { authedProcedure } from "../base";
 import { todoSchema, toTodo } from "../dto";
 

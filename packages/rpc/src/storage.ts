@@ -1,6 +1,6 @@
-import { type ImageContentType, type StoredFile } from "@better-spa/shared/files";
+import { type ImageContentType, type StoredFile } from "@kitkit/shared/files";
 
-export { IMAGE_CONTENT_TYPES, type ImageContentType } from "@better-spa/shared/files";
+export { IMAGE_CONTENT_TYPES, type ImageContentType } from "@kitkit/shared/files";
 
 export type StorageObjectMetadata = StoredFile;
 

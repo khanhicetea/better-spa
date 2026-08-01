@@ -49,4 +49,4 @@ const configuredUrl = envSource
   .match(/^VITE_BASE_URL=(.+)$/m)?.[1]
   ?.trim()
   .replace(/^["']|["']$/g, "");
-console.log(`Better SPA is ready at ${configuredUrl}`);
+console.log(`KitKit is ready at ${configuredUrl}`);

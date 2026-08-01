@@ -1,17 +1,17 @@
 import handler from "@tanstack/react-start/server-entry";
-import { createWorkerDatabaseResource } from "@better-spa/db/client";
-import { createRepos } from "@better-spa/db/repositories";
-import { getAuthConfig } from "@better-spa/auth/server";
-import { createRequestContext, requestStorage } from "@better-spa/rpc/context";
-import { ingressRateLimitService } from "@better-spa/rpc/rate-limiter";
-import { createS3StorageSigner } from "@better-spa/rpc/storage";
-import { evlogRedactConfig, runWithLogContext } from "@better-spa/observability";
+import { createWorkerDatabaseResource } from "@kitkit/db/client";
+import { createRepos } from "@kitkit/db/repositories";
+import { getAuthConfig } from "@kitkit/auth/server";
+import { createRequestContext, requestStorage } from "@kitkit/rpc/context";
+import { ingressRateLimitService } from "@kitkit/rpc/rate-limiter";
+import { createS3StorageSigner } from "@kitkit/rpc/storage";
+import { evlogRedactConfig, runWithLogContext } from "@kitkit/observability";
 import { createWorkersLogger, initWorkersLogger } from "evlog/workers";
 import webPackage from "../../package.json";
 
 initWorkersLogger({
   env: {
-    service: "better-spa-web",
+    service: "kitkit-web",
     environment: "production",
     version: webPackage.version,
   },

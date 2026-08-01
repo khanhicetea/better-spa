@@ -6,7 +6,7 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import evlog from "evlog/nitro/v3";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
-import { evlogRedactConfig } from "@better-spa/observability";
+import { evlogRedactConfig } from "@kitkit/observability";
 
 export default defineConfig(({ command }) => ({
   resolve: {
@@ -37,7 +37,7 @@ export default defineConfig(({ command }) => ({
       preset: "node-server",
       modules: [
         evlog({
-          env: { service: "better-spa-web" },
+          env: { service: "kitkit-web" },
           exclude: ["/api/rpc", "/api/rpc/**"],
           redact: evlogRedactConfig,
         }),

@@ -20,7 +20,7 @@ for (const packageRoot of packageRoots) {
 
 const names = new Set();
 for (const { directory, manifest, manifestPath } of manifests) {
-  if (!/^@better-spa\/[a-z0-9-]+$/.test(manifest.name ?? "")) {
+  if (!/^@kitkit\/[a-z0-9-]+$/.test(manifest.name ?? "")) {
     failures.push(`${path.relative(root, manifestPath)} has invalid name ${manifest.name}`);
   }
   if (names.has(manifest.name)) failures.push(`Duplicate package name ${manifest.name}`);
@@ -69,12 +69,12 @@ const forbidden = [
   "node:",
   "pg",
   "drizzle-orm",
-  "@better-spa/db",
-  "@better-spa/observability",
-  "@better-spa/auth/server",
-  "@better-spa/rpc/context",
-  "@better-spa/rpc/rate-limiter",
-  "@better-spa/rpc/storage",
+  "@kitkit/db",
+  "@kitkit/observability",
+  "@kitkit/auth/server",
+  "@kitkit/rpc/context",
+  "@kitkit/rpc/rate-limiter",
+  "@kitkit/rpc/storage",
 ];
 
 async function inspect(directory) {

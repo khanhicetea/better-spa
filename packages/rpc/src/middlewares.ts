@@ -1,5 +1,5 @@
 import { ORPCError, os } from "@orpc/server";
-import type { ServerAuthSession } from "@better-spa/auth/server";
+import type { ServerAuthSession } from "@kitkit/auth/server";
 import type { RateLimitPolicy, RequestContext } from "./context";
 
 export const authMiddleware = os

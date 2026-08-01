@@ -199,18 +199,18 @@ current code before using them.
 
 Read only what the task needs:
 
-| Area                               | Document                          |
-| ---------------------------------- | --------------------------------- |
-| Shell, bootstrap, auth boundaries  | `docs/better-spa-architecture.md` |
-| oRPC context, DTOs, errors, writes | `docs/rpc-architecture.md`        |
-| Schema, repositories, migrations   | `docs/database-repository.md`     |
-| Routes, React, UI, utilities       | `docs/web-conventions.md`         |
-| Private S3/R2 storage              | `docs/file-storage.md`            |
-| Generated database snapshot        | `docs/db-schema.md`               |
-| Commands and quality gates         | `docs/commands.md`                |
-| Node deployment and health checks  | `docs/devops.md`                  |
-| Cloudflare bindings and deployment | `docs/cloudflare.md`              |
-| Mobile local setup                 | `apps/mobile/README.md`           |
+| Area                               | Document                      |
+| ---------------------------------- | ----------------------------- |
+| Shell, bootstrap, auth boundaries  | `docs/kitkit-architecture.md` |
+| oRPC context, DTOs, errors, writes | `docs/rpc-architecture.md`    |
+| Schema, repositories, migrations   | `docs/database-repository.md` |
+| Routes, React, UI, utilities       | `docs/web-conventions.md`     |
+| Private S3/R2 storage              | `docs/file-storage.md`        |
+| Generated database snapshot        | `docs/db-schema.md`           |
+| Commands and quality gates         | `docs/commands.md`            |
+| Node deployment and health checks  | `docs/devops.md`              |
+| Cloudflare bindings and deployment | `docs/cloudflare.md`          |
+| Mobile local setup                 | `apps/mobile/README.md`       |
 
 ## Common commands
 

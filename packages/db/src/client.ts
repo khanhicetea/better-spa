@@ -20,7 +20,7 @@ export function createNodeDatabaseResource(connectionString: string): DatabaseRe
     max: MAX_CONNECTIONS,
     connectionTimeoutMillis: 5_000,
     idleTimeoutMillis: 30_000,
-    application_name: "better-spa",
+    application_name: "kitkit",
   });
   return { db: drizzle({ client: pool }), close: () => pool.end() };
 }

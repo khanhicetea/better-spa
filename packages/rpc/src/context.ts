@@ -1,8 +1,8 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import type { DB } from "@better-spa/db/client";
-import type { Repositories } from "@better-spa/db/repositories";
-import type { ServerAuth, ServerAuthSession } from "@better-spa/auth/server";
-import type { RuntimeName } from "@better-spa/observability";
+import type { DB } from "@kitkit/db/client";
+import type { Repositories } from "@kitkit/db/repositories";
+import type { ServerAuth, ServerAuthSession } from "@kitkit/auth/server";
+import type { RuntimeName } from "@kitkit/observability";
 import type { StorageSigner } from "./storage";
 
 export type RateLimitPolicy = "api" | "admin" | "upload";

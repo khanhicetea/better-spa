@@ -2,7 +2,7 @@ import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import type { rpcRouter } from "@better-spa/rpc/router";
+import type { rpcRouter } from "@kitkit/rpc/router";
 import { getAuthCookie } from "./auth-client";
 import { apiUrl } from "./config";
 

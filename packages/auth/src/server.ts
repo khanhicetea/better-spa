@@ -3,8 +3,8 @@ import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth/minimal";
 import { admin } from "better-auth/plugins/admin";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
-import type { DB } from "@better-spa/db/client";
-import { schema } from "@better-spa/db/schema";
+import type { DB } from "@kitkit/db/client";
+import { schema } from "@kitkit/db/schema";
 import { getAdminPluginConfig } from "./rbac";
 
 export type AuthSocialProviderConfig = {
@@ -28,8 +28,8 @@ export const getAuthConfig = (options: AuthOptions) =>
     database: drizzleAdapter(options.db, { provider: "pg", schema }),
     plugins: [admin(getAdminPluginConfig()), expo(), tanstackStartCookies()],
     trustedOrigins: [
-      "better-spa://",
-      "better-spa://*",
+      "kitkit://",
+      "kitkit://*",
       ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**"] : []),
     ],
     session: {

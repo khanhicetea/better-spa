@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { getPaginationRange } from "@better-spa/shared/helpers/paginations";
+import { getPaginationRange } from "@kitkit/shared/helpers/paginations";
 
 interface DataTablePaginationProps {
   currentPage: number;

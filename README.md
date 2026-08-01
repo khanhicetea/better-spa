@@ -1,4 +1,4 @@
-# Better SPA
+# KitKit
 
 A production-minded shell-SPA starter. TanStack Start server-renders one small bootstrap
 payload and shell, then TanStack Router, TanStack Query, and oRPC drive the application as
@@ -40,7 +40,7 @@ Uploads are private. Authenticated clients request short-lived, content-type-bou
 URLs from `file.createUploadIntents`; reads use `file.createReadUrl`. Object keys are scoped
 to `users/{userId}/`, and no durable public URL is returned.
 
-See [the architecture guide](docs/better-spa-architecture.md),
+See [the architecture guide](docs/kitkit-architecture.md),
 [RPC guide](docs/rpc-architecture.md), and [storage guide](docs/file-storage.md).
 
 ## Workspace

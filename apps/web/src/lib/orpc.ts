@@ -4,7 +4,7 @@ import { BatchLinkPlugin } from "@orpc/client/plugins";
 import type { RouterClient } from "@orpc/server";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import type { rpcRouter } from "@better-spa/rpc/router";
+import type { rpcRouter } from "@kitkit/rpc/router";
 import { makeServerRPCClient } from "./orpc.server";
 
 export type RPCClient = RouterClient<typeof rpcRouter>;

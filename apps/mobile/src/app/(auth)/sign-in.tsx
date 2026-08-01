@@ -36,7 +36,7 @@ export default function SignInScreen() {
       subtitle="Sign in to keep your workspace close, wherever you are."
       footer={
         <Text style={[styles.footer, { color: colors.textMuted }]}>
-          New to Better SPA?{" "}
+          New to KitKit?{" "}
           <Link href="/sign-up" style={[styles.link, { color: colors.primary }]}>
             Create an account
           </Link>

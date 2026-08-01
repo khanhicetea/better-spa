@@ -12,7 +12,7 @@ One file per domain. Each file exports short server actions: `list`, `get`, `cre
 - Read and write data through `context.repos`. Reach for raw `context.db` only when a query has no repository equivalent.
 - Enforce ownership in the handler, not the UI. For per-row writes, use a repository method that includes `userId` in the SQL mutation predicate.
 - Throw via the typed errors map: `errors.NOT_FOUND()`, `errors.UNAUTHORIZED()`, `errors.RATE_LIMITED({ data: { retryAfter } })`.
-- Generate IDs with `generateUUID()` from `@better-spa/shared/helpers/data`. Set `createdAt` and `updatedAt` on insert; set `updatedAt: new Date()` on update.
+- Generate IDs with `generateUUID()` from `@kitkit/shared/helpers/data`. Set `createdAt` and `updatedAt` on insert; set `updatedAt: new Date()` on update.
 - Declare an output schema and return serialized data only. Dates cross RPC as ISO strings.
 
 ## Wiring a New Action

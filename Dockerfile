@@ -29,9 +29,9 @@ ENV NITRO_PRESET=node-server
 RUN pnpm run build \
  && pnpm run build:migrate
 
-# Produce a prod-only, self-contained bundle of @better-spa/db for running migrations.
+# Produce a prod-only, self-contained bundle of @kitkit/db for running migrations.
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
-    pnpm --filter=@better-spa/db deploy --legacy --prod /prod/db
+    pnpm --filter=@kitkit/db deploy --legacy --prod /prod/db
 
 FROM base AS runner
 WORKDIR /app

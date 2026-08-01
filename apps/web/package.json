@@ -1,5 +1,5 @@
 {
-  "name": "@better-spa/web",
+  "name": "@kitkit/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -23,11 +23,11 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
-    "@better-spa/auth": "workspace:*",
-    "@better-spa/db": "workspace:*",
-    "@better-spa/observability": "workspace:*",
-    "@better-spa/rpc": "workspace:*",
-    "@better-spa/shared": "workspace:*",
+    "@kitkit/auth": "workspace:*",
+    "@kitkit/db": "workspace:*",
+    "@kitkit/observability": "workspace:*",
+    "@kitkit/rpc": "workspace:*",
+    "@kitkit/shared": "workspace:*",
     "@hookform/resolvers": "^5.4.0",
     "@orpc/client": "catalog:",
     "@orpc/server": "catalog:",

@@ -82,7 +82,7 @@ Spreading one file's properties across columns such as `avatarKey`, `avatarFilen
 another. Do not make storage shape depend on whether the containing field is singular,
 plural, or nested. Validate the complete object at every write boundary.
 
-`@better-spa/shared/files` owns the browser-safe `StoredFile` shape and `UploadedFile`
+`@kitkit/shared/files` owns the browser-safe `StoredFile` shape and `UploadedFile`
 runtime wrapper. Persist and send only the plain `StoredFile` value; class instances are
 rehydrated only when behavior is useful. `UploadedFile.url(resolver)` receives URL behavior
 through dependency injection, so signing and authorization remain in the server storage

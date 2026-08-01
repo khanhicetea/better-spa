@@ -1,5 +1,5 @@
 {
-  "name": "@better-spa/rpc",
+  "name": "@kitkit/rpc",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,10 +14,10 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-spa/auth": "workspace:*",
-    "@better-spa/db": "workspace:*",
-    "@better-spa/observability": "workspace:*",
-    "@better-spa/shared": "workspace:*",
+    "@kitkit/auth": "workspace:*",
+    "@kitkit/db": "workspace:*",
+    "@kitkit/observability": "workspace:*",
+    "@kitkit/shared": "workspace:*",
     "@orpc/server": "catalog:",
     "evlog": "catalog:",
     "zod": "catalog:"
