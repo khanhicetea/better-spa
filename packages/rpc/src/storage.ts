@@ -1,13 +1,8 @@
-export const IMAGE_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const;
-export type ImageContentType = (typeof IMAGE_CONTENT_TYPES)[number];
+import { type ImageContentType, type StoredFile } from "@better-spa/shared/files";
 
-export type StorageObjectMetadata = {
-  key: string;
-  bucket: string;
-  filename: string;
-  contentType: ImageContentType;
-  size: number;
-};
+export { IMAGE_CONTENT_TYPES, type ImageContentType } from "@better-spa/shared/files";
+
+export type StorageObjectMetadata = StoredFile;
 
 export type UploadIntent = StorageObjectMetadata & {
   uploadUrl: string;

@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./files": "./src/files.ts",
     "./helpers/data": "./src/helpers/data.ts",
     "./helpers/date": "./src/helpers/date.ts",
     "./helpers/paginations": "./src/helpers/paginations.ts"

@@ -31,6 +31,9 @@ include both row ID and owner ID.
 - Mutation methods accept narrow update types.
 - Database timestamps are timezone-aware `Date` values; RPC DTOs use ISO strings.
 - Better Auth uses its Drizzle 1.7 schema, including issuer-scoped provider account IDs.
+- Persist uploaded objects according to `docs/file-storage.md`: each logical file is one
+  complete typed JSON object, whether stored singly, in an array, or nested in JSONB; spreading
+  its properties across columns is an anti-pattern.
 
 ## Resources
 
